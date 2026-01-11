@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type Plant = {
   id: number;
@@ -13,6 +13,8 @@ type Placement = {
   id: number;
   x: number;
   y: number;
+  w?: number | null;
+  h?: number | null;
   plant: Plant;
 };
 
@@ -25,29 +27,43 @@ type Bed = {
   placements: Placement[];
 };
 
+async function readJson<T>(
+  res: Response
+): Promise<{ ok: true; data: T } | { ok: false; status: number; text: string }> {
+  const text = await res.text();
+  if (!res.ok) return { ok: false, status: res.status, text };
+  return { ok: true, data: (text ? JSON.parse(text) : null) as T };
+}
+
 export default function BedLayoutClient({ bedId }: { bedId: number }) {
   const [bed, setBed] = useState<Bed | null>(null);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selectedPlantId, setSelectedPlantId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
-  async function loadBed() {
-    const res = await fetch(`/api/beds/${bedId}`);
-    const text = await res.text();
-    if (!res.ok) throw new Error(`Failed to load bed (${res.status}): ${text}`);
-    setBed(text ? JSON.parse(text) : null);
-  }
+  const loadBed = useCallback(async () => {
+    const res = await fetch(`/api/beds/${bedId}`, { cache: "no-store" });
+    const parsed = await readJson<Bed | null>(res);
+    if (!parsed.ok) throw new Error(`Failed to load bed (${parsed.status}): ${parsed.text}`);
+    setBed(parsed.data);
+  }, [bedId]);
 
-  async function loadPlants() {
-    const res = await fetch(`/api/plants`);
-    const text = await res.text();
-    if (!res.ok) throw new Error(`Failed to load plants (${res.status}): ${text}`);
-    const data: Plant[] = text ? JSON.parse(text) : [];
+  const loadPlants = useCallback(async () => {
+    const res = await fetch(`/api/plants`, { cache: "no-store" });
+    const parsed = await readJson<Plant[]>(res);
+    if (!parsed.ok) throw new Error(`Failed to load plants (${parsed.status}): ${parsed.text}`);
+
+    const data = parsed.data ?? [];
     setPlants(data);
-    if (data.length > 0 && selectedPlantId == null) setSelectedPlantId(data[0].id);
-  }
 
-  async function refresh() {
+    // Keep selection if still valid; otherwise pick first plant
+    setSelectedPlantId((prev) => {
+      if (prev != null && data.some((p) => p.id === prev)) return prev;
+      return data.length > 0 ? data[0].id : null;
+    });
+  }, []);
+
+  const refresh = useCallback(async () => {
     setMessage("");
     try {
       await Promise.all([loadBed(), loadPlants()]);
@@ -55,12 +71,11 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
       console.error(e);
       setMessage(e?.message ?? "Failed to load.");
     }
-  }
+  }, [loadBed, loadPlants]);
 
   useEffect(() => {
     refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bedId]);
+  }, [refresh]);
 
   const cols = useMemo(() => {
     if (!bed) return 0;
@@ -72,10 +87,36 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     return Math.max(1, Math.floor(bed.heightInches / bed.cellInches));
   }, [bed]);
 
-  const placementMap = useMemo(() => {
+  // Footprint-aware: maps every covered cell -> the Placement that occupies it
+  const cellMap = useMemo(() => {
     const map = new Map<string, Placement>();
     if (!bed) return map;
-    for (const p of bed.placements) map.set(`${p.x},${p.y}`, p);
+
+    for (const p of bed.placements) {
+      const w = p.w ?? 1;
+      const h = p.h ?? 1;
+
+      for (let dy = 0; dy < h; dy++) {
+        for (let dx = 0; dx < w; dx++) {
+          map.set(`${p.x + dx},${p.y + dy}`, p);
+        }
+      }
+    }
+    return map;
+  }, [bed]);
+
+  // Anchor cells (top-left) of each footprint so we only print name once
+  const anchorSet = useMemo(() => {
+    const s = new Set<string>();
+    if (!bed) return s;
+    for (const p of bed.placements) s.add(`${p.x},${p.y}`);
+    return s;
+  }, [bed]);
+
+  const counts = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!bed) return map;
+    for (const p of bed.placements) map.set(p.plant.name, (map.get(p.plant.name) ?? 0) + 1);
     return map;
   }, [bed]);
 
@@ -83,83 +124,101 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     if (!selectedPlantId) return null;
     return plants.find((p) => p.id === selectedPlantId) ?? null;
   }, [plants, selectedPlantId]);
-  
+
   const requiredCells = useMemo(() => {
     if (!bed || !selectedPlant) return 0;
     return Math.max(1, Math.ceil(selectedPlant.spacingInches / bed.cellInches));
   }, [bed, selectedPlant]);
-  
-  function isBlockedCell(x: number, y: number) {
-    if (!bed || !selectedPlant) return false;
-  
-    // Check against all placements EXCEPT anything in the same cell (since we can replace)
+
+  // Blocked cells preview (uses anchors; matches your earlier behavior)
+  const blockedMap = useMemo(() => {
+    const blocked = new Set<string>();
+    if (!bed || !selectedPlant || requiredCells <= 0) return blocked;
+
     for (const plc of bed.placements) {
-      if (plc.x === x && plc.y === y) continue;
-  
-      const dx = Math.abs(plc.x - x);
-      const dy = Math.abs(plc.y - y);
-  
-      // simple square-radius rule (matches server)
-      if (dx < requiredCells && dy < requiredCells) return true;
+      for (let dy = -(requiredCells - 1); dy <= requiredCells - 1; dy++) {
+        for (let dx = -(requiredCells - 1); dx <= requiredCells - 1; dx++) {
+          const x = plc.x + dx;
+          const y = plc.y + dy;
+
+          if (x < 0 || y < 0 || x >= cols || y >= rows) continue;
+          if (x === plc.x && y === plc.y) continue;
+
+          blocked.add(`${x},${y}`);
+        }
+      }
     }
-  
-    return false;
-  }
-  
-  async function placeAt(x: number, y: number) {
-    setMessage("");
-    if (!selectedPlantId) {
-      setMessage("Create a plant first (Plants page).");
-      return;
-    }
-    if (selectedPlant && bed) {
-      if (isBlockedCell(x, y)) {
-        setMessage(
-          `Blocked: too close for ${selectedPlant.name} (needs ${requiredCells} cells spacing)`
-        );
+
+    return blocked;
+  }, [bed, selectedPlant, requiredCells, cols, rows]);
+
+  const placeAt = useCallback(
+    async (x: number, y: number) => {
+      setMessage("");
+
+      if (!selectedPlantId || !selectedPlant) {
+        setMessage("Create a plant first (Plants page).");
         return;
       }
-    }
-    const res = await fetch(`/api/beds/${bedId}/place`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plantId: selectedPlantId, x, y }),
-    });
 
-    const text = await res.text();
+      const key = `${x},${y}`;
+      const blocked = blockedMap.has(key);
+      const placed = cellMap.get(key);
 
-    if (!res.ok) {
-      try {
-        const j = JSON.parse(text);
-        setMessage(j?.error ?? `Place failed (${res.status})`);
-      } catch {
-        setMessage(`Place failed (${res.status})`);
+      // Block only if empty + blocked (still allow replacing occupied cells)
+      if (blocked && !placed) {
+        setMessage(`Blocked: too close for ${selectedPlant.name} (needs ${requiredCells} cells spacing)`);
+        return;
       }
-      return;
-    }
 
-    await loadBed();
-  }
+      const res = await fetch(`/api/beds/${bedId}/place`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plantId: selectedPlantId, x, y }),
+      });
 
-  async function clearAt(x: number, y: number) {
-    setMessage("");
+      const text = await res.text();
 
-    const res = await fetch(`/api/beds/${bedId}/clear`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x, y }),
-    });
+      if (!res.ok) {
+        try {
+          const j = JSON.parse(text);
+          setMessage(j?.error ?? `Place failed (${res.status})`);
+        } catch {
+          setMessage(`Place failed (${res.status})`);
+        }
+        return;
+      }
 
-    const text = await res.text();
+      await loadBed();
+    },
+    [bedId, blockedMap, cellMap, loadBed, requiredCells, selectedPlant, selectedPlantId]
+  );
 
-    if (!res.ok) {
-      setMessage(`Clear failed (${res.status}): ${text}`);
-      return;
-    }
+  const clearAt = useCallback(
+    async (x: number, y: number) => {
+      setMessage("");
 
-    await loadBed();
-  }
+      const p = cellMap.get(`${x},${y}`);
+      if (!p) return;
 
+      const res = await fetch(`/api/beds/${bedId}/clear`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ placementId: p.id }),
+      });
+
+      const text = await res.text();
+      if (!res.ok) {
+        setMessage(`Clear failed (${res.status}): ${text}`);
+        return;
+      }
+
+      await loadBed();
+    },
+    [bedId, cellMap, loadBed]
+  );
+
+  // --- render ---
   if (!bed) {
     return (
       <div className="space-y-3">
@@ -190,6 +249,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+        {/* Left panel */}
         <div className="rounded-lg border p-3 space-y-3">
           <p className="text-sm font-medium">Plant selection</p>
 
@@ -222,14 +282,47 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               Click a cell to place the selected plant.
               <br />
               Right-click a cell to clear it.
+              <br />
+              {selectedPlant ? (
+                <>
+                  Spacing preview: <span className="font-mono">{requiredCells}</span> cells
+                </>
+              ) : null}
             </p>
           </div>
 
           {message ? <p className="text-sm">{message}</p> : null}
+
+          <div className="rounded-lg border p-3">
+            <p className="text-sm font-medium">Counts in this bed</p>
+            {counts.size === 0 ? (
+              <p className="text-sm text-gray-600">Nothing placed yet.</p>
+            ) : (
+              <ul className="mt-2 text-sm list-disc pl-5">
+                {Array.from(counts.entries()).map(([name, count]) => (
+                  <li key={name}>
+                    {name}: {count}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
+        {/* Grid */}
         <div className="rounded-lg border p-3">
           <p className="text-sm font-medium">Bed grid</p>
+
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-block h-3 w-3 border border-gray-200 bg-white" />
+              available
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-block h-3 w-3 border border-gray-200 bg-red-50" />
+              blocked (spacing)
+            </span>
+          </div>
 
           <div
             className="mt-2 grid rounded-lg border bg-white"
@@ -237,39 +330,43 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
           >
             {Array.from({ length: rows }).map((_, y) =>
               Array.from({ length: cols }).map((__, x) => {
-                const placed = placementMap.get(`${x},${y}`);
-const blocked = isBlockedCell(x, y);
+                const key = `${x},${y}`;
+                const placed = cellMap.get(key);
+                const isAnchor = placed ? anchorSet.has(key) : false;
+                const blocked = blockedMap.has(key);
 
-return (
-  <button
-    key={`${x},${y}`}
-    onClick={() => placeAt(x, y)}
-    onContextMenu={(e) => {
-      e.preventDefault();
-      clearAt(x, y);
-    }}
-    disabled={blocked && !placed} // allow right-click clear; allow click replacement only if occupied
-    className={[
-      "aspect-square border border-gray-200 p-1 text-[10px] leading-tight focus:outline-none focus:ring-2 focus:ring-black",
-      placed ? "bg-white" : blocked ? "bg-red-50" : "bg-white",
-      placed ? "hover:bg-gray-50" : blocked ? "cursor-not-allowed" : "hover:bg-gray-50",
-    ].join(" ")}
-    title={
-      placed
-        ? "Click to replace. Right-click to clear."
-        : blocked
-        ? `Blocked for ${selectedPlant?.name ?? "selected plant"} (needs ${requiredCells} cells spacing)`
-        : "Click to place. Right-click to clear."
-    }
-  >
-    {placed ? (
-      <span className="font-medium">{placed.plant.name}</span>
-    ) : (
-      <span className="text-gray-200">•</span>
-    )}
-  </button>
-);
-
+                return (
+                  <button
+                    key={key}
+                    onClick={() => placeAt(x, y)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      clearAt(x, y);
+                    }}
+                    disabled={blocked && !placed}
+                    className={[
+                      "aspect-square border border-gray-200 p-1 text-[10px] leading-tight focus:outline-none focus:ring-2 focus:ring-black",
+                      placed
+                        ? "bg-white hover:bg-gray-50"
+                        : blocked
+                        ? "bg-red-50 cursor-not-allowed"
+                        : "bg-white hover:bg-gray-50",
+                    ].join(" ")}
+                    title={
+                      placed
+                        ? "Click to replace. Right-click to clear."
+                        : blocked
+                        ? `Blocked for ${selectedPlant?.name ?? "selected plant"} (needs ${requiredCells} cells spacing)`
+                        : "Click to place. Right-click to clear."
+                    }
+                  >
+                    {placed ? (
+                      isAnchor ? <span className="font-medium">{placed.plant.name}</span> : null
+                    ) : (
+                      <span className="text-gray-200">•</span>
+                    )}
+                  </button>
+                );
               })
             )}
           </div>

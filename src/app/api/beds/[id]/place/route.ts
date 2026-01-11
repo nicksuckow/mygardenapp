@@ -27,58 +27,64 @@ export async function POST(
     return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
   }
 
-  // Load bed + current placements
   const bed = await prisma.bed.findUnique({
     where: { id: bedId },
     include: { placements: { include: { plant: true } } },
   });
   if (!bed) return NextResponse.json({ error: "Bed not found" }, { status: 404 });
 
-  // Load plant we’re trying to place
   const plant = await prisma.plant.findUnique({ where: { id: plantId } });
   if (!plant) return NextResponse.json({ error: "Plant not found" }, { status: 404 });
 
-  // Convert spacing inches -> required cells on this bed’s grid
-  // Example: spacing 24" on 12" grid => requiredCells = 2
-  const requiredCells = Math.max(1, Math.ceil(plant.spacingInches / bed.cellInches));
+  const cols = Math.max(1, Math.floor(bed.widthInches / bed.cellInches));
+  const rows = Math.max(1, Math.floor(bed.heightInches / bed.cellInches));
 
-  // Reject if too close to ANY existing placement (except the same cell)
+  // footprint size in cells (square footprint derived from spacing)
+  const footprint = Math.max(1, Math.ceil(plant.spacingInches / bed.cellInches));
+  const w = footprint;
+  const h = footprint;
+
+  // bounds check
+  if (x < 0 || y < 0 || x + w > cols || y + h > rows) {
+    return NextResponse.json(
+      { error: "Footprint does not fit in bed at that position", details: { x, y, w, h, cols, rows } },
+      { status: 409 }
+    );
+  }
+
+  // overlap check against existing footprints
+  const newLeft = x;
+  const newTop = y;
+  const newRight = x + w - 1;
+  const newBottom = y + h - 1;
+
   for (const p of bed.placements) {
-    if (p.x === x && p.y === y) continue;
+    const pw = p.w ?? 1;
+    const ph = p.h ?? 1;
 
-    const dx = Math.abs(p.x - x);
-    const dy = Math.abs(p.y - y);
+    const left = p.x;
+    const top = p.y;
+    const right = p.x + pw - 1;
+    const bottom = p.y + ph - 1;
 
-    // Square distance in cell-space (simple + beginner friendly)
-    if (dx < requiredCells && dy < requiredCells) {
+    const overlaps =
+      newLeft <= right && newRight >= left && newTop <= bottom && newBottom >= top;
+
+    if (overlaps) {
       return NextResponse.json(
         {
-          error: "Too close to another plant",
-          details: {
-            placing: plant.name,
-            existing: p.plant.name,
-            requiredCells,
-            gridCellInches: bed.cellInches,
-          },
+          error: "Overlaps an existing plant footprint",
+          details: { existingPlant: p.plant.name, existingAt: { x: p.x, y: p.y, w: pw, h: ph } },
         },
         { status: 409 }
       );
     }
   }
 
-  // Place (update if occupied, else create)
-  const existing = await prisma.bedPlacement.findFirst({
-    where: { bedId, x, y },
+  // create a single placement row representing the whole plant footprint
+  const placement = await prisma.bedPlacement.create({
+    data: { bedId, plantId, x, y, w, h, count: 1 },
   });
-
-  const placement = existing
-    ? await prisma.bedPlacement.update({
-        where: { id: existing.id },
-        data: { plantId },
-      })
-    : await prisma.bedPlacement.create({
-        data: { bedId, plantId, x, y, w: 1, h: 1, count: 1 },
-      });
 
   return NextResponse.json(placement);
 }

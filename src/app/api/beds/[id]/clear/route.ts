@@ -16,13 +16,15 @@ export async function POST(
   }
 
   const body = await req.json();
-  const x = Number(body.x);
-  const y = Number(body.y);
+  const placementId = Number(body.placementId);
 
-  if (!Number.isInteger(x) || !Number.isInteger(y)) {
-    return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
+  if (!Number.isInteger(placementId)) {
+    return NextResponse.json({ error: "placementId is required" }, { status: 400 });
   }
 
-  await prisma.bedPlacement.deleteMany({ where: { bedId, x, y } });
+  await prisma.bedPlacement.delete({
+    where: { id: placementId },
+  });
+
   return NextResponse.json({ ok: true });
 }

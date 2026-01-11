@@ -32,7 +32,7 @@ type Placement = {
 };
 
 type EventRow = {
-  date: string; // YYYY-MM-DD
+  date: string;
   bedName: string;
   plantName: string;
   count: number;
@@ -54,19 +54,19 @@ function fmt(d: Date) {
 export default function SchedulePage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
         setError("");
 
-        const sRes = await fetch("/api/settings");
+        const sRes = await fetch("/api/settings", { cache: "no-store" });
         const sText = await sRes.text();
         const sJson = sText ? JSON.parse(sText) : null;
         setSettings(sJson);
 
-        const pRes = await fetch("/api/plan");
+        const pRes = await fetch("/api/plan", { cache: "no-store" });
         const pText = await pRes.text();
         const pJson = pText ? JSON.parse(pText) : [];
         setPlacements(pJson);
@@ -82,8 +82,11 @@ export default function SchedulePage() {
 
     const lastFrost = new Date(settings.lastSpringFrost);
 
-    // Group placements: bedId -> plantId -> count
-    const byBed = new Map<number, { bedName: string; plants: Map<number, { plant: Plant; count: number }> }>();
+    // bedId -> bedName + plantId -> {plant, count}
+    const byBed = new Map<
+      number,
+      { bedName: string; plants: Map<number, { plant: Plant; count: number }> }
+    >();
 
     for (const plc of placements) {
       const bedId = plc.bed.id;
@@ -96,11 +99,8 @@ export default function SchedulePage() {
       const bedEntry = byBed.get(bedId)!;
       const existing = bedEntry.plants.get(plantId);
 
-      if (existing) {
-        existing.count += 1;
-      } else {
-        bedEntry.plants.set(plantId, { plant: plc.plant, count: 1 });
-      }
+      if (existing) existing.count += 1;
+      else bedEntry.plants.set(plantId, { plant: plc.plant, count: 1 });
     }
 
     const rows: EventRow[] = [];
@@ -152,7 +152,6 @@ export default function SchedulePage() {
           });
         }
 
-        // Harvest estimate: anchor to transplant if present, else direct sow, else start indoors
         const anchor = transplant ?? directSow ?? startIndoors;
 
         if (anchor && plant.daysToMaturityMin != null) {
@@ -180,8 +179,6 @@ export default function SchedulePage() {
     return rows.sort((a, b) => a.date.localeCompare(b.date));
   }, [settings, placements]);
 
-  const hasPlacements = placements.length > 0;
-
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-semibold">Schedule</h1>
@@ -189,25 +186,19 @@ export default function SchedulePage() {
       {error ? (
         <div className="rounded-lg border p-3">
           <p className="text-sm font-medium">Error</p>
-          <p className="text-sm text-gray-700">{error}</p>
+          <pre className="mt-2 whitespace-pre-wrap text-xs">{error}</pre>
         </div>
       ) : !settings ? (
         <p className="text-sm text-gray-600">
           No settings found. Go to Settings and save frost dates.
         </p>
-      ) : !hasPlacements ? (
-        <div className="rounded-lg border p-4 space-y-2">
-          <p className="text-sm">
-            No plants placed in any beds yet.
-          </p>
-          <p className="text-sm text-gray-600">
-            Go to Beds, open a bed, and place some plants. Then come back here.
-          </p>
-        </div>
+      ) : placements.length === 0 ? (
+        <p className="text-sm text-gray-600">
+          No plants placed yet. Go to Beds and place some plants.
+        </p>
       ) : events.length === 0 ? (
         <p className="text-sm text-gray-600">
-          You have placements, but your plants don’t have timing rules (weeks/DTM).
-          Add timing details on the Plants page.
+          You have placements, but plants are missing timing rules. Add timing details on Plants page.
         </p>
       ) : (
         <div className="overflow-auto rounded-lg border">
