@@ -1,3 +1,4 @@
+import { ui } from "@/lib/uiStyles";
 import "./globals.css";
 import Link from "next/link";
 
@@ -13,23 +14,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={ui.page}>
         <div className="min-h-screen">
-          <header className="border-b">
+          <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
             <nav className="mx-auto flex max-w-5xl items-center gap-4 p-4">
-              <Link className="font-semibold" href="/">
+              <Link className="font-semibold text-slate-900" href="/">
                 Garden Planner
               </Link>
-              <Link className="text-sm hover:underline" href="/settings">
-                Settings
+
+              <Link className="text-sm text-slate-700 hover:text-slate-900 hover:underline" href="/settings">
+                Location Data
               </Link>
-              <Link className="text-sm hover:underline" href="/plants">
+              <Link className="text-sm text-slate-700 hover:text-slate-900 hover:underline" href="/plants">
                 Plants
               </Link>
-              <Link className="text-sm hover:underline" href="/beds">
+              <Link className="text-sm text-slate-700 hover:text-slate-900 hover:underline" href="/beds">
                 Beds
               </Link>
-              <Link className="text-sm hover:underline" href="/schedule">
+              <Link className="text-sm text-slate-700 hover:text-slate-900 hover:underline" href="/schedule">
                 Schedule
               </Link>
             </nav>

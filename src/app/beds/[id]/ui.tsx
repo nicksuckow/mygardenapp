@@ -185,6 +185,43 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
 
     return blocked;
   }, [bed, placingPlant, placements, placingCells, cols, rows]);
+// NEW: why each blocked cell is blocked (cellKey -> reason string)
+// why each blocked cell is blocked (cellKey -> reason string)
+// matches blockedMap logic: max(placingCells, existingCells)
+const blockedReasonMap = useMemo(() => {
+  const reasons = new Map<string, string>();
+  if (!bed || !placingPlant) return reasons;
+
+  for (const plc of placements) {
+    const existingW = plc.w ?? 1;
+    const existingH = plc.h ?? 1;
+
+    const existingCells = spacingToCells(plc.plant.spacingInches, bed.cellInches);
+    const blockCells = Math.max(placingCells, existingCells);
+
+    for (let dy = -blockCells + 1; dy < existingH; dy++) {
+      for (let dx = -blockCells + 1; dx < existingW; dx++) {
+        const cx = plc.x + dx;
+        const cy = plc.y + dy;
+
+        if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) continue;
+
+        const key = `${cx},${cy}`;
+
+        // If multiple plants block the same cell, keep the first reason (stable)
+        if (!reasons.has(key)) {
+          reasons.set(
+            key,
+            `Too close to ${plc.plant.name} (anchor at ${plc.x},${plc.y})`
+          );
+        }
+      }
+    }
+  }
+
+  return reasons;
+}, [bed, placingPlant, placements, placingCells, cols, rows]);
+
 
   const hoverFootprintKeys = useMemo(() => {
     if (!bed || !placingPlant || !hoverCell) return [];
@@ -430,9 +467,9 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       placed
                         ? "Click to replace. Right-click to clear."
                         : blocked
-                        ? `Blocked for ${selectedPlant?.name ?? "selected plant"} (needs ${requiredCells} cells spacing)`
+                        ? `${blockedReasonMap.get(key) ?? "Blocked"} — placing ${selectedPlant?.name ?? "selected plant"} needs ${requiredCells} cells spacing`
                         : "Click to place. Right-click to clear."
-                    }
+                    }                    
                   >
                     {placed ? (
                       isAnchor ? <span className="font-medium">{placed.plant.name}</span> : null

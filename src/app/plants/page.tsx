@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ui } from "@/lib/uiStyles";
 
 type Plant = {
   id: number;
@@ -76,8 +77,8 @@ export default function PlantsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Plants</h1>
-        <p className="text-sm text-gray-600">
+      <h1 className={ui.h1}>Plants</h1>
+              <p className="text-sm text-gray-600">
           Add plants with timing rules (weeks relative to last frost).
         </p>
       </div>
