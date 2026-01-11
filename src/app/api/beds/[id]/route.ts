@@ -1,31 +1,55 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params; // ✅ unwrap params
-  const bedId = Number(id);
+export async function PATCH(req: Request, ctx: Ctx) {
+  const { id: idStr } = await ctx.params;
+  const id = Number(idStr);
 
-  if (!Number.isInteger(bedId) || bedId <= 0) {
+  if (!Number.isFinite(id)) {
+    return NextResponse.json({ error: "Invalid bed id" }, { status: 400 });
+  }
+
+  const body = await req.json().catch(() => ({}));
+  const gardenRotated =
+    typeof body.gardenRotated === "boolean" ? body.gardenRotated : null;
+
+  if (gardenRotated == null) {
     return NextResponse.json(
-      { error: "Invalid bed id", received: id },
+      { error: "gardenRotated boolean is required." },
       { status: 400 }
     );
   }
 
-  const bed = await prisma.bed.findUnique({
-    where: { id: bedId },
-    include: { placements: { include: { plant: true } } },
+  const updated = await prisma.bed.update({
+    where: { id },
+    data: { gardenRotated },
   });
 
-  if (!bed) {
-    return NextResponse.json({ error: "Bed not found", id: bedId }, { status: 404 });
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(_: Request, ctx: Ctx) {
+  const { id: idStr } = await ctx.params;
+  const id = Number(idStr);
+
+  if (!Number.isFinite(id)) {
+    return NextResponse.json({ error: "Invalid bed id" }, { status: 400 });
   }
 
-  return NextResponse.json(bed);
+  // Safety: prevent deleting beds that still have plants placed
+  const placementsCount = await prisma.bedPlacement.count({
+    where: { bedId: id },
+  });
+
+  if (placementsCount > 0) {
+    return NextResponse.json(
+      { error: "This bed still has plants placed. Clear the bed before deleting it." },
+      { status: 400 }
+    );
+  }
+
+  await prisma.bed.delete({ where: { id } });
+  return NextResponse.json({ ok: true });
 }

@@ -52,9 +52,21 @@ model Bed {
   widthInches  Int
   heightInches Int
   cellInches   Int    @default(12) // grid size: 6 or 12 are common
+  gardenX   Int?  // top-left position in garden grid cells
+  gardenY   Int?  // top-left position in garden grid cells
+  gardenRotated Boolean @default(false)
 
   placements BedPlacement[]
 }
+
+model Garden {
+  id          Int   @id @default(1)
+  widthInches Int
+  heightInches Int
+  cellInches  Int   @default(12)
+  updatedAt   DateTime @updatedAt
+}
+
 
 model BedPlacement {
   id        Int      @id @default(autoincrement())

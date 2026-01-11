@@ -34,6 +34,10 @@ export default function RootLayout({
               <Link className="text-sm text-slate-700 hover:text-slate-900 hover:underline" href="/schedule">
                 Schedule
               </Link>
+              <Link className="text-sm hover:underline" href="/garden">
+                Garden View
+              </Link>
+
             </nav>
           </header>
 
