@@ -33,6 +33,7 @@ type Placement = {
 
 type EventRow = {
   date: string;
+  bedId: number;
   bedName: string;
   plantName: string;
   count: number;
@@ -56,6 +57,9 @@ export default function SchedulePage() {
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [error, setError] = useState("");
 
+  // ✅ NEW: bed filter state
+  const [filterBedId, setFilterBedId] = useState<number | "all">("all");
+
   useEffect(() => {
     (async () => {
       try {
@@ -76,6 +80,24 @@ export default function SchedulePage() {
       }
     })();
   }, []);
+
+  // ✅ NEW: dropdown options based on beds seen in placements
+  const bedOptions = useMemo(() => {
+    const m = new Map<number, string>();
+    for (const plc of placements) {
+      m.set(plc.bed.id, plc.bed.name);
+    }
+    return Array.from(m.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [placements]);
+
+  // ✅ NEW: if user had a bed selected but it no longer exists, reset to "all"
+  useEffect(() => {
+    if (filterBedId === "all") return;
+    const stillExists = bedOptions.some((b) => b.id === filterBedId);
+    if (!stillExists) setFilterBedId("all");
+  }, [bedOptions, filterBedId]);
 
   const events = useMemo(() => {
     if (!settings) return [] as EventRow[];
@@ -105,7 +127,7 @@ export default function SchedulePage() {
 
     const rows: EventRow[] = [];
 
-    for (const bedEntry of byBed.values()) {
+    for (const [bedId, bedEntry] of byBed.entries()) {
       for (const { plant, count } of bedEntry.plants.values()) {
         const startIndoors =
           plant.startIndoorsWeeksBeforeFrost != null
@@ -125,6 +147,7 @@ export default function SchedulePage() {
         if (startIndoors) {
           rows.push({
             date: fmt(startIndoors),
+            bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
@@ -135,6 +158,7 @@ export default function SchedulePage() {
         if (transplant) {
           rows.push({
             date: fmt(transplant),
+            bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
@@ -145,6 +169,7 @@ export default function SchedulePage() {
         if (directSow) {
           rows.push({
             date: fmt(directSow),
+            bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
@@ -157,6 +182,7 @@ export default function SchedulePage() {
         if (anchor && plant.daysToMaturityMin != null) {
           rows.push({
             date: fmt(addDays(anchor, plant.daysToMaturityMin)),
+            bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
@@ -167,6 +193,7 @@ export default function SchedulePage() {
         if (anchor && plant.daysToMaturityMax != null) {
           rows.push({
             date: fmt(addDays(anchor, plant.daysToMaturityMax)),
+            bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
@@ -179,9 +206,37 @@ export default function SchedulePage() {
     return rows.sort((a, b) => a.date.localeCompare(b.date));
   }, [settings, placements]);
 
+  // ✅ NEW: filtered events
+  const filteredEvents = useMemo(() => {
+    if (filterBedId === "all") return events;
+    return events.filter((e) => e.bedId === filterBedId);
+  }, [events, filterBedId]);
+
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Schedule</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold">Schedule</h1>
+
+        {/* ✅ NEW: dropdown */}
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-gray-600">Filter bed:</label>
+          <select
+            className="rounded border px-3 py-2 text-sm"
+            value={filterBedId}
+            onChange={(e) => {
+              const v = e.target.value;
+              setFilterBedId(v === "all" ? "all" : Number(v));
+            }}
+          >
+            <option value="all">All beds</option>
+            {bedOptions.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {error ? (
         <div className="rounded-lg border p-3">
@@ -200,6 +255,10 @@ export default function SchedulePage() {
         <p className="text-sm text-gray-600">
           You have placements, but plants are missing timing rules. Add timing details on Plants page.
         </p>
+      ) : filteredEvents.length === 0 ? (
+        <p className="text-sm text-gray-600">
+          No schedule items for this bed (or timing rules are missing for plants in this bed).
+        </p>
       ) : (
         <div className="overflow-auto rounded-lg border">
           <table className="w-full text-left text-sm">
@@ -213,7 +272,7 @@ export default function SchedulePage() {
               </tr>
             </thead>
             <tbody>
-              {events.map((e, idx) => (
+              {filteredEvents.map((e, idx) => (
                 <tr key={idx} className="border-b">
                   <td className="p-2 font-mono">{e.date}</td>
                   <td className="p-2">{e.bedName}</td>
