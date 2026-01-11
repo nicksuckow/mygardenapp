@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model UserSettings {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lastSpringFrost DateTime
+  firstFallFrost  DateTime
+  zone            String?
+  units           String   @default("imperial") // "imperial" or "metric"
+}
+
+model Plant {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name          String
+  variety       String?
+  spacingInches Int     @default(12)
+
+  daysToMaturityMin Int?
+  daysToMaturityMax Int?
+
+  startIndoorsWeeksBeforeFrost  Int?
+  transplantWeeksAfterFrost     Int?
+  directSowWeeksRelativeToFrost Int?
+
+  notes String?
+
+  placements BedPlacement[]
+}
+
+model Bed {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name         String
+  widthInches  Int
+  heightInches Int
+  cellInches   Int    @default(12) // grid size: 6 or 12 are common
+
+  placements BedPlacement[]
+}
+
+model BedPlacement {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bedId   Int
+  plantId Int
+
+  // Grid coordinates (0-based)
+  x Int
+  y Int
+  w Int @default(1) // width in cells
+  h Int @default(1) // height in cells
+
+  count Int @default(1)
+
+  bed   Bed   @relation(fields: [bedId], references: [id], onDelete: Cascade)
+  plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
+  @@unique([bedId, x, y]) // prevents two placements from sharing the exact same cell
+}
