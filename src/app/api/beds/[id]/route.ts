@@ -6,13 +6,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const bedId = Number(params.id);
+  const { id } = await params; // ✅ unwrap params
+  const bedId = Number(id);
 
   if (!Number.isInteger(bedId) || bedId <= 0) {
     return NextResponse.json(
-      { error: "Invalid bed id", received: params.id },
+      { error: "Invalid bed id", received: id },
       { status: 400 }
     );
   }
@@ -23,10 +24,7 @@ export async function GET(
   });
 
   if (!bed) {
-    return NextResponse.json(
-      { error: "Bed not found", id: bedId },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Bed not found", id: bedId }, { status: 404 });
   }
 
   return NextResponse.json(bed);
