@@ -1,4 +1,6 @@
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -8,12 +10,24 @@ export async function GET(
 ) {
   const bedId = Number(params.id);
 
+  if (!Number.isInteger(bedId) || bedId <= 0) {
+    return NextResponse.json(
+      { error: "Invalid bed id", received: params.id },
+      { status: 400 }
+    );
+  }
+
   const bed = await prisma.bed.findUnique({
     where: { id: bedId },
-    include: {
-      placements: { include: { plant: true } },
-    },
+    include: { placements: { include: { plant: true } } },
   });
 
-  return Response.json(bed);
+  if (!bed) {
+    return NextResponse.json(
+      { error: "Bed not found", id: bedId },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json(bed);
 }
