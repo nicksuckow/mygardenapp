@@ -24,9 +24,16 @@ type Bed = {
 
 type PlanPlacement = {
   id: number;
+  x: number;
+  y: number;
+  w: number | null;
+  h: number | null;
   bed: { id: number; name: string };
   plant: { id: number; name: string };
 };
+
+// Header height reserved for dots offset (still a small top margin)
+const BED_HEADER_PX = 22;
 
 function toInt(v: any, fallback: number) {
   const n = Number(v);
@@ -40,6 +47,51 @@ function bedSizeInGardenCells(bed: Bed, gardenCellInches: number) {
   return {
     w: Math.max(1, Math.ceil(wIn / gardenCellInches)),
     h: Math.max(1, Math.ceil(hIn / gardenCellInches)),
+  };
+}
+
+// How many placement-grid cells are inside THIS bed (same idea as bed editor)
+function bedGridSize(bed: Bed) {
+  const cols = Math.max(1, Math.floor(bed.widthInches / bed.cellInches));
+  const rows = Math.max(1, Math.floor(bed.heightInches / bed.cellInches));
+  return { cols, rows };
+}
+
+// Convert placement x/y (+ optional w/h footprint) into % position INSIDE bed rectangle
+function dotPosPct(bed: Bed, p: PlanPlacement) {
+  const w = p.w ?? 1;
+  const h = p.h ?? 1;
+
+  const base = bedGridSize(bed);
+
+  // Start unrotated
+  let cols = base.cols;
+  let rows = base.rows;
+
+  let cx = p.x + w / 2;
+  let cy = p.y + h / 2;
+
+  // If bed is rotated in garden view, rotate dot positions too (90° clockwise)
+  // (x,y) -> (y, cols - x)
+  if (bed.gardenRotated) {
+    const newCx = cy;
+    const newCy = cols - cx;
+
+    cx = newCx;
+    cy = newCy;
+
+    // swapped grid size when rotated
+    cols = base.rows;
+    rows = base.cols;
+  }
+
+  // clamp to avoid weird values
+  const safeCx = Math.max(0, Math.min(cx, cols));
+  const safeCy = Math.max(0, Math.min(cy, rows));
+
+  return {
+    left: `${(safeCx / cols) * 100}%`,
+    top: `${(safeCy / rows) * 100}%`,
   };
 }
 
@@ -62,6 +114,15 @@ export default function GardenPage() {
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [dragBedId, setDragBedId] = useState<number | null>(null);
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null);
+
+  // ✅ dot tooltip state
+  const [dotTip, setDotTip] = useState<{
+    bedId: number;
+    placementId: number;
+    label: string;
+    x: number; // px within bed block
+    y: number; // px within bed block
+  } | null>(null);
 
   async function load() {
     setMessage("");
@@ -123,6 +184,18 @@ export default function GardenPage() {
       const bedId = plc?.bed?.id;
       if (typeof bedId !== "number") continue;
       map.set(bedId, (map.get(bedId) ?? 0) + 1);
+    }
+    return map;
+  }, [placements]);
+
+  const placementsByBed = useMemo(() => {
+    const map = new Map<number, PlanPlacement[]>();
+    for (const plc of placements) {
+      const bedId = plc?.bed?.id;
+      if (typeof bedId !== "number") continue;
+      const arr = map.get(bedId) ?? [];
+      arr.push(plc);
+      map.set(bedId, arr);
     }
     return map;
   }, [placements]);
@@ -452,7 +525,7 @@ export default function GardenPage() {
 
                 {/* overlay: placed beds */}
                 <div
-                  className="absolute inset-0 grid"
+                  className="absolute inset-0 grid pointer-events-none"
                   style={{
                     gridTemplateColumns: `repeat(${cols}, ${CELL_PX}px)`,
                     gridTemplateRows: `repeat(${rows}, ${CELL_PX}px)`,
@@ -464,12 +537,23 @@ export default function GardenPage() {
                     const size = bedSizeInGardenCells(b, garden.cellInches);
                     const isSelected = b.id === selectedBedId;
                     const plantCount = plantCountByBed.get(b.id) ?? 0;
+                    const bedPlacements = placementsByBed.get(b.id) ?? [];
+
+                    const showTip =
+                      dotTip && dotTip.bedId === b.id
+                        ? {
+                            left: dotTip.x,
+                            top: dotTip.y,
+                            label: dotTip.label,
+                            placementId: dotTip.placementId,
+                          }
+                        : null;
 
                     return (
                       <div
                         key={b.id}
                         className={[
-                          "rounded-lg border shadow-sm p-1 cursor-grab active:cursor-grabbing",
+                          "relative h-full rounded-lg border shadow-sm p-1 cursor-grab active:cursor-grabbing pointer-events-auto overflow-hidden",
                           isSelected
                             ? "border-emerald-500 bg-emerald-100"
                             : "border-slate-300 bg-slate-100",
@@ -487,37 +571,100 @@ export default function GardenPage() {
                           startDrag(b.id);
                         }}
                         onClick={() => setSelectedBedId(b.id)}
+                        onPointerLeave={() => setDotTip((t) => (t?.bedId === b.id ? null : t))}
                       >
-                        <div className="px-1 py-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="truncate text-[11px] font-semibold leading-tight">
-                                {b.name}
-                              </div>
-                              <div className="text-[10px] text-slate-600 leading-tight">
-                                {plantCount} plants • {b.gardenRotated ? "rotated" : "normal"}
-                              </div>
+                        {/* Dots (hoverable) */}
+                        <div
+                          className="absolute inset-x-0 z-10"
+                          style={{ top: BED_HEADER_PX + 1, bottom: 0 }}
+                        >
+                          {bedPlacements.map((p) => {
+                            const pos = dotPosPct(b, p);
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                className="absolute h-2 w-2 rounded-full bg-emerald-600 opacity-80 hover:scale-110"
+                                style={{
+                                  left: pos.left,
+                                  top: pos.top,
+                                  transform: "translate(-50%, -50%)",
+                                }}
+                                onPointerEnter={(ev) => {
+                                  ev.stopPropagation();
+                                  const rect = (
+                                    ev.currentTarget.offsetParent as HTMLElement | null
+                                  )?.getBoundingClientRect();
+                                  const dotRect = ev.currentTarget.getBoundingClientRect();
+                                  if (!rect) return;
+
+                                  // tooltip position relative to the bed block
+                                  const xPx = dotRect.left - rect.left + dotRect.width / 2;
+                                  const yPx = dotRect.top - rect.top;
+
+                                  setDotTip({
+                                    bedId: b.id,
+                                    placementId: p.id,
+                                    label: p.plant.name,
+                                    x: xPx,
+                                    y: yPx,
+                                  });
+                                }}
+                                onPointerLeave={(ev) => {
+                                  ev.stopPropagation();
+                                  setDotTip((t) =>
+                                    t && t.bedId === b.id && t.placementId === p.id ? null : t
+                                  );
+                                }}
+                                onClick={(ev) => {
+                                  // don't select bed / start drag when clicking dots
+                                  ev.preventDefault();
+                                  ev.stopPropagation();
+                                }}
+                                title={p.plant.name} // fallback native tooltip
+                              />
+                            );
+                          })}
+
+                          {/* Custom tooltip */}
+                          {showTip ? (
+                            <div
+                              className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-800 shadow"
+                              style={{
+                                left: showTip.left,
+                                top: showTip.top,
+                              }}
+                            >
+                              {showTip.label}
                             </div>
+                          ) : null}
+                        </div>
 
-                            {/* rotate button on the bed block */}
-                            <button
-  className="rounded border bg-white px-2 py-1 text-[10px] text-slate-700 hover:bg-slate-50"
-  onPointerDown={(ev) => {
-    // Prevent the parent bed block from starting a drag
-    ev.preventDefault();
-    ev.stopPropagation();
-  }}
-  onClick={(ev) => {
-    // Prevent selecting/dragging the bed block
-    ev.preventDefault();
-    ev.stopPropagation();
-    rotateBed(b.id, !b.gardenRotated);
-  }}
-  title="Rotate"
->
-  ↻
-</button>
+                        {/* Compact label (top-right) */}
+                        <div className="absolute right-1 top-1 z-20 inline-flex items-center gap-1 rounded-md bg-white px-1 py-0.5 shadow-sm">
+                          <button
+                            className="rounded border bg-white px-1.5 py-0.5 text-[10px] text-slate-700 hover:bg-slate-50"
+                            onPointerDown={(ev) => {
+                              ev.preventDefault();
+                              ev.stopPropagation();
+                            }}
+                            onClick={(ev) => {
+                              ev.preventDefault();
+                              ev.stopPropagation();
+                              rotateBed(b.id, !b.gardenRotated);
+                            }}
+                            title="Rotate"
+                          >
+                            ↻
+                          </button>
 
+                          <div className="min-w-0">
+                            <div className="max-w-[140px] truncate text-[10px] font-semibold leading-tight text-slate-900">
+                              {b.name}
+                            </div>
+                            <div className="text-[9px] text-slate-700 leading-tight">
+                              {plantCount} • {b.gardenRotated ? "rotated" : "normal"}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -540,8 +687,7 @@ export default function GardenPage() {
               </div>
 
               <div className="mt-3 text-xs text-slate-500">
-                Tip: If placement fails, it’s usually overlap or out-of-bounds — the message will
-                tell you.
+                Tip: Hover a dot to see what’s planted there.
               </div>
             </div>
           )}

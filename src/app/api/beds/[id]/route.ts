@@ -2,6 +2,27 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 type Ctx = { params: Promise<{ id: string }> };
+export async function GET(_: Request, ctx: Ctx) {
+  const { id: idStr } = await ctx.params;
+  const id = Number(idStr);
+
+  if (!Number.isFinite(id)) {
+    return NextResponse.json({ error: "Invalid bed id" }, { status: 400 });
+  }
+
+  const bed = await prisma.bed.findUnique({
+    where: { id },
+    include: {
+      placements: {
+        include: {
+          plant: true,
+        },
+      },
+    },
+  });
+
+  return NextResponse.json(bed);
+}
 
 export async function PATCH(req: Request, ctx: Ctx) {
   const { id: idStr } = await ctx.params;
