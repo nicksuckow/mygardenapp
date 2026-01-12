@@ -13,6 +13,10 @@ type Plant = {
   startIndoorsWeeksBeforeFrost: number | null;
   transplantWeeksAfterFrost: number | null;
   directSowWeeksRelativeToFrost: number | null;
+
+  // ✅ NEW (supports fractions via Prisma Float)
+  plantingDepthInches: number | null;
+
   notes: string | null;
 };
 
@@ -24,7 +28,28 @@ type PlantDraft = {
   startIndoorsWeeksBeforeFrost: number | null;
   transplantWeeksAfterFrost: number | null;
   directSowWeeksRelativeToFrost: number | null;
+
+  // ✅ NEW
+  plantingDepthInches: number | null;
 };
+
+function fmtInches(v: number) {
+  // trims trailing zeros (0.50 -> 0.5, 1.00 -> 1)
+  return Number(v.toFixed(2)).toString();
+}
+
+async function safeJsonFromResponse(res: Response) {
+  const text = await res.text();
+  if (!text) return { ok: res.ok, status: res.status, data: null, raw: "" };
+
+  try {
+    const data = JSON.parse(text);
+    return { ok: res.ok, status: res.status, data, raw: text };
+  } catch {
+    // Not JSON (often HTML error page)
+    return { ok: res.ok, status: res.status, data: null, raw: text };
+  }
+}
 
 export default function PlantsPage() {
   const [plants, setPlants] = useState<Plant[]>([]);
@@ -35,15 +60,42 @@ export default function PlantsPage() {
   const [startWeeks, setStartWeeks] = useState<number | "">("");
   const [transplantWeeks, setTransplantWeeks] = useState<number | "">("");
   const [directSowWeeks, setDirectSowWeeks] = useState<number | "">("");
+
+  // ✅ NEW
+  const [plantingDepthInches, setPlantingDepthInches] = useState<number | "">("");
+
   const [message, setMessage] = useState("");
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draft, setDraft] = useState<PlantDraft | null>(null);
 
   async function load() {
-    const res = await fetch("/api/plants", { cache: "no-store" });
-    const data = await res.json();
-    setPlants(data);
+    try {
+      setMessage("");
+
+      // ✅ Absolute URL prevents “string did not match expected pattern” issues in some setups
+      const url = new URL("/api/plants", window.location.origin);
+
+      const res = await fetch(url.toString(), { method: "GET" });
+      const parsed = await safeJsonFromResponse(res);
+
+      if (!parsed.ok) {
+        console.error("LOAD /api/plants failed:", parsed.status, parsed.raw || parsed.data);
+        setMessage(`Failed to load plants (${parsed.status}). Check console.`);
+        return;
+      }
+
+      if (!Array.isArray(parsed.data)) {
+        console.error("LOAD /api/plants returned non-array:", parsed.data, parsed.raw);
+        setMessage("Failed to load plants (bad response format). Check console.");
+        return;
+      }
+
+      setPlants(parsed.data);
+    } catch (e) {
+      console.error("LOAD exception:", e);
+      setMessage("Failed to load plants (network/client error). Check console.");
+    }
   }
 
   useEffect(() => {
@@ -51,40 +103,63 @@ export default function PlantsPage() {
   }, []);
 
   async function addPlant() {
-    setMessage("");
-    if (!name.trim()) {
-      setMessage("Plant name is required.");
-      return;
-    }
+    try {
+      setMessage("");
 
-    const res = await fetch("/api/plants", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      if (!name.trim()) {
+        setMessage("Plant name is required.");
+        return;
+      }
+
+      const payload = {
         name,
-        spacingInches,
-        daysToMaturityMin: dtmMin === "" ? null : dtmMin,
-        daysToMaturityMax: dtmMax === "" ? null : dtmMax,
-        startIndoorsWeeksBeforeFrost: startWeeks === "" ? null : startWeeks,
-        transplantWeeksAfterFrost: transplantWeeks === "" ? null : transplantWeeks,
-        directSowWeeksRelativeToFrost: directSowWeeks === "" ? null : directSowWeeks,
-      }),
-    });
+        spacingInches: Number(spacingInches),
+        daysToMaturityMin: dtmMin === "" ? null : Number(dtmMin),
+        daysToMaturityMax: dtmMax === "" ? null : Number(dtmMax),
+        startIndoorsWeeksBeforeFrost: startWeeks === "" ? null : Number(startWeeks),
+        transplantWeeksAfterFrost: transplantWeeks === "" ? null : Number(transplantWeeks),
+        directSowWeeksRelativeToFrost: directSowWeeks === "" ? null : Number(directSowWeeks),
 
-    if (!res.ok) {
-      setMessage("Failed to add plant.");
-      return;
+        // ✅ NEW (float)
+        plantingDepthInches: plantingDepthInches === "" ? null : Number(plantingDepthInches),
+      };
+
+      const url = new URL("/api/plants", window.location.origin);
+
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const parsed = await safeJsonFromResponse(res);
+
+      if (!parsed.ok) {
+        console.error("ADD /api/plants failed:", parsed.status, parsed.raw || parsed.data);
+        const err =
+          (parsed.data && (parsed.data as any).error) ||
+          (parsed.raw ? parsed.raw.slice(0, 180) : "") ||
+          "Failed to add plant.";
+        setMessage(`${err} (${parsed.status})`);
+        return;
+      }
+
+      // reset
+      setName("");
+      setSpacingInches(12);
+      setDtmMin("");
+      setDtmMax("");
+      setStartWeeks("");
+      setTransplantWeeks("");
+      setDirectSowWeeks("");
+      setPlantingDepthInches("");
+
+      await load();
+      setMessage("Added!");
+    } catch (e) {
+      console.error("ADD exception:", e);
+      setMessage("Add failed (network/client error). Check console.");
     }
-
-    setName("");
-    setSpacingInches(12);
-    setDtmMin("");
-    setDtmMax("");
-    setStartWeeks("");
-    setTransplantWeeks("");
-    setDirectSowWeeks("");
-    await load();
-    setMessage("Added!");
   }
 
   function startEdit(p: Plant) {
@@ -98,6 +173,9 @@ export default function PlantsPage() {
       startIndoorsWeeksBeforeFrost: p.startIndoorsWeeksBeforeFrost ?? null,
       transplantWeeksAfterFrost: p.transplantWeeksAfterFrost ?? null,
       directSowWeeksRelativeToFrost: p.directSowWeeksRelativeToFrost ?? null,
+
+      // ✅ NEW
+      plantingDepthInches: p.plantingDepthInches ?? null,
     });
   }
 
@@ -107,70 +185,88 @@ export default function PlantsPage() {
   }
 
   async function saveEdit(id: number) {
-    setMessage("");
+    try {
+      setMessage("");
 
-    if (!draft) return;
+      if (!draft) return;
 
-    if (!draft.name.trim()) {
-      setMessage("Plant name is required.");
-      return;
-    }
-    if (!Number.isFinite(draft.spacingInches) || draft.spacingInches < 1) {
-      setMessage("Spacing must be a number ≥ 1.");
-      return;
-    }
-
-    const res = await fetch(`/api/plants/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: draft.name,
-        spacingInches: draft.spacingInches,
-        daysToMaturityMin: draft.daysToMaturityMin,
-        daysToMaturityMax: draft.daysToMaturityMax,
-        startIndoorsWeeksBeforeFrost: draft.startIndoorsWeeksBeforeFrost,
-        transplantWeeksAfterFrost: draft.transplantWeeksAfterFrost,
-        directSowWeeksRelativeToFrost: draft.directSowWeeksRelativeToFrost,
-      }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      try {
-        const j = JSON.parse(text);
-        setMessage(j?.error ?? `Save failed (${res.status})`);
-      } catch {
-        setMessage(`Save failed (${res.status})`);
+      if (!draft.name.trim()) {
+        setMessage("Plant name is required.");
+        return;
       }
-      return;
-    }
+      if (!Number.isFinite(draft.spacingInches) || draft.spacingInches < 1) {
+        setMessage("Spacing must be a number ≥ 1.");
+        return;
+      }
 
-    cancelEdit();
-    await load();
-    setMessage("Saved!");
+      const url = new URL(`/api/plants/${id}`, window.location.origin);
+
+      const res = await fetch(url.toString(), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: draft.name,
+          spacingInches: draft.spacingInches,
+          daysToMaturityMin: draft.daysToMaturityMin,
+          daysToMaturityMax: draft.daysToMaturityMax,
+          startIndoorsWeeksBeforeFrost: draft.startIndoorsWeeksBeforeFrost,
+          transplantWeeksAfterFrost: draft.transplantWeeksAfterFrost,
+          directSowWeeksRelativeToFrost: draft.directSowWeeksRelativeToFrost,
+
+          // ✅ NEW
+          plantingDepthInches: draft.plantingDepthInches,
+        }),
+      });
+
+      const parsed = await safeJsonFromResponse(res);
+
+      if (!parsed.ok) {
+        console.error("SAVE failed:", parsed.status, parsed.raw || parsed.data);
+        const err =
+          (parsed.data && (parsed.data as any).error) ||
+          (parsed.raw ? parsed.raw.slice(0, 180) : "") ||
+          "Save failed.";
+        setMessage(`${err} (${parsed.status})`);
+        return;
+      }
+
+      cancelEdit();
+      await load();
+      setMessage("Saved!");
+    } catch (e) {
+      console.error("SAVE exception:", e);
+      setMessage("Save failed (network/client error). Check console.");
+    }
   }
 
   async function deletePlant(id: number) {
-    setMessage("");
-    const ok = confirm("Delete this plant? This cannot be undone.");
-    if (!ok) return;
+    try {
+      setMessage("");
+      const ok = confirm("Delete this plant? This cannot be undone.");
+      if (!ok) return;
 
-    const res = await fetch(`/api/plants/${id}`, { method: "DELETE" });
-    const text = await res.text();
+      const url = new URL(`/api/plants/${id}`, window.location.origin);
 
-    if (!res.ok) {
-      try {
-        const j = JSON.parse(text);
-        setMessage(j?.error ?? `Delete failed (${res.status})`);
-      } catch {
-        setMessage(`Delete failed (${res.status})`);
+      const res = await fetch(url.toString(), { method: "DELETE" });
+      const parsed = await safeJsonFromResponse(res);
+
+      if (!parsed.ok) {
+        console.error("DELETE failed:", parsed.status, parsed.raw || parsed.data);
+        const err =
+          (parsed.data && (parsed.data as any).error) ||
+          (parsed.raw ? parsed.raw.slice(0, 180) : "") ||
+          "Delete failed.";
+        setMessage(`${err} (${parsed.status})`);
+        return;
       }
-      return;
-    }
 
-    if (editingId === id) cancelEdit();
-    await load();
-    setMessage("Deleted.");
+      if (editingId === id) cancelEdit();
+      await load();
+      setMessage("Deleted.");
+    } catch (e) {
+      console.error("DELETE exception:", e);
+      setMessage("Delete failed (network/client error). Check console.");
+    }
   }
 
   return (
@@ -248,7 +344,8 @@ export default function PlantsPage() {
             />
           </label>
 
-          <label className="grid gap-1 sm:col-span-2">
+          {/* ✅ NOW 2 columns: Direct sow (left) + Planting depth (right) */}
+          <label className="grid gap-1">
             <span className="text-sm font-medium">Direct sow (weeks relative to last frost)</span>
             <input
               className="rounded border px-3 py-2 text-sm"
@@ -260,10 +357,25 @@ export default function PlantsPage() {
               placeholder="e.g. -2 means 2 weeks before last frost"
             />
           </label>
+
+          <label className="grid gap-1">
+            <span className="text-sm font-medium">Planting Depth (inches)</span>
+            <input
+              className="rounded border px-3 py-2 text-sm"
+              type="number"
+              value={plantingDepthInches}
+              onChange={(e) =>
+                setPlantingDepthInches(e.target.value === "" ? "" : Number(e.target.value))
+              }
+              min={0}
+              step={0.25}
+              placeholder="e.g. 0.5"
+            />
+          </label>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button className={`${ui.btn} ${ui.btnPrimary}`} onClick={addPlant}>
+          <button className={`${ui.btn} ${ui.btnPrimary}`} type="button" onClick={addPlant}>
             Add Plant
           </button>
 
@@ -299,12 +411,14 @@ export default function PlantsPage() {
                         <div className="flex gap-2">
                           <button
                             className={`${ui.btn} ${ui.btnSecondary} py-1`}
+                            type="button"
                             onClick={() => startEdit(p)}
                           >
                             Edit
                           </button>
                           <button
                             className={`${ui.btn} ${ui.btnDanger} py-1`}
+                            type="button"
                             onClick={() => deletePlant(p.id)}
                           >
                             Delete
@@ -335,6 +449,11 @@ export default function PlantsPage() {
                             ? `${p.directSowWeeksRelativeToFrost}w relative`
                             : "—"}
                         </p>
+
+                        <p>
+                          Planting depth:{" "}
+                          {p.plantingDepthInches != null ? `${fmtInches(p.plantingDepthInches)}"` : "—"}
+                        </p>
                       </div>
                     </>
                   ) : (
@@ -344,12 +463,14 @@ export default function PlantsPage() {
                         <div className="flex gap-2">
                           <button
                             className={`${ui.btn} ${ui.btnPrimary} py-1`}
+                            type="button"
                             onClick={() => saveEdit(p.id)}
                           >
                             Save
                           </button>
                           <button
                             className={`${ui.btn} ${ui.btnSecondary} py-1`}
+                            type="button"
                             onClick={cancelEdit}
                           >
                             Cancel
@@ -364,9 +485,7 @@ export default function PlantsPage() {
                             className="rounded border px-3 py-2 text-sm"
                             value={draft?.name ?? ""}
                             onChange={(e) =>
-                              setDraft((d) =>
-                                d ? { ...d, name: e.target.value } : d
-                              )
+                              setDraft((d) => (d ? { ...d, name: e.target.value } : d))
                             }
                           />
                         </label>
@@ -376,13 +495,13 @@ export default function PlantsPage() {
                           <input
                             className="rounded border px-3 py-2 text-sm"
                             type="number"
-                            min={1}
-                            value={draft?.spacingInches ?? 1}
+                            value={draft?.spacingInches ?? 12}
                             onChange={(e) =>
                               setDraft((d) =>
                                 d ? { ...d, spacingInches: Number(e.target.value) } : d
                               )
                             }
+                            min={1}
                           />
                         </label>
 
@@ -403,7 +522,6 @@ export default function PlantsPage() {
                                   : d
                               )
                             }
-                            min={1}
                           />
                         </label>
 
@@ -424,7 +542,6 @@ export default function PlantsPage() {
                                   : d
                               )
                             }
-                            min={1}
                           />
                         </label>
 
@@ -472,7 +589,7 @@ export default function PlantsPage() {
                           />
                         </label>
 
-                        <label className="grid gap-1 sm:col-span-2">
+                        <label className="grid gap-1">
                           <span className="text-sm font-medium">
                             Direct sow (weeks relative to last frost)
                           </span>
@@ -494,10 +611,29 @@ export default function PlantsPage() {
                             placeholder="e.g. -2 means 2 weeks before last frost"
                           />
                         </label>
-                      </div>
 
-                      <div className="text-xs text-slate-500">
-                        Tip: If you’re not sure, it’s okay to leave timing fields blank.
+                        <label className="grid gap-1">
+                          <span className="text-sm font-medium">Planting Depth (inches)</span>
+                          <input
+                            className="rounded border px-3 py-2 text-sm"
+                            type="number"
+                            value={draft?.plantingDepthInches ?? ""}
+                            onChange={(e) =>
+                              setDraft((d) =>
+                                d
+                                  ? {
+                                      ...d,
+                                      plantingDepthInches:
+                                        e.target.value === "" ? null : Number(e.target.value),
+                                    }
+                                  : d
+                              )
+                            }
+                            min={0}
+                            step={0.25}
+                            placeholder="e.g. 0.5"
+                          />
+                        </label>
                       </div>
                     </div>
                   )}
