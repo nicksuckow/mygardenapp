@@ -1,4 +1,4 @@
-// prisma/schema.prisma
+//prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -9,8 +9,86 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User model for authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  settings   UserSettings?
+  gardens    Garden[]
+  beds       Bed[]
+  plants     Plant[]
+
+  // NextAuth.js session support
+  accounts           Account[]
+  sessions           Session[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([email])
+}
+
+// NextAuth.js models (required by PrismaAdapter)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Password reset tokens
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique // hashed token
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+// User settings - now per-user instead of singleton
 model UserSettings {
   id        Int      @id @default(autoincrement())
+  userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -18,10 +96,16 @@ model UserSettings {
   firstFallFrost  DateTime
   zone            String?
   units           String   @default("imperial") // "imperial" or "metric"
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
+// Plant model - now per-user
 model Plant {
   id        Int      @id @default(autoincrement())
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -36,38 +120,54 @@ model Plant {
   transplantWeeksAfterFrost     Int?
   directSowWeeksRelativeToFrost Int?
 
-  // ✅ NEW
   plantingDepthInches Float?
 
   notes String?
 
   placements BedPlacement[]
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, name])
 }
 
+// Bed model - now per-user
 model Bed {
   id        Int      @id @default(autoincrement())
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   name         String
   widthInches  Int
   heightInches Int
-  cellInches   Int    @default(12) // grid size: 6 or 12 are common
-  gardenX   Int?  // top-left position in garden grid cells
-  gardenY   Int?  // top-left position in garden grid cells
+  cellInches   Int     @default(12) // grid size: 6 or 12 are common
+  gardenX      Int? // top-left position in garden grid cells
+  gardenY      Int? // top-left position in garden grid cells
   gardenRotated Boolean @default(false)
 
   placements BedPlacement[]
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
+// Garden model - now per-user, removed hardcoded id=1
 model Garden {
-  id          Int   @id @default(1)
-  widthInches Int
+  id           Int      @id @default(autoincrement())
+  userId       String   @unique // one garden per user
+  widthInches  Int
   heightInches Int
-  cellInches  Int   @default(12)
-  updatedAt   DateTime @updatedAt
+  cellInches   Int      @default(12)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
+// BedPlacement - no changes needed (inherits through Bed relationship)
 model BedPlacement {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())

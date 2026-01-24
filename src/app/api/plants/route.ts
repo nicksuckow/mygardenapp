@@ -1,6 +1,7 @@
 // src/app/api/plants/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 
 // Accepts: 1, "1", "0.5", "1/2", "1 1/2"
 function parseFractionToNumber(v: unknown): number | null {
@@ -47,66 +48,115 @@ function parseFractionToNumber(v: unknown): number | null {
 }
 
 export async function GET() {
-  const plants = await prisma.plant.findMany({
-    orderBy: { name: "asc" },
-  });
+  try {
+    const userId = await getCurrentUserId();
 
-  return NextResponse.json(plants);
+    const plants = await prisma.plant.findMany({
+      where: { userId },
+      orderBy: { name: "asc" },
+    });
+
+    return NextResponse.json(plants);
+  } catch (error) {
+    console.error("Error fetching plants:", error);
+    return NextResponse.json({ error: "Unauthorized or failed to fetch plants" }, { status: 401 });
+  }
 }
 
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({}));
+  try {
+    const userId = await getCurrentUserId();
+    const body = await req.json().catch(() => ({}));
 
-  const name = typeof body?.name === "string" ? body.name.trim() : "";
-  if (!name) return NextResponse.json({ error: "Plant name is required." }, { status: 400 });
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    if (!name) {
+      return NextResponse.json({ error: "Plant name is required." }, { status: 400 });
+    }
+    if (name.length > 100) {
+      return NextResponse.json({ error: "Plant name must be 100 characters or less." }, { status: 400 });
+    }
 
-  const spacingInches =
-    typeof body?.spacingInches === "number" && Number.isFinite(body.spacingInches)
-      ? body.spacingInches
-      : 12;
+    const spacingInches =
+      typeof body?.spacingInches === "number" && Number.isFinite(body.spacingInches)
+        ? body.spacingInches
+        : 12;
 
-  const daysToMaturityMin =
-    typeof body?.daysToMaturityMin === "number" && Number.isFinite(body.daysToMaturityMin)
-      ? body.daysToMaturityMin
-      : null;
+    // Validate spacing bounds
+    if (spacingInches < 0.25 || spacingInches > 120) {
+      return NextResponse.json({ error: "Plant spacing must be between 0.25 and 120 inches." }, { status: 400 });
+    }
 
-  const daysToMaturityMax =
-    typeof body?.daysToMaturityMax === "number" && Number.isFinite(body.daysToMaturityMax)
-      ? body.daysToMaturityMax
-      : null;
+    const daysToMaturityMin =
+      typeof body?.daysToMaturityMin === "number" && Number.isFinite(body.daysToMaturityMin)
+        ? body.daysToMaturityMin
+        : null;
 
-  const startIndoorsWeeksBeforeFrost =
-    typeof body?.startIndoorsWeeksBeforeFrost === "number" &&
-    Number.isFinite(body.startIndoorsWeeksBeforeFrost)
-      ? body.startIndoorsWeeksBeforeFrost
-      : null;
+    const daysToMaturityMax =
+      typeof body?.daysToMaturityMax === "number" && Number.isFinite(body.daysToMaturityMax)
+        ? body.daysToMaturityMax
+        : null;
 
-  const transplantWeeksAfterFrost =
-    typeof body?.transplantWeeksAfterFrost === "number" &&
-    Number.isFinite(body.transplantWeeksAfterFrost)
-      ? body.transplantWeeksAfterFrost
-      : null;
+    // Validate days to maturity bounds
+    if (daysToMaturityMin !== null && (daysToMaturityMin < 0 || daysToMaturityMin > 365)) {
+      return NextResponse.json({ error: "Days to maturity min must be between 0 and 365." }, { status: 400 });
+    }
+    if (daysToMaturityMax !== null && (daysToMaturityMax < 0 || daysToMaturityMax > 365)) {
+      return NextResponse.json({ error: "Days to maturity max must be between 0 and 365." }, { status: 400 });
+    }
 
-  const directSowWeeksRelativeToFrost =
-    typeof body?.directSowWeeksRelativeToFrost === "number" &&
-    Number.isFinite(body.directSowWeeksRelativeToFrost)
-      ? body.directSowWeeksRelativeToFrost
-      : null;
+    const startIndoorsWeeksBeforeFrost =
+      typeof body?.startIndoorsWeeksBeforeFrost === "number" &&
+      Number.isFinite(body.startIndoorsWeeksBeforeFrost)
+        ? body.startIndoorsWeeksBeforeFrost
+        : null;
 
-  const plantingDepthInches = parseFractionToNumber(body?.plantingDepthInches);
+    const transplantWeeksAfterFrost =
+      typeof body?.transplantWeeksAfterFrost === "number" &&
+      Number.isFinite(body.transplantWeeksAfterFrost)
+        ? body.transplantWeeksAfterFrost
+        : null;
 
-  const plant = await prisma.plant.create({
-    data: {
-      name,
-      spacingInches,
-      daysToMaturityMin,
-      daysToMaturityMax,
-      startIndoorsWeeksBeforeFrost,
-      transplantWeeksAfterFrost,
-      directSowWeeksRelativeToFrost,
-      plantingDepthInches,
-    },
-  });
+    const directSowWeeksRelativeToFrost =
+      typeof body?.directSowWeeksRelativeToFrost === "number" &&
+      Number.isFinite(body.directSowWeeksRelativeToFrost)
+        ? body.directSowWeeksRelativeToFrost
+        : null;
 
-  return NextResponse.json(plant, { status: 201 });
+    // Validate week bounds
+    if (startIndoorsWeeksBeforeFrost !== null && (startIndoorsWeeksBeforeFrost < -52 || startIndoorsWeeksBeforeFrost > 52)) {
+      return NextResponse.json({ error: "Start indoors weeks must be between -52 and 52." }, { status: 400 });
+    }
+    if (transplantWeeksAfterFrost !== null && (transplantWeeksAfterFrost < -52 || transplantWeeksAfterFrost > 52)) {
+      return NextResponse.json({ error: "Transplant weeks must be between -52 and 52." }, { status: 400 });
+    }
+    if (directSowWeeksRelativeToFrost !== null && (directSowWeeksRelativeToFrost < -52 || directSowWeeksRelativeToFrost > 52)) {
+      return NextResponse.json({ error: "Direct sow weeks must be between -52 and 52." }, { status: 400 });
+    }
+
+    const plantingDepthInches = parseFractionToNumber(body?.plantingDepthInches);
+
+    // Validate planting depth bounds
+    if (plantingDepthInches !== null && (plantingDepthInches < 0 || plantingDepthInches > 24)) {
+      return NextResponse.json({ error: "Planting depth must be between 0 and 24 inches." }, { status: 400 });
+    }
+
+    const plant = await prisma.plant.create({
+      data: {
+        userId,
+        name,
+        spacingInches,
+        daysToMaturityMin,
+        daysToMaturityMax,
+        startIndoorsWeeksBeforeFrost,
+        transplantWeeksAfterFrost,
+        directSowWeeksRelativeToFrost,
+        plantingDepthInches,
+      },
+    });
+
+    return NextResponse.json(plant, { status: 201 });
+  } catch (error) {
+    console.error("Error creating plant:", error);
+    return NextResponse.json({ error: "Unauthorized or failed to create plant" }, { status: 401 });
+  }
 }

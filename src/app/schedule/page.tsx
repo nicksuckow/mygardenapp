@@ -74,9 +74,8 @@ export default function SchedulePage() {
         const pText = await pRes.text();
         const pJson = pText ? JSON.parse(pText) : [];
         setPlacements(pJson);
-      } catch (e: any) {
-        console.error(e);
-        setError(e?.message ?? "Failed to load schedule data.");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load schedule data.");
       }
     })();
   }, []);

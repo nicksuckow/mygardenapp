@@ -80,21 +80,18 @@ export default function PlantsPage() {
       const parsed = await safeJsonFromResponse(res);
 
       if (!parsed.ok) {
-        console.error("LOAD /api/plants failed:", parsed.status, parsed.raw || parsed.data);
-        setMessage(`Failed to load plants (${parsed.status}). Check console.`);
+        setMessage(`Failed to load plants (${parsed.status}).`);
         return;
       }
 
       if (!Array.isArray(parsed.data)) {
-        console.error("LOAD /api/plants returned non-array:", parsed.data, parsed.raw);
-        setMessage("Failed to load plants (bad response format). Check console.");
+        setMessage("Failed to load plants (bad response format).");
         return;
       }
 
       setPlants(parsed.data);
     } catch (e) {
-      console.error("LOAD exception:", e);
-      setMessage("Failed to load plants (network/client error). Check console.");
+      setMessage("Failed to load plants (network error).");
     }
   }
 
@@ -135,9 +132,8 @@ export default function PlantsPage() {
       const parsed = await safeJsonFromResponse(res);
 
       if (!parsed.ok) {
-        console.error("ADD /api/plants failed:", parsed.status, parsed.raw || parsed.data);
         const err =
-          (parsed.data && (parsed.data as any).error) ||
+          (parsed.data && (parsed.data as Record<string, unknown>).error) ||
           (parsed.raw ? parsed.raw.slice(0, 180) : "") ||
           "Failed to add plant.";
         setMessage(`${err} (${parsed.status})`);
@@ -157,8 +153,7 @@ export default function PlantsPage() {
       await load();
       setMessage("Added!");
     } catch (e) {
-      console.error("ADD exception:", e);
-      setMessage("Add failed (network/client error). Check console.");
+      setMessage("Add failed (network error).");
     }
   }
 
@@ -221,9 +216,8 @@ export default function PlantsPage() {
       const parsed = await safeJsonFromResponse(res);
 
       if (!parsed.ok) {
-        console.error("SAVE failed:", parsed.status, parsed.raw || parsed.data);
         const err =
-          (parsed.data && (parsed.data as any).error) ||
+          (parsed.data && (parsed.data as Record<string, unknown>).error) ||
           (parsed.raw ? parsed.raw.slice(0, 180) : "") ||
           "Save failed.";
         setMessage(`${err} (${parsed.status})`);
@@ -234,8 +228,7 @@ export default function PlantsPage() {
       await load();
       setMessage("Saved!");
     } catch (e) {
-      console.error("SAVE exception:", e);
-      setMessage("Save failed (network/client error). Check console.");
+      setMessage("Save failed (network error).");
     }
   }
 
@@ -251,9 +244,8 @@ export default function PlantsPage() {
       const parsed = await safeJsonFromResponse(res);
 
       if (!parsed.ok) {
-        console.error("DELETE failed:", parsed.status, parsed.raw || parsed.data);
         const err =
-          (parsed.data && (parsed.data as any).error) ||
+          (parsed.data && (parsed.data as Record<string, unknown>).error) ||
           (parsed.raw ? parsed.raw.slice(0, 180) : "") ||
           "Delete failed.";
         setMessage(`${err} (${parsed.status})`);
@@ -264,8 +256,7 @@ export default function PlantsPage() {
       await load();
       setMessage("Deleted.");
     } catch (e) {
-      console.error("DELETE exception:", e);
-      setMessage("Delete failed (network/client error). Check console.");
+      setMessage("Delete failed (network error).");
     }
   }
 

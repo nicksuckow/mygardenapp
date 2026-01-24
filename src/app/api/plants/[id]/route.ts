@@ -1,6 +1,7 @@
 // src/app/api/plants/[id]/route.ts
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,89 +54,119 @@ function parseFractionInches(v: unknown): number | null {
 }
 
 export async function PATCH(req: Request, ctx: Ctx) {
-  const { id: idStr } = await ctx.params;
-  const id = Number(idStr);
-
-  if (!Number.isFinite(id)) {
-    return NextResponse.json({ error: "Invalid plant id" }, { status: 400 });
-  }
-
-  const body = await req.json().catch(() => ({} as any));
-
-  // Whitelist allowed fields
-  const data: any = {};
-
-  if (typeof body.name === "string") data.name = body.name.trim();
-  if (typeof body.variety === "string" || body.variety === null) data.variety = body.variety;
-  if (typeof body.spacingInches === "number") data.spacingInches = body.spacingInches;
-
-  if (typeof body.daysToMaturityMin === "number" || body.daysToMaturityMin === null)
-    data.daysToMaturityMin = body.daysToMaturityMin;
-  if (typeof body.daysToMaturityMax === "number" || body.daysToMaturityMax === null)
-    data.daysToMaturityMax = body.daysToMaturityMax;
-
-  if (
-    typeof body.startIndoorsWeeksBeforeFrost === "number" ||
-    body.startIndoorsWeeksBeforeFrost === null
-  )
-    data.startIndoorsWeeksBeforeFrost = body.startIndoorsWeeksBeforeFrost;
-
-  if (typeof body.transplantWeeksAfterFrost === "number" || body.transplantWeeksAfterFrost === null)
-    data.transplantWeeksAfterFrost = body.transplantWeeksAfterFrost;
-
-  if (
-    typeof body.directSowWeeksRelativeToFrost === "number" ||
-    body.directSowWeeksRelativeToFrost === null
-  )
-    data.directSowWeeksRelativeToFrost = body.directSowWeeksRelativeToFrost;
-
-  if (typeof body.notes === "string" || body.notes === null) data.notes = body.notes;
-
-  // ✅ NEW: planting depth (supports number OR fraction strings)
-  if ("plantingDepthInches" in body) {
-    const parsed = parseFractionInches(body.plantingDepthInches);
-    data.plantingDepthInches = parsed;
-  }
-
-  if ("name" in data && data.name === "") {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
-  }
-
   try {
+    const userId = await getCurrentUserId();
+    const { id: idStr } = await ctx.params;
+    const id = Number(idStr);
+
+    if (!Number.isFinite(id)) {
+      return NextResponse.json({ error: "Invalid plant id" }, { status: 400 });
+    }
+
+    // Verify ownership
+    const plant = await prisma.plant.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (!plant || plant.userId !== userId) {
+      return NextResponse.json(
+        { error: "Plant not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    const body = await req.json().catch(() => ({}));
+
+    // Whitelist allowed fields
+    const data: Record<string, unknown> = {};
+
+    if (typeof body.name === "string") data.name = body.name.trim();
+    if (typeof body.variety === "string" || body.variety === null) data.variety = body.variety;
+    if (typeof body.spacingInches === "number") data.spacingInches = body.spacingInches;
+
+    if (typeof body.daysToMaturityMin === "number" || body.daysToMaturityMin === null)
+      data.daysToMaturityMin = body.daysToMaturityMin;
+    if (typeof body.daysToMaturityMax === "number" || body.daysToMaturityMax === null)
+      data.daysToMaturityMax = body.daysToMaturityMax;
+
+    if (
+      typeof body.startIndoorsWeeksBeforeFrost === "number" ||
+      body.startIndoorsWeeksBeforeFrost === null
+    )
+      data.startIndoorsWeeksBeforeFrost = body.startIndoorsWeeksBeforeFrost;
+
+    if (typeof body.transplantWeeksAfterFrost === "number" || body.transplantWeeksAfterFrost === null)
+      data.transplantWeeksAfterFrost = body.transplantWeeksAfterFrost;
+
+    if (
+      typeof body.directSowWeeksRelativeToFrost === "number" ||
+      body.directSowWeeksRelativeToFrost === null
+    )
+      data.directSowWeeksRelativeToFrost = body.directSowWeeksRelativeToFrost;
+
+    if (typeof body.notes === "string" || body.notes === null) data.notes = body.notes;
+
+    // ✅ NEW: planting depth (supports number OR fraction strings)
+    if ("plantingDepthInches" in body) {
+      const parsed = parseFractionInches(body.plantingDepthInches);
+      data.plantingDepthInches = parsed;
+    }
+
+    if ("name" in data && data.name === "") {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
     const updated = await prisma.plant.update({
       where: { id },
       data,
     });
     return NextResponse.json(updated);
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Update failed" }, { status: 500 });
+  } catch (error) {
+    console.error("Error updating plant:", error);
+    return NextResponse.json({ error: "Unauthorized or failed to update plant" }, { status: 401 });
   }
 }
 
 export async function DELETE(_: Request, ctx: Ctx) {
-  const { id: idStr } = await ctx.params;
-  const id = Number(idStr);
-
-  if (!Number.isFinite(id)) {
-    return NextResponse.json({ error: "Invalid plant id" }, { status: 400 });
-  }
-
-  // Safety: prevent deleting a plant that is placed in any bed.
-  const usedCount = await prisma.bedPlacement.count({
-    where: { plantId: id },
-  });
-
-  if (usedCount > 0) {
-    return NextResponse.json(
-      { error: "This plant is placed in a bed. Clear it from beds before deleting." },
-      { status: 400 }
-    );
-  }
-
   try {
+    const userId = await getCurrentUserId();
+    const { id: idStr } = await ctx.params;
+    const id = Number(idStr);
+
+    if (!Number.isFinite(id)) {
+      return NextResponse.json({ error: "Invalid plant id" }, { status: 400 });
+    }
+
+    // Verify ownership
+    const plant = await prisma.plant.findUnique({
+      where: { id },
+      select: { userId: true },
+    });
+
+    if (!plant || plant.userId !== userId) {
+      return NextResponse.json(
+        { error: "Plant not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    // Safety: prevent deleting a plant that is placed in any bed.
+    const usedCount = await prisma.bedPlacement.count({
+      where: { plantId: id },
+    });
+
+    if (usedCount > 0) {
+      return NextResponse.json(
+        { error: "This plant is placed in a bed. Clear it from beds before deleting." },
+        { status: 400 }
+      );
+    }
+
     await prisma.plant.delete({ where: { id } });
     return NextResponse.json({ ok: true });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Delete failed" }, { status: 500 });
+  } catch (error) {
+    console.error("Error deleting plant:", error);
+    return NextResponse.json({ error: "Unauthorized or failed to delete plant" }, { status: 401 });
   }
 }

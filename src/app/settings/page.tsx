@@ -23,14 +23,13 @@ export default function SettingsPage() {
         const text = await res.text();
   
         if (!res.ok) {
-          console.error("GET /api/settings failed:", res.status, text);
-          setMessage(`API error ${res.status}: check console`);
+          setMessage(`Failed to load settings (error ${res.status}).`);
           setLoading(false);
           return;
         }
-  
+
         const data: Settings | null = text ? JSON.parse(text) : null;
-  
+
         if (data) {
           setZone(data.zone ?? "");
           setLastSpringFrost(data.lastSpringFrost.slice(0, 10));
@@ -39,11 +38,10 @@ export default function SettingsPage() {
           setLastSpringFrost("2026-04-15");
           setFirstFallFrost("2026-10-15");
         }
-  
+
         setLoading(false);
       } catch (e) {
-        console.error(e);
-        setMessage("Failed to load settings (see console).");
+        setMessage("Failed to load settings.");
         setLoading(false);
       }
     })();

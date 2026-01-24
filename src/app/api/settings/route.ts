@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,42 +18,44 @@ function parseDateOrThrow(value: unknown, fieldName: string) {
 
 export async function GET() {
   try {
-    const settings = await prisma.userSettings.findFirst();
+    const userId = await getCurrentUserId();
+
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId },
+    });
+
     return NextResponse.json(settings);
-  } catch (err: any) {
-    console.error("GET /api/settings error:", err);
-    return NextResponse.json(
-      { error: "GET /api/settings failed", message: err?.message ?? String(err) },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error("GET /api/settings error:", error);
+    return NextResponse.json({ error: "Unauthorized or failed to fetch settings" }, { status: 401 });
   }
 }
 
 export async function POST(req: Request) {
   try {
+    const userId = await getCurrentUserId();
     const body = await req.json();
 
     const lastSpringFrost = parseDateOrThrow(body.lastSpringFrost, "lastSpringFrost");
     const firstFallFrost = parseDateOrThrow(body.firstFallFrost, "firstFallFrost");
     const zone = body.zone ? String(body.zone) : null;
 
-    const existing = await prisma.userSettings.findFirst();
-
-    const saved = existing
-      ? await prisma.userSettings.update({
-          where: { id: existing.id },
-          data: { lastSpringFrost, firstFallFrost, zone },
-        })
-      : await prisma.userSettings.create({
-          data: { lastSpringFrost, firstFallFrost, zone },
-        });
+    const saved = await prisma.userSettings.upsert({
+      where: { userId },
+      create: { userId, lastSpringFrost, firstFallFrost, zone },
+      update: { lastSpringFrost, firstFallFrost, zone },
+    });
 
     return NextResponse.json(saved);
-  } catch (err: any) {
-    console.error("POST /api/settings error:", err);
-    return NextResponse.json(
-      { error: "POST /api/settings failed", message: err?.message ?? String(err) },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error("POST /api/settings error:", error);
+    // Check if it's a validation error from parseDateOrThrow
+    if (error instanceof Error && error.message.includes("is required")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    if (error instanceof Error && error.message.includes("not a valid date")) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Unauthorized or failed to save settings" }, { status: 401 });
   }
 }

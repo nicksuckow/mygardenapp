@@ -74,9 +74,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     setMessage("");
     try {
       await Promise.all([loadBed(), loadPlants()]);
-    } catch (e: any) {
-      console.error(e);
-      setMessage(e?.message ?? "Failed to load.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Failed to load.");
     }
   }, [loadBed, loadPlants]);
 
