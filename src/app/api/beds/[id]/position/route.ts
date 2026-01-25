@@ -31,11 +31,22 @@ export async function POST(req: Request, ctx: Ctx) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const gardenX = Number(body.gardenX);
-  const gardenY = Number(body.gardenY);
+
+  // Allow null to remove bed from garden
+  const gardenX = body.gardenX === null ? null : Number(body.gardenX);
+  const gardenY = body.gardenY === null ? null : Number(body.gardenY);
+
+  // If removing from garden (null values), update and return early
+  if (gardenX === null || gardenY === null) {
+    const updated = await prisma.bed.update({
+      where: { id: bedId },
+      data: { gardenX: null, gardenY: null },
+    });
+    return NextResponse.json(updated);
+  }
 
   if (!Number.isFinite(gardenX) || !Number.isFinite(gardenY)) {
-    return NextResponse.json({ error: "gardenX and gardenY are required." }, { status: 400 });
+    return NextResponse.json({ error: "gardenX and gardenY must be valid numbers or null." }, { status: 400 });
   }
 
   const garden = await prisma.garden.findUnique({ where: { id: 1 } });

@@ -3,12 +3,33 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ui } from "@/lib/uiStyles";
+import { inchesToFeetInches } from "@/lib/dimensions";
+
+type Walkway = {
+  id: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  name: string | null;
+};
+
+type Gate = {
+  id: number;
+  x: number;
+  y: number;
+  side: string;
+  width: number;
+  name: string | null;
+};
 
 type Garden = {
   id: 1;
   widthInches: number;
   heightInches: number;
   cellInches: number;
+  walkways?: Walkway[];
+  gates?: Gate[];
 };
 
 type Bed = {
@@ -97,10 +118,22 @@ export default function GardenPage() {
   const [placements, setPlacements] = useState<PlanPlacement[]>([]);
   const [message, setMessage] = useState("");
 
-  // setup inputs
-  const [gWidth, setGWidth] = useState(240);
-  const [gHeight, setGHeight] = useState(240);
-  const [gCell, setGCell] = useState(12);
+  // setup inputs - width in feet and inches
+  const [gWidthFeet, setGWidthFeet] = useState(20);
+  const [gWidthInches, setGWidthInches] = useState(0);
+
+  // setup inputs - height in feet and inches
+  const [gHeightFeet, setGHeightFeet] = useState(20);
+  const [gHeightInches, setGHeightInches] = useState(0);
+
+  // setup inputs - cell size in feet and inches
+  const [gCellFeet, setGCellFeet] = useState(1);
+  const [gCellInches, setGCellInches] = useState(0);
+
+  // Calculate total inches
+  const gWidth = gWidthFeet * 12 + gWidthInches;
+  const gHeight = gHeightFeet * 12 + gHeightInches;
+  const gCell = gCellFeet * 12 + gCellInches;
 
   const gardenGridCols = Math.max(1, Math.floor(gWidth / gCell));
   const gardenGridRows = Math.max(1, Math.floor(gHeight / gCell));
@@ -114,6 +147,18 @@ export default function GardenPage() {
   const [dragBedId, setDragBedId] = useState<number | null>(null);
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null);
 
+  // placement mode state
+  const [placementMode, setPlacementMode] = useState<'bed' | 'walkway' | 'gate'>('bed');
+  const [walkwayDraft, setWalkwayDraft] = useState<{
+    start: { x: number; y: number } | null;
+    end: { x: number; y: number } | null;
+    isDragging: boolean;
+  }>({
+    start: null,
+    end: null,
+    isDragging: false,
+  });
+
   // ✅ dot tooltip state
   const [dotTip, setDotTip] = useState<{
     bedId: number;
@@ -122,6 +167,15 @@ export default function GardenPage() {
     x: number; // px within bed block
     y: number; // px within bed block
   } | null>(null);
+
+  // zoom and pan state
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  // rotation state (0, 90, 180, 270)
+  const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
 
   async function load() {
     setMessage("");
@@ -142,9 +196,13 @@ export default function GardenPage() {
     setPlacements(Array.isArray(pJson) ? pJson : []);
 
     if (gJson) {
-      setGWidth(gJson.widthInches);
-      setGHeight(gJson.heightInches);
-      setGCell(gJson.cellInches);
+      // Convert inches to feet and inches
+      setGWidthFeet(Math.floor(gJson.widthInches / 12));
+      setGWidthInches(gJson.widthInches % 12);
+      setGHeightFeet(Math.floor(gJson.heightInches / 12));
+      setGHeightInches(gJson.heightInches % 12);
+      setGCellFeet(Math.floor(gJson.cellInches / 12));
+      setGCellInches(gJson.cellInches % 12);
     }
 
     setSelectedBedId((prev) => {
@@ -269,6 +327,99 @@ export default function GardenPage() {
     await load();
   }
 
+  async function removeBedFromGarden(bedId: number) {
+    setMessage("");
+    const res = await fetch(`/api/beds/${bedId}/position`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gardenX: null, gardenY: null }),
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      try {
+        setMessage(JSON.parse(text)?.error ?? `Remove failed (${res.status})`);
+      } catch {
+        setMessage(`Remove failed (${res.status})`);
+      }
+      return;
+    }
+
+    await load();
+  }
+
+  async function addWalkway(x: number, y: number, width: number, height: number) {
+    setMessage("");
+    const res = await fetch("/api/walkways", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x, y, width, height }),
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      try {
+        setMessage(JSON.parse(text)?.error ?? `Add walkway failed (${res.status})`);
+      } catch {
+        setMessage(`Add walkway failed (${res.status})`);
+      }
+      return;
+    }
+
+    await load();
+  }
+
+  async function deleteWalkway(id: number) {
+    setMessage("");
+    const res = await fetch(`/api/walkways/${id}`, {
+      method: "DELETE",
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      setMessage(`Delete walkway failed (${res.status}): ${text}`);
+      return;
+    }
+
+    await load();
+  }
+
+  async function addGate(x: number, y: number, side: string) {
+    setMessage("");
+    const res = await fetch("/api/gates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x, y, side, width: 1 }),
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      try {
+        setMessage(JSON.parse(text)?.error ?? `Add gate failed (${res.status})`);
+      } catch {
+        setMessage(`Add gate failed (${res.status})`);
+      }
+      return;
+    }
+
+    await load();
+  }
+
+  async function deleteGate(id: number) {
+    setMessage("");
+    const res = await fetch(`/api/gates/${id}`, {
+      method: "DELETE",
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      setMessage(`Delete gate failed (${res.status}): ${text}`);
+      return;
+    }
+
+    await load();
+  }
+
   // Convert mouse/pointer position to grid cell
   function pointerToCell(clientX: number, clientY: number) {
     const el = gridRef.current;
@@ -310,13 +461,59 @@ export default function GardenPage() {
     await setBedPosition(dragBedId, cell.x, cell.y);
   }
 
-  // Click-to-place (when not dragging)
-  function onGridClick(x: number, y: number) {
-    if (!selectedBed) {
-      setMessage("Pick a bed first.");
-      return;
+  // Grid cell pointer down - start walkway drag or place bed/gate
+  function onGridCellPointerDown(x: number, y: number) {
+    if (placementMode === 'walkway') {
+      setWalkwayDraft({ start: { x, y }, end: { x, y }, isDragging: true });
+      setMessage("Drag to size walkway, release to place");
     }
-    setBedPosition(selectedBed.id, x, y);
+  }
+
+  // Grid cell pointer enter - update walkway end position while dragging
+  function onGridCellPointerEnter(x: number, y: number) {
+    if (placementMode === 'walkway' && walkwayDraft.isDragging && walkwayDraft.start) {
+      setWalkwayDraft(prev => ({ ...prev, end: { x, y } }));
+    }
+  }
+
+  // Grid cell pointer up - finalize walkway or place bed/gate
+  function onGridCellPointerUp(x: number, y: number) {
+    if (placementMode === 'bed') {
+      if (!selectedBed) {
+        setMessage("Pick a bed first.");
+        return;
+      }
+      setBedPosition(selectedBed.id, x, y);
+    } else if (placementMode === 'walkway') {
+      if (walkwayDraft.isDragging && walkwayDraft.start) {
+        // Finalize walkway
+        const startX = Math.min(walkwayDraft.start.x, x);
+        const startY = Math.min(walkwayDraft.start.y, y);
+        const endX = Math.max(walkwayDraft.start.x, x);
+        const endY = Math.max(walkwayDraft.start.y, y);
+        const width = endX - startX + 1;
+        const height = endY - startY + 1;
+
+        addWalkway(startX, startY, width, height);
+        setWalkwayDraft({ start: null, end: null, isDragging: false });
+        setMessage("");
+      }
+    } else if (placementMode === 'gate') {
+      // Determine which edge this is closest to
+      if (!garden) return;
+      const distToTop = y;
+      const distToBottom = rows - 1 - y;
+      const distToLeft = x;
+      const distToRight = cols - 1 - x;
+
+      const minDist = Math.min(distToTop, distToBottom, distToLeft, distToRight);
+      let side = 'bottom';
+      if (minDist === distToTop) side = 'top';
+      else if (minDist === distToRight) side = 'right';
+      else if (minDist === distToLeft) side = 'left';
+
+      addGate(x, y, side);
+    }
   }
 
   const previewBed = useMemo(() => {
@@ -362,42 +559,90 @@ export default function GardenPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <label className="grid gap-1.5">
-            <span className="text-sm font-medium">Width (inches)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              min={12}
-              value={gWidth}
-              onChange={(e) => setGWidth(toInt(e.target.value, 240))}
-            />
-            <span className="text-xs text-slate-500">Total garden width</span>
-          </label>
+          <div className="grid gap-1.5">
+            <span className="text-sm font-medium">Width</span>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <input
+                  className="w-full rounded border px-3 py-2 text-sm"
+                  type="number"
+                  value={gWidthFeet}
+                  onChange={(e) => setGWidthFeet(Math.max(0, Number(e.target.value)))}
+                  min={0}
+                  placeholder="Feet"
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  className="w-full rounded border px-3 py-2 text-sm"
+                  type="number"
+                  value={gWidthInches}
+                  onChange={(e) => setGWidthInches(Math.max(0, Math.min(11, Number(e.target.value))))}
+                  min={0}
+                  max={11}
+                  placeholder="Inches"
+                />
+              </div>
+            </div>
+            <span className="text-xs text-slate-500">Total: {inchesToFeetInches(gWidth)}</span>
+          </div>
 
-          <label className="grid gap-1.5">
-            <span className="text-sm font-medium">Height (inches)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              min={12}
-              value={gHeight}
-              onChange={(e) => setGHeight(toInt(e.target.value, 240))}
-            />
-            <span className="text-xs text-slate-500">Total garden height</span>
-          </label>
+          <div className="grid gap-1.5">
+            <span className="text-sm font-medium">Height</span>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <input
+                  className="w-full rounded border px-3 py-2 text-sm"
+                  type="number"
+                  value={gHeightFeet}
+                  onChange={(e) => setGHeightFeet(Math.max(0, Number(e.target.value)))}
+                  min={0}
+                  placeholder="Feet"
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  className="w-full rounded border px-3 py-2 text-sm"
+                  type="number"
+                  value={gHeightInches}
+                  onChange={(e) => setGHeightInches(Math.max(0, Math.min(11, Number(e.target.value))))}
+                  min={0}
+                  max={11}
+                  placeholder="Inches"
+                />
+              </div>
+            </div>
+            <span className="text-xs text-slate-500">Total: {inchesToFeetInches(gHeight)}</span>
+          </div>
 
-          <label className="grid gap-1.5">
-            <span className="text-sm font-medium">Grid cell size (inches)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              min={1}
-              step={0.5}
-              value={gCell}
-              onChange={(e) => setGCell(toInt(e.target.value, 12))}
-            />
-            <span className="text-xs text-slate-500">Cell size for bed placement</span>
-          </label>
+          <div className="grid gap-1.5">
+            <span className="text-sm font-medium">Grid cell size</span>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <input
+                  className="w-full rounded border px-3 py-2 text-sm"
+                  type="number"
+                  value={gCellFeet}
+                  onChange={(e) => setGCellFeet(Math.max(0, Number(e.target.value)))}
+                  min={0}
+                  placeholder="Feet"
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  className="w-full rounded border px-3 py-2 text-sm"
+                  type="number"
+                  value={gCellInches}
+                  onChange={(e) => setGCellInches(Math.max(0, Math.min(11, Number(e.target.value))))}
+                  min={0}
+                  max={11}
+                  step={0.5}
+                  placeholder="Inches"
+                />
+              </div>
+            </div>
+            <span className="text-xs text-slate-500">Total: {inchesToFeetInches(gCell)}</span>
+          </div>
         </div>
 
         {gardenGridCols > 0 && gardenGridRows > 0 ? (
@@ -419,8 +664,56 @@ export default function GardenPage() {
         {/* Left panel */}
         <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
           <div>
-            <p className="text-base font-semibold">Bed Management</p>
-            <p className="text-xs text-slate-600 mt-0.5">Click grid cells or drag beds to position them</p>
+            <p className="text-base font-semibold">Garden Layout Tools</p>
+            <p className="text-xs text-slate-600 mt-0.5">Place beds, walkways, and gates</p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Placement Mode</p>
+            <div className="flex gap-2">
+              <button
+                className={`flex-1 px-3 py-2 text-sm rounded border ${
+                  placementMode === 'bed'
+                    ? 'bg-emerald-100 border-emerald-500 text-emerald-900'
+                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setPlacementMode('bed');
+                  setWalkwayDraft({ start: null, end: null, isDragging: false });
+                }}
+              >
+                Beds
+              </button>
+              <button
+                className={`flex-1 px-3 py-2 text-sm rounded border ${
+                  placementMode === 'walkway'
+                    ? 'bg-amber-100 border-amber-500 text-amber-900'
+                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setPlacementMode('walkway');
+                  setWalkwayDraft({ start: null, end: null, isDragging: false });
+                }}
+              >
+                Walkways
+              </button>
+              <button
+                className={`flex-1 px-3 py-2 text-sm rounded border ${
+                  placementMode === 'gate'
+                    ? 'bg-blue-100 border-blue-500 text-blue-900'
+                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                }`}
+                onClick={() => {
+                  setPlacementMode('gate');
+                  setWalkwayDraft({ start: null, end: null, isDragging: false });
+                }}
+              >
+                Gates
+              </button>
+            </div>
+            {placementMode === 'walkway' && (
+              <p className="text-xs text-amber-700">Click and drag on the grid to create walkways</p>
+            )}
           </div>
 
           {beds.length === 0 ? (
@@ -454,7 +747,7 @@ export default function GardenPage() {
                     <div className="flex-1">
                       <div className="font-medium text-sm">{selectedBed.name}</div>
                       <div className="text-xs text-emerald-700 space-y-0.5 mt-1">
-                        <p>Size: {selectedBed.widthInches}" × {selectedBed.heightInches}"</p>
+                        <p>Size: {inchesToFeetInches(selectedBed.widthInches)} × {inchesToFeetInches(selectedBed.heightInches)}</p>
                         <p>Status: {selectedBed.gardenRotated ? "Rotated 90°" : "Normal orientation"}</p>
                         <p>Plants: {(plantCountByBed.get(selectedBed.id) ?? 0)} placed</p>
                       </div>
@@ -478,27 +771,40 @@ export default function GardenPage() {
                 ) : (
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {placedBeds.map((b) => (
-                      <button
+                      <div
                         key={b.id}
                         className={[
-                          "w-full rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                          "rounded-lg border transition-colors",
                           selectedBedId === b.id
                             ? "border-emerald-400 bg-emerald-50 shadow-sm"
-                            : "border-slate-200 bg-white hover:bg-slate-50",
+                            : "border-slate-200 bg-white",
                         ].join(" ")}
-                        onClick={() => setSelectedBedId(b.id)}
-                        title="Click to select this bed"
                       >
-                        <div className="flex items-baseline justify-between gap-2">
-                          <span className="font-medium">{b.name}</span>
-                          <span className="text-xs text-slate-600">
-                            {(plantCountByBed.get(b.id) ?? 0)} plants
-                          </span>
+                        <button
+                          className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-50/50"
+                          onClick={() => setSelectedBedId(b.id)}
+                          title="Click to select this bed"
+                        >
+                          <div className="flex items-baseline justify-between gap-2">
+                            <span className="font-medium">{b.name}</span>
+                            <span className="text-xs text-slate-600">
+                              {(plantCountByBed.get(b.id) ?? 0)} plants
+                            </span>
+                          </div>
+                          <div className="mt-1 text-xs text-slate-600">
+                            Position: ({b.gardenX}, {b.gardenY}) • {b.gardenRotated ? "rotated" : "normal"}
+                          </div>
+                        </button>
+                        <div className="border-t px-3 py-2">
+                          <button
+                            className="text-xs text-red-600 hover:text-red-700 hover:underline"
+                            onClick={() => removeBedFromGarden(b.id)}
+                            title="Remove this bed from the garden layout"
+                          >
+                            Remove from garden
+                          </button>
                         </div>
-                        <div className="mt-1 text-xs text-slate-600">
-                          Position: ({b.gardenX}, {b.gardenY}) • {b.gardenRotated ? "rotated" : "normal"}
-                        </div>
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -513,7 +819,7 @@ export default function GardenPage() {
             <p className="text-base font-semibold">Garden Layout</p>
             {garden ? (
               <p className="text-xs text-slate-600">
-                {cols} × {rows} grid ({garden.widthInches}" × {garden.heightInches}" @ {garden.cellInches}" cells)
+                {cols} × {rows} grid ({inchesToFeetInches(garden.widthInches)} × {inchesToFeetInches(garden.heightInches)} @ {inchesToFeetInches(garden.cellInches)} cells)
               </p>
             ) : null}
           </div>
@@ -544,11 +850,97 @@ export default function GardenPage() {
                       <button
                         key={`${x},${y}`}
                         className="h-7 w-7 border border-slate-100 hover:bg-slate-50"
-                        title={selectedBed ? `Place/move "${selectedBed.name}" here` : "Select a bed"}
-                        onClick={() => onGridClick(x, y)}
+                        title={
+                          placementMode === 'walkway'
+                            ? "Click and drag to create walkway"
+                            : placementMode === 'gate'
+                            ? "Click to place gate"
+                            : selectedBed
+                            ? `Place/move "${selectedBed.name}" here`
+                            : "Select a bed"
+                        }
+                        onPointerDown={() => onGridCellPointerDown(x, y)}
+                        onPointerEnter={() => onGridCellPointerEnter(x, y)}
+                        onPointerUp={() => onGridCellPointerUp(x, y)}
                       />
                     ))
                   )}
+                </div>
+
+                {/* overlay: walkways */}
+                <div
+                  className="absolute inset-0 grid pointer-events-none"
+                  style={{
+                    gridTemplateColumns: `repeat(${cols}, ${CELL_PX}px)`,
+                    gridTemplateRows: `repeat(${rows}, ${CELL_PX}px)`,
+                  }}
+                >
+                  {(garden?.walkways ?? []).map((w) => (
+                    <div
+                      key={w.id}
+                      className="relative h-full bg-amber-200/60 border border-amber-400 pointer-events-auto"
+                      style={{
+                        gridColumnStart: w.x + 1,
+                        gridRowStart: w.y + 1,
+                        gridColumnEnd: w.x + 1 + w.width,
+                        gridRowEnd: w.y + 1 + w.height,
+                      }}
+                      title={w.name || "Walkway"}
+                    >
+                      <button
+                        className="absolute top-0.5 right-0.5 bg-white rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600"
+                        onClick={() => deleteWalkway(w.id)}
+                        title="Delete walkway"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Walkway draft preview */}
+                  {placementMode === 'walkway' && walkwayDraft.start && walkwayDraft.end && (
+                    <div
+                      className="h-full bg-amber-300/40 border-2 border-dashed border-amber-500"
+                      style={{
+                        gridColumnStart: Math.min(walkwayDraft.start.x, walkwayDraft.end.x) + 1,
+                        gridRowStart: Math.min(walkwayDraft.start.y, walkwayDraft.end.y) + 1,
+                        gridColumnEnd: Math.max(walkwayDraft.start.x, walkwayDraft.end.x) + 2,
+                        gridRowEnd: Math.max(walkwayDraft.start.y, walkwayDraft.end.y) + 2,
+                      }}
+                    />
+                  )}
+                </div>
+
+                {/* overlay: gates */}
+                <div
+                  className="absolute inset-0 grid pointer-events-none"
+                  style={{
+                    gridTemplateColumns: `repeat(${cols}, ${CELL_PX}px)`,
+                    gridTemplateRows: `repeat(${rows}, ${CELL_PX}px)`,
+                  }}
+                >
+                  {(garden?.gates ?? []).map((g) => (
+                    <div
+                      key={g.id}
+                      className="relative h-full flex items-center justify-center bg-blue-200/60 border-2 border-blue-500 pointer-events-auto"
+                      style={{
+                        gridColumnStart: g.x + 1,
+                        gridRowStart: g.y + 1,
+                        gridColumnEnd: g.x + 1 + g.width,
+                        gridRowEnd: g.y + 2,
+                      }}
+                      title={g.name || `Gate (${g.side})`}
+                    >
+                      <span className="text-xs font-bold text-blue-700">GATE</span>
+                      <button
+                        className="absolute top-0.5 right-0.5 bg-white rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600"
+                        onClick={() => deleteGate(g.id)}
+                        title="Delete gate"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
 
                 {/* overlay: placed beds */}
@@ -717,10 +1109,11 @@ export default function GardenPage() {
               <div className="mt-3 space-y-1.5">
                 <p className="text-xs font-medium text-slate-700">How to use:</p>
                 <ul className="text-xs text-slate-600 space-y-0.5 list-disc pl-4">
-                  <li>Click any grid cell to place or move the selected bed</li>
-                  <li>Drag bed blocks to reposition them in the garden</li>
-                  <li>Hover over green dots to see which plants are placed</li>
-                  <li>Use the "Rotate" button to change bed orientation</li>
+                  <li><strong>Beds:</strong> Click grid cell to place, or drag bed blocks to reposition</li>
+                  <li><strong>Walkways:</strong> Click and drag on grid to create rectangular walkways</li>
+                  <li><strong>Gates:</strong> Click grid cell to place gate (auto-detects nearest edge)</li>
+                  <li>Hover over green dots to see which plants are placed in beds</li>
+                  <li>Use the "Rotate" button (↻) to change bed orientation</li>
                 </ul>
               </div>
             </div>

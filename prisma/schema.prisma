@@ -191,7 +191,45 @@ model Garden {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walkways  Walkway[]
+  gates     Gate[]
+
+  @@index([userId])
+}
+
+// Walkway - paths/aisles in the garden
+model Walkway {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  x      Int // position in garden grid cells
+  y      Int
+  width  Int // size in garden grid cells
+  height Int
+  name   String? // optional label
+
+  garden Garden @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Gate - entry/exit points in the garden
+model Gate {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  x      Int    // position in garden grid cells
+  y      Int
+  side   String // 'top', 'right', 'bottom', 'left'
+  width  Int    @default(1) // width of gate opening in cells
+  name   String? // optional label
+
+  garden Garden @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@index([userId])
 }

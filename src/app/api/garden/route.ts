@@ -8,6 +8,10 @@ export async function GET() {
 
     const garden = await prisma.garden.findUnique({
       where: { userId },
+      include: {
+        walkways: true,
+        gates: true,
+      },
     });
 
     return NextResponse.json(garden);
