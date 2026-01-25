@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ui } from "@/lib/uiStyles";
-import PerenualSearchModal from "@/components/PerenualSearchModal";
+import VerdantlySearchModal from "@/components/VerdantlySearchModal";
 
 type Plant = {
   id: number;
@@ -99,8 +99,8 @@ export default function PlantsPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draft, setDraft] = useState<PlantDraft | null>(null);
 
-  // Perenual search modal
-  const [showPerenualModal, setShowPerenualModal] = useState(false);
+  // Verdantly search modal
+  const [showVerdantlyModal, setShowVerdantlyModal] = useState(false);
 
   async function load() {
     try {
@@ -441,12 +441,12 @@ export default function PlantsPage() {
           <button
             className={`${ui.btn} ${ui.btnSecondary}`}
             type="button"
-            onClick={() => setShowPerenualModal(true)}
+            onClick={() => setShowVerdantlyModal(true)}
           >
             <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            Search Perenual Database
+            Search Verdantly Database
           </button>
 
           {message ? (
@@ -821,13 +821,13 @@ export default function PlantsPage() {
         )}
       </div>
 
-      {/* Perenual Search Modal */}
-      <PerenualSearchModal
-        isOpen={showPerenualModal}
-        onClose={() => setShowPerenualModal(false)}
+      {/* Verdantly Search Modal */}
+      <VerdantlySearchModal
+        isOpen={showVerdantlyModal}
+        onClose={() => setShowVerdantlyModal(false)}
         onImport={() => {
           load();
-          setMessage("Plant imported from Perenual!");
+          setMessage("Plant imported from Verdantly!");
         }}
       />
     </div>

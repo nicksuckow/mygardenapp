@@ -28,15 +28,7 @@ export async function GET(_: Request, ctx: Ctx) {
         bed: {
           select: { id: true, name: true, userId: true },
         },
-        plant: {
-          select: {
-            id: true,
-            name: true,
-            variety: true,
-            daysToMaturityMin: true,
-            daysToMaturityMax: true,
-          },
-        },
+        plant: true, // Include all plant fields for display
       },
     });
 
@@ -180,9 +172,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
         bed: {
           select: { id: true, name: true },
         },
-        plant: {
-          select: { id: true, name: true, variety: true },
-        },
+        plant: true, // Include all plant fields for display
       },
     });
 

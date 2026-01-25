@@ -23,7 +23,7 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <div className="min-h-screen">
             <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-              <nav className="mx-auto flex max-w-5xl items-center gap-4 p-4">
+              <nav className="mx-auto flex items-center gap-4 px-6 py-4">
                 <Link className="font-semibold text-slate-900" href="/">
                   Garden Planner
                 </Link>
@@ -66,7 +66,7 @@ export default async function RootLayout({
               </nav>
             </header>
 
-            <main className="mx-auto max-w-5xl p-4">{children}</main>
+            <main className="mx-auto px-6 py-4">{children}</main>
           </div>
         </SessionProvider>
       </body>

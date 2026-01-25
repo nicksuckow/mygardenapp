@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { ui } from "@/lib/uiStyles";
+import PlantInfoPanel, { type FullPlantData } from "./PlantInfoPanel";
 
 type PlacementDetailsModalProps = {
   isOpen: boolean;
   placementId: number | null;
   onClose: () => void;
   onSave: () => void;
+  onDelete: (placementId: number) => void;
 };
 
 type PlacementData = {
@@ -19,7 +21,7 @@ type PlacementData = {
   actualHarvestEndDate: string | null;
   notes: string | null;
   bed: { id: number; name: string };
-  plant: { id: number; name: string; variety: string | null };
+  plant: FullPlantData; // Full plant data
   count: number;
   x: number;
   y: number;
@@ -30,9 +32,11 @@ export default function PlacementDetailsModal({
   placementId,
   onClose,
   onSave,
+  onDelete,
 }: PlacementDetailsModalProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [placement, setPlacement] = useState<PlacementData | null>(null);
 
@@ -129,8 +133,31 @@ export default function PlacementDetailsModal({
     }
   };
 
+  const handleDelete = async () => {
+    if (!placementId) return;
+
+    // Ask for confirmation
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this ${placement?.plant.name} placement? This cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      setError("");
+
+      onDelete(placementId);
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to delete placement");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleClose = () => {
-    if (saving) return; // Prevent closing while saving
+    if (saving || deleting) return; // Prevent closing while saving or deleting
     onClose();
   };
 
@@ -155,18 +182,22 @@ export default function PlacementDetailsModal({
           </div>
         ) : placement ? (
           <div className="space-y-4">
-            {/* Plant info */}
+            {/* Placement location info */}
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-sm font-medium text-slate-700">
-                {placement.plant.name}
-                {placement.plant.variety && (
-                  <span className="text-slate-500"> ({placement.plant.variety})</span>
-                )}
-              </p>
-              <p className="text-xs text-slate-600 mt-1">
-                Bed: {placement.bed.name} | Position: ({Math.round(placement.x)}", {Math.round(placement.y)}") | Count: {placement.count}
+              <p className="text-xs text-slate-600">
+                Bed: <span className="font-medium">{placement.bed.name}</span> | Position: ({Math.round(placement.x)}", {Math.round(placement.y)}") | Count: <span className="font-medium">{placement.count}</span>
               </p>
             </div>
+
+            {/* Plant information - expandable */}
+            <details className="rounded-lg border border-slate-200 bg-slate-50" open>
+              <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100 rounded-t-lg">
+                📋 Plant Information: {placement.plant.name}
+              </summary>
+              <div className="px-3 py-3 border-t border-slate-200">
+                <PlantInfoPanel plant={placement.plant} />
+              </div>
+            </details>
 
             {/* Status dropdown */}
             <label className="grid gap-1.5">
@@ -250,21 +281,32 @@ export default function PlacementDetailsModal({
             </label>
 
             {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <button
-                className={`${ui.btn} ${ui.btnPrimary}`}
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save changes"}
-              </button>
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t pt-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  className={`${ui.btn} ${ui.btnPrimary}`}
+                  onClick={handleSave}
+                  disabled={saving || deleting}
+                >
+                  {saving ? "Saving..." : "Save changes"}
+                </button>
+
+                <button
+                  className={`${ui.btn} ${ui.btnSecondary}`}
+                  onClick={handleClose}
+                  disabled={saving || deleting}
+                >
+                  Cancel
+                </button>
+              </div>
 
               <button
-                className={`${ui.btn} ${ui.btnSecondary}`}
-                onClick={handleClose}
-                disabled={saving}
+                className={`${ui.btn} ${ui.btnDanger}`}
+                onClick={handleDelete}
+                disabled={saving || deleting}
+                title="Delete this plant placement"
               >
-                Cancel
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

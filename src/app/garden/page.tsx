@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ui } from "@/lib/uiStyles";
 import { inchesToFeetInches } from "@/lib/dimensions";
+import PlantInfoModal from "@/components/PlantInfoModal";
+import { type FullPlantData } from "@/components/PlantInfoPanel";
 
 type Walkway = {
   id: number;
@@ -49,9 +51,10 @@ type PlanPlacement = {
   y: number;
   w: number | null;
   h: number | null;
+  count: number;
   status?: string | null;
   bed: { id: number; name: string };
-  plant: { id: number; name: string };
+  plant: FullPlantData;
 };
 
 // Header height reserved for dots offset (still a small top margin)
@@ -161,7 +164,7 @@ export default function GardenPage() {
   const [selectedBedId, setSelectedBedId] = useState<number | null>(null);
 
   // drag state
-  const CELL_PX = 28;
+  const CELL_PX = 40; // Increased from 28 to 40 for better visibility
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [dragBedId, setDragBedId] = useState<number | null>(null);
   const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null);
@@ -186,6 +189,10 @@ export default function GardenPage() {
     x: number; // px within bed block
     y: number; // px within bed block
   } | null>(null);
+
+  // plant info modal state
+  const [selectedPlacement, setSelectedPlacement] = useState<PlanPlacement | null>(null);
+  const [showPlantInfoModal, setShowPlantInfoModal] = useState(false);
 
   // zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -781,9 +788,8 @@ export default function GardenPage() {
         </button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
-        {/* Left panel */}
-        <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
+      {/* Garden Layout Tools */}
+      <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
           <div>
             <p className="text-base font-semibold">Garden Layout Tools</p>
             <p className="text-xs text-slate-600 mt-0.5">Place beds, walkways, and gates</p>
@@ -996,7 +1002,8 @@ export default function GardenPage() {
             <div
               className="mt-3 overflow-auto rounded-xl border bg-white p-3"
               style={{
-                maxHeight: '600px',
+                maxHeight: 'calc(100vh - 400px)', // Dynamic height based on viewport
+                minHeight: '500px',
                 cursor: isPanning ? 'grabbing' : 'default'
               }}
               onWheel={handleWheel}
@@ -1225,6 +1232,9 @@ export default function GardenPage() {
                                   // don't select bed / start drag when clicking dots
                                   ev.preventDefault();
                                   ev.stopPropagation();
+                                  // Show plant info modal
+                                  setSelectedPlacement(p);
+                                  setShowPlantInfoModal(true);
                                 }}
                                 title={p.plant.name} // fallback native tooltip
                               />
@@ -1336,7 +1346,25 @@ export default function GardenPage() {
             </div>
           )}
         </div>
-      </div>
+
+      {/* Plant Info Modal */}
+      <PlantInfoModal
+        isOpen={showPlantInfoModal}
+        plant={selectedPlacement?.plant || null}
+        bedName={selectedPlacement?.bed.name}
+        placementInfo={
+          selectedPlacement
+            ? {
+                count: selectedPlacement.count,
+                status: selectedPlacement.status || null,
+              }
+            : undefined
+        }
+        onClose={() => {
+          setShowPlantInfoModal(false);
+          setSelectedPlacement(null);
+        }}
+      />
     </div>
   );
 }

@@ -530,6 +530,10 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
           setSelectedPlacementId(null);
           refresh();
         }}
+        onDelete={(placementId) => {
+          clearPlacement(placementId);
+          setSelectedPlacementId(null);
+        }}
       />
     </div>
   );
