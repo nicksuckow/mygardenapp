@@ -172,6 +172,53 @@ export async function searchVerdantlyPlants(
   };
 }
 
+export interface VerdantlyZoneResponse {
+  zipCode: string;
+  zone: string;
+  temperatureRange: {
+    min: number;
+    max: number;
+  };
+}
+
+/**
+ * Lookup USDA Hardiness Zone by ZIP code using Verdantly API
+ * @param zipCode - 5-digit US ZIP code
+ */
+export async function lookupHardinessZone(zipCode: string): Promise<VerdantlyZoneResponse> {
+  if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "YOUR_API_KEY_HERE") {
+    throw new Error("RapidAPI key not configured for Verdantly. Add RAPIDAPI_KEY to your .env file");
+  }
+
+  const url = `${VERDANTLY_API_BASE}/v1/hardiness-zones/zipcode/${zipCode}`;
+
+  console.log("Verdantly zone lookup:", { url, zipCode });
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "X-RapidAPI-Key": RAPIDAPI_KEY,
+      "X-RapidAPI-Host": RAPIDAPI_HOST,
+      "Accept": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Verdantly zone lookup failed:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText,
+    });
+    throw new Error(`Failed to lookup zone: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log("Verdantly zone response:", data);
+
+  return data;
+}
+
 /**
  * Convert Verdantly plant data to our Plant model format
  */

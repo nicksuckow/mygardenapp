@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { lookupHardinessZone } from "@/lib/verdantly";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -91,7 +92,33 @@ export async function GET(req: Request) {
       );
     }
 
-    // Step 1: Get coordinates from ZIP code using Zippopotam.us (free, no API key required)
+    // Try Verdantly API first (most accurate)
+    try {
+      console.log("Attempting Verdantly zone lookup for ZIP:", zipCode);
+      const verdantlyData = await lookupHardinessZone(zipCode);
+
+      if (verdantlyData && verdantlyData.zone) {
+        // Get frost date estimates based on zone
+        const currentYear = new Date().getFullYear();
+        const zone = verdantlyData.zone;
+        const frostEstimates = FROST_DATE_ESTIMATES[zone.toLowerCase()] || FROST_DATE_ESTIMATES["6a"];
+
+        console.log("Verdantly zone lookup successful:", zone);
+
+        return NextResponse.json({
+          zone,
+          lastSpringFrost: `${currentYear}-${frostEstimates.lastSpring}`,
+          firstFallFrost: `${currentYear}-${frostEstimates.firstFall}`,
+          source: "verdantly",
+        });
+      }
+    } catch (verdantlyError) {
+      console.warn("Verdantly zone lookup failed, falling back to geocoding:", verdantlyError);
+      // Fall through to backup method
+    }
+
+    // Fallback: Get coordinates from ZIP code using Zippopotam.us and estimate zone
+    console.log("Using geocoding fallback for ZIP:", zipCode);
     const geocodeUrl = `https://api.zippopotam.us/us/${zipCode}`;
 
     const geocodeRes = await fetch(geocodeUrl);
@@ -115,21 +142,21 @@ export async function GET(req: Request) {
     const lat = parseFloat(place.latitude);
     const lon = parseFloat(place.longitude);
 
-    // Step 2: Determine USDA Plant Hardiness Zone from latitude
-    // This is based on the approximate latitude bands for each USDA zone
+    // Determine USDA Plant Hardiness Zone from latitude
     const zone = estimateZoneFromLatitude(lat);
 
-    console.log(`Coordinates: ${lat}, ${lon} -> Zone: ${zone}`);
+    console.log(`Fallback: Coordinates: ${lat}, ${lon} -> Zone: ${zone}`);
 
-    // Step 3: Get frost date estimates based on zone
+    // Get frost date estimates based on zone
     const currentYear = new Date().getFullYear();
-    const frostEstimates = FROST_DATE_ESTIMATES[zone.toLowerCase()] || FROST_DATE_ESTIMATES["6a"]; // Default to 6a if unknown
+    const frostEstimates = FROST_DATE_ESTIMATES[zone.toLowerCase()] || FROST_DATE_ESTIMATES["6a"];
 
     return NextResponse.json({
       zone,
       lastSpringFrost: `${currentYear}-${frostEstimates.lastSpring}`,
       firstFallFrost: `${currentYear}-${frostEstimates.firstFall}`,
       coordinates: { lat, lon },
+      source: "geocoding",
     });
   } catch (error) {
     console.error("Error in zone lookup:", error);
