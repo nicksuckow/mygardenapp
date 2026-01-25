@@ -49,7 +49,8 @@ export async function GET(req: Request) {
     // If response has a data property
     if (response.data && Array.isArray(response.data)) {
       // Verdantly API uses 'meta' not 'metadata'
-      const metadata = response.meta || response.metadata;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const metadata = (response.meta || response.metadata) as any;
 
       // Use the exact field names from Verdantly API
       const totalCount = metadata?.totalCount || metadata?.total_count || metadata?.total || response.data.length;
