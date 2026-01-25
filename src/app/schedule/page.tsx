@@ -30,10 +30,11 @@ type Placement = {
   y: number;
   plant: Plant;
   bed: Bed;
-  status?: string | null;
-  plantingDate?: string | null;
-  actualHarvestStartDate?: string | null;
-  actualHarvestEndDate?: string | null;
+  seedsStartedDate?: string | null;
+  transplantedDate?: string | null;
+  directSowedDate?: string | null;
+  harvestStartedDate?: string | null;
+  harvestEndedDate?: string | null;
 };
 
 type EventRow = {
@@ -133,7 +134,7 @@ export default function SchedulePage() {
       if (existing) {
         existing.count += 1;
         // Use the most recent placement data (or first one with actual dates)
-        if (plc.plantingDate || plc.actualHarvestStartDate || plc.actualHarvestEndDate) {
+        if (plc.seedsStartedDate || plc.transplantedDate || plc.directSowedDate || plc.harvestStartedDate || plc.harvestEndedDate) {
           existing.placement = plc;
         }
       } else {
@@ -145,95 +146,114 @@ export default function SchedulePage() {
 
     for (const [bedId, bedEntry] of byBed.entries()) {
       for (const { plant, count, placement } of bedEntry.plants.values()) {
-        // Check if we have actual dates from placement
-        const hasActualPlantingDate = placement?.plantingDate != null;
-        const hasActualHarvestStart = placement?.actualHarvestStartDate != null;
-        const hasActualHarvestEnd = placement?.actualHarvestEndDate != null;
-
-        const startIndoors =
+        // Calculate estimated dates
+        const estimatedStartIndoors =
           plant.startIndoorsWeeksBeforeFrost != null
             ? addWeeks(lastFrost, -plant.startIndoorsWeeksBeforeFrost)
             : null;
 
-        const transplant =
+        const estimatedTransplant =
           plant.transplantWeeksAfterFrost != null
             ? addWeeks(lastFrost, plant.transplantWeeksAfterFrost)
             : null;
 
-        const directSow =
+        const estimatedDirectSow =
           plant.directSowWeeksRelativeToFrost != null
             ? addWeeks(lastFrost, plant.directSowWeeksRelativeToFrost)
             : null;
 
-        // Add actual planting date if it exists
-        if (hasActualPlantingDate) {
+        // Start seeds indoors
+        if (placement?.seedsStartedDate) {
           rows.push({
-            date: placement.plantingDate!.slice(0, 10),
+            date: placement.seedsStartedDate.slice(0, 10),
             bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "Planted ✓",
+            task: "✓ Seeds started indoors",
             status: "completed",
             isActual: true,
           });
-        } else {
-          // Show estimated dates only if no actual date
-          if (startIndoors) {
-            rows.push({
-              date: fmt(startIndoors),
-              bedId,
-              bedName: bedEntry.bedName,
-              plantName: plant.name,
-              count,
-              task: "Start seeds indoors",
-              status: "planned",
-            });
-          }
-
-          if (transplant) {
-            rows.push({
-              date: fmt(transplant),
-              bedId,
-              bedName: bedEntry.bedName,
-              plantName: plant.name,
-              count,
-              task: "Transplant outside",
-              status: "planned",
-            });
-          }
-
-          if (directSow) {
-            rows.push({
-              date: fmt(directSow),
-              bedId,
-              bedName: bedEntry.bedName,
-              plantName: plant.name,
-              count,
-              task: "Direct sow outside",
-              status: "planned",
-            });
-          }
+        } else if (estimatedStartIndoors) {
+          rows.push({
+            date: fmt(estimatedStartIndoors),
+            bedId,
+            bedName: bedEntry.bedName,
+            plantName: plant.name,
+            count,
+            task: "Start seeds indoors",
+            status: "planned",
+          });
         }
 
-        const anchor = transplant ?? directSow ?? startIndoors;
-
-        // Add actual harvest dates if they exist
-        if (hasActualHarvestStart) {
+        // Transplant
+        if (placement?.transplantedDate) {
           rows.push({
-            date: placement.actualHarvestStartDate!.slice(0, 10),
+            date: placement.transplantedDate.slice(0, 10),
             bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "Harvest started ✓",
+            task: "✓ Transplanted outdoors",
+            status: "completed",
+            isActual: true,
+          });
+        } else if (estimatedTransplant) {
+          rows.push({
+            date: fmt(estimatedTransplant),
+            bedId,
+            bedName: bedEntry.bedName,
+            plantName: plant.name,
+            count,
+            task: "Transplant outdoors",
+            status: "planned",
+          });
+        }
+
+        // Direct sow
+        if (placement?.directSowedDate) {
+          rows.push({
+            date: placement.directSowedDate.slice(0, 10),
+            bedId,
+            bedName: bedEntry.bedName,
+            plantName: plant.name,
+            count,
+            placementId: placement.id,
+            task: "✓ Direct sowed",
+            status: "completed",
+            isActual: true,
+          });
+        } else if (estimatedDirectSow) {
+          rows.push({
+            date: fmt(estimatedDirectSow),
+            bedId,
+            bedName: bedEntry.bedName,
+            plantName: plant.name,
+            count,
+            task: "Direct sow",
+            status: "planned",
+          });
+        }
+
+        // Determine anchor date for harvest calculations
+        const anchor = estimatedTransplant ?? estimatedDirectSow ?? estimatedStartIndoors;
+
+        // Harvest start
+        if (placement?.harvestStartedDate) {
+          rows.push({
+            date: placement.harvestStartedDate.slice(0, 10),
+            bedId,
+            bedName: bedEntry.bedName,
+            plantName: plant.name,
+            count,
+            placementId: placement.id,
+            task: "✓ Harvest started",
             status: "completed",
             isActual: true,
           });
         } else if (anchor && plant.daysToMaturityMin != null) {
-          // Show estimated harvest start only if no actual date
           rows.push({
             date: fmt(addDays(anchor, plant.daysToMaturityMin)),
             bedId,
@@ -245,20 +265,20 @@ export default function SchedulePage() {
           });
         }
 
-        if (hasActualHarvestEnd) {
+        // Harvest end
+        if (placement?.harvestEndedDate) {
           rows.push({
-            date: placement.actualHarvestEndDate!.slice(0, 10),
+            date: placement.harvestEndedDate.slice(0, 10),
             bedId,
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "Harvest complete ✓",
+            task: "✓ Harvest ended",
             status: "completed",
             isActual: true,
           });
         } else if (anchor && plant.daysToMaturityMax != null) {
-          // Show estimated harvest end only if no actual date
           rows.push({
             date: fmt(addDays(anchor, plant.daysToMaturityMax)),
             bedId,

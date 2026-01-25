@@ -52,7 +52,10 @@ type PlanPlacement = {
   w: number | null;
   h: number | null;
   count: number;
-  status?: string | null;
+  seedsStartedDate?: string | null;
+  transplantedDate?: string | null;
+  directSowedDate?: string | null;
+  harvestStartedDate?: string | null;
   bed: { id: number; name: string };
   plant: FullPlantData;
 };
@@ -60,22 +63,27 @@ type PlanPlacement = {
 // Header height reserved for dots offset (still a small top margin)
 const BED_HEADER_PX = 22;
 
-// Helper function to get status color for dots
-function getStatusDotColor(status?: string | null): string {
-  switch (status) {
-    case "planted":
-      return "bg-blue-500"; // blue
-    case "growing":
-      return "bg-green-500"; // green
-    case "harvesting":
-      return "bg-orange-500"; // orange
-    case "harvested":
-      return "bg-purple-500"; // purple
-    case "removed":
-      return "bg-red-500"; // red
-    default:
-      return "bg-emerald-600"; // emerald (planned or null)
+// Helper function to get status string from placement dates
+function getPlacementStatus(placement: PlanPlacement): string | null {
+  if (placement.harvestStartedDate) return "harvesting";
+  if (placement.transplantedDate || placement.directSowedDate) return "growing";
+  if (placement.seedsStartedDate) return "planted";
+  return "planned";
+}
+
+// Helper function to get status color for dots based on spring tracking
+function getStatusDotColor(placement: PlanPlacement): string {
+  // Priority: latest stage completed
+  if (placement.harvestStartedDate) {
+    return "bg-orange-500"; // orange - harvesting
   }
+  if (placement.transplantedDate || placement.directSowedDate) {
+    return "bg-green-500"; // green - growing in ground
+  }
+  if (placement.seedsStartedDate) {
+    return "bg-blue-500"; // blue - seeds started indoors
+  }
+  return "bg-slate-400"; // gray - planned only
 }
 
 function toInt(v: any, fallback: number) {
@@ -1191,7 +1199,7 @@ export default function GardenPage() {
                         >
                           {bedPlacements.map((p) => {
                             const pos = dotPosPct(b, p);
-                            const dotColor = getStatusDotColor(p.status);
+                            const dotColor = getStatusDotColor(p);
                             return (
                               <button
                                 key={p.id}
@@ -1318,16 +1326,16 @@ export default function GardenPage() {
                 <p className="text-xs font-medium text-slate-700 mb-2">Plant Status Colors:</p>
                 <div className="grid grid-cols-2 gap-1 text-xs text-slate-600">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-emerald-600"></div>
+                    <div className="w-2 h-2 rounded-full bg-slate-400"></div>
                     <span>Planned</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span>Planted</span>
+                    <span>Seeds Started</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span>Growing</span>
+                    <span>In Ground</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="w-2 h-2 rounded-full bg-orange-500"></div>
@@ -1356,7 +1364,7 @@ export default function GardenPage() {
           selectedPlacement
             ? {
                 count: selectedPlacement.count,
-                status: selectedPlacement.status || null,
+                status: getPlacementStatus(selectedPlacement),
               }
             : undefined
         }

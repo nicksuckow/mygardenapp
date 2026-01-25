@@ -1,184 +1,237 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/auth-helpers";
+import { auth } from "@/auth";
 
-type Ctx = { params: Promise<{ id: string }> };
+export const runtime = "nodejs";
 
-// Helper function to add days to a date
-function addDays(d: Date, days: number) {
-  const out = new Date(d);
-  out.setDate(out.getDate() + days);
-  return out;
-}
-
-// GET /api/placements/[id] - Get single placement with full details
-export async function GET(_: Request, ctx: Ctx) {
-  try {
-    const userId = await getCurrentUserId();
-    const { id: idStr } = await ctx.params;
-    const placementId = Number(idStr);
-
-    if (!Number.isFinite(placementId)) {
-      return NextResponse.json({ error: "Invalid placement id" }, { status: 400 });
-    }
-
-    const placement = await prisma.bedPlacement.findUnique({
-      where: { id: placementId },
-      include: {
-        bed: {
-          select: { id: true, name: true, userId: true },
-        },
-        plant: true, // Include all plant fields for display
-      },
-    });
-
-    if (!placement || placement.bed.userId !== userId) {
-      return NextResponse.json({ error: "Placement not found or access denied" }, { status: 404 });
-    }
-
-    return NextResponse.json(placement);
-  } catch (error) {
-    console.error("Error fetching placement:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to fetch placement" }, { status: 401 });
+async function getCurrentUserId() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
   }
+  return session.user.id;
 }
 
-// PATCH /api/placements/[id] - Update placement lifecycle fields
-export async function PATCH(req: Request, ctx: Ctx) {
+/**
+ * GET /api/placements/[id]
+ * Get placement details with plant and bed data
+ */
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const userId = await getCurrentUserId();
-    const { id: idStr } = await ctx.params;
-    const placementId = Number(idStr);
+    const { id } = await params;
+    const placementId = parseInt(id);
 
-    if (!Number.isFinite(placementId)) {
-      return NextResponse.json({ error: "Invalid placement id" }, { status: 400 });
+    if (isNaN(placementId)) {
+      return NextResponse.json(
+        { error: "Invalid placement ID" },
+        { status: 400 }
+      );
     }
 
-    // Verify ownership
     const placement = await prisma.bedPlacement.findUnique({
       where: { id: placementId },
       include: {
-        bed: { select: { userId: true } },
-        plant: {
+        plant: true,
+        bed: {
           select: {
-            daysToMaturityMin: true,
-            daysToMaturityMax: true,
+            id: true,
+            name: true,
+            userId: true,
           },
         },
       },
     });
 
     if (!placement || placement.bed.userId !== userId) {
-      return NextResponse.json({ error: "Placement not found or access denied" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Placement not found" },
+        { status: 404 }
+      );
     }
 
-    const body = await req.json().catch(() => ({}));
+    return NextResponse.json(placement);
+  } catch (error) {
+    console.error("Error fetching placement:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Failed to fetch placement" },
+      { status: 500 }
+    );
+  }
+}
 
-    // Build update data object
-    const data: Record<string, unknown> = {};
+/**
+ * PATCH /api/placements/[id]
+ * Update placement tracking dates
+ */
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const userId = await getCurrentUserId();
+    const { id } = await params;
+    const placementId = parseInt(id);
 
-    // Validate and add status
-    if (typeof body.status === "string") {
-      const validStatuses = ["planned", "planted", "growing", "harvesting", "harvested", "removed"];
-      if (validStatuses.includes(body.status)) {
-        data.status = body.status;
-      } else {
-        return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
-      }
+    if (isNaN(placementId)) {
+      return NextResponse.json(
+        { error: "Invalid placement ID" },
+        { status: 400 }
+      );
     }
 
-    // Handle date fields
-    if (body.plantingDate !== undefined) {
-      if (body.plantingDate === null) {
-        data.plantingDate = null;
-        data.expectedHarvestDate = null; // Clear expected harvest if planting date is cleared
-      } else {
-        const plantingDate = new Date(body.plantingDate);
-        if (isNaN(plantingDate.getTime())) {
-          return NextResponse.json({ error: "Invalid planting date" }, { status: 400 });
-        }
-        data.plantingDate = plantingDate;
-
-        // Auto-calculate expected harvest date
-        if (placement.plant.daysToMaturityMin) {
-          data.expectedHarvestDate = addDays(plantingDate, placement.plant.daysToMaturityMin);
-        }
-      }
-    }
-
-    if (body.actualHarvestStartDate !== undefined) {
-      if (body.actualHarvestStartDate === null) {
-        data.actualHarvestStartDate = null;
-      } else {
-        const harvestStartDate = new Date(body.actualHarvestStartDate);
-        if (isNaN(harvestStartDate.getTime())) {
-          return NextResponse.json({ error: "Invalid actual harvest start date" }, { status: 400 });
-        }
-
-        // Validate: harvest start must be >= planting date if planting date exists
-        const plantingDate = data.plantingDate
-          ? new Date(data.plantingDate as Date)
-          : placement.plantingDate;
-        if (plantingDate && harvestStartDate < plantingDate) {
-          return NextResponse.json(
-            { error: "Harvest start date must be on or after planting date" },
-            { status: 400 }
-          );
-        }
-
-        data.actualHarvestStartDate = harvestStartDate;
-      }
-    }
-
-    if (body.actualHarvestEndDate !== undefined) {
-      if (body.actualHarvestEndDate === null) {
-        data.actualHarvestEndDate = null;
-      } else {
-        const harvestEndDate = new Date(body.actualHarvestEndDate);
-        if (isNaN(harvestEndDate.getTime())) {
-          return NextResponse.json({ error: "Invalid actual harvest end date" }, { status: 400 });
-        }
-
-        // Validate: harvest end must be >= harvest start if harvest start exists
-        const harvestStartDate = data.actualHarvestStartDate
-          ? new Date(data.actualHarvestStartDate as Date)
-          : placement.actualHarvestStartDate;
-        if (harvestStartDate && harvestEndDate < harvestStartDate) {
-          return NextResponse.json(
-            { error: "Harvest end date must be on or after harvest start date" },
-            { status: 400 }
-          );
-        }
-
-        data.actualHarvestEndDate = harvestEndDate;
-      }
-    }
-
-    // Add notes if provided
-    if (typeof body.notes === "string") {
-      data.notes = body.notes.trim();
-    }
-
-    // If no fields to update, return error
-    if (Object.keys(data).length === 0) {
-      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
-    }
-
-    // Update the placement
-    const updated = await prisma.bedPlacement.update({
+    // Verify ownership
+    const placement = await prisma.bedPlacement.findUnique({
       where: { id: placementId },
-      data,
       include: {
         bed: {
-          select: { id: true, name: true },
+          select: {
+            userId: true,
+          },
         },
-        plant: true, // Include all plant fields for display
+      },
+    });
+
+    if (!placement || placement.bed.userId !== userId) {
+      return NextResponse.json(
+        { error: "Placement not found" },
+        { status: 404 }
+      );
+    }
+
+    const body = await req.json();
+    const {
+      seedsStartedDate,
+      transplantedDate,
+      directSowedDate,
+      harvestStartedDate,
+      harvestEndedDate,
+      notes,
+    } = body;
+
+    // Validate dates if provided
+    const updates: {
+      seedsStartedDate?: Date | null;
+      transplantedDate?: Date | null;
+      directSowedDate?: Date | null;
+      harvestStartedDate?: Date | null;
+      harvestEndedDate?: Date | null;
+      notes?: string | null;
+    } = {};
+
+    if (seedsStartedDate !== undefined) {
+      updates.seedsStartedDate = seedsStartedDate ? new Date(seedsStartedDate) : null;
+    }
+    if (transplantedDate !== undefined) {
+      updates.transplantedDate = transplantedDate ? new Date(transplantedDate) : null;
+    }
+    if (directSowedDate !== undefined) {
+      updates.directSowedDate = directSowedDate ? new Date(directSowedDate) : null;
+    }
+    if (harvestStartedDate !== undefined) {
+      updates.harvestStartedDate = harvestStartedDate ? new Date(harvestStartedDate) : null;
+    }
+    if (harvestEndedDate !== undefined) {
+      updates.harvestEndedDate = harvestEndedDate ? new Date(harvestEndedDate) : null;
+    }
+    if (notes !== undefined) {
+      updates.notes = notes;
+    }
+
+    const updated = await prisma.bedPlacement.update({
+      where: { id: placementId },
+      data: updates,
+      include: {
+        plant: true,
+        bed: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Error updating placement:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to update placement" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Failed to update placement" },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/placements/[id]
+ * Delete a placement
+ */
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const userId = await getCurrentUserId();
+    const { id } = await params;
+    const placementId = parseInt(id);
+
+    if (isNaN(placementId)) {
+      return NextResponse.json(
+        { error: "Invalid placement ID" },
+        { status: 400 }
+      );
+    }
+
+    // Verify ownership
+    const placement = await prisma.bedPlacement.findUnique({
+      where: { id: placementId },
+      include: {
+        bed: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+
+    if (!placement || placement.bed.userId !== userId) {
+      return NextResponse.json(
+        { error: "Placement not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.bedPlacement.delete({
+      where: { id: placementId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting placement:", error);
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Failed to delete placement" },
+      { status: 500 }
+    );
   }
 }

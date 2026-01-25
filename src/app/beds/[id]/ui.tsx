@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import PlacementDetailsModal from "@/components/PlacementDetailsModal";
+import PlacementTrackingModal from "@/components/PlacementTrackingModal";
 
 type Plant = {
   id: number;
@@ -16,7 +16,10 @@ type Placement = {
   y: number;
   w?: number | null;
   h?: number | null;
-  status?: string | null;
+  seedsStartedDate?: string | null;
+  transplantedDate?: string | null;
+  directSowedDate?: string | null;
+  harvestStartedDate?: string | null;
   plant: Plant;
 };
 
@@ -37,22 +40,19 @@ async function readJson<T>(
   return { ok: true, data: (text ? JSON.parse(text) : null) as T };
 }
 
-// Helper function to get status color
-function getStatusColor(status?: string | null): string {
-  switch (status) {
-    case "planted":
-      return "#3b82f6"; // blue
-    case "growing":
-      return "#10b981"; // green
-    case "harvesting":
-      return "#f59e0b"; // orange
-    case "harvested":
-      return "#8b5cf6"; // purple
-    case "removed":
-      return "#ef4444"; // red
-    default:
-      return "#10b981"; // green (planned or null)
+// Helper function to get status color based on spring tracking
+function getStatusColor(placement: Placement): string {
+  // Priority: latest stage completed
+  if (placement.harvestStartedDate) {
+    return "#f59e0b"; // orange - harvesting
   }
+  if (placement.transplantedDate || placement.directSowedDate) {
+    return "#10b981"; // green - growing in ground
+  }
+  if (placement.seedsStartedDate) {
+    return "#3b82f6"; // blue - seeds started indoors
+  }
+  return "#94a3b8"; // gray - planned only
 }
 
 export default function BedLayoutClient({ bedId }: { bedId: number }) {
@@ -460,7 +460,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               {placements.map((p) => {
                 const w = p.w ?? p.plant.spacingInches;
                 const h = p.h ?? p.plant.spacingInches;
-                const statusColor = getStatusColor(p.status);
+                const statusColor = getStatusColor(p);
 
                 return (
                   <button
@@ -480,11 +480,6 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     title={`${p.plant.name} at (${p.x}", ${p.y}") - Click for details`}
                   >
                     <span className="text-center px-1 leading-tight">{p.plant.name}</span>
-                    {p.status && p.status !== "planned" && (
-                      <span className="absolute top-1 right-1 text-[8px] font-bold uppercase bg-white/80 px-1 rounded">
-                        {p.status}
-                      </span>
-                    )}
                   </button>
                 );
               })}
@@ -521,18 +516,14 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
         </div>
       </div>
 
-      {/* Placement details modal */}
-      <PlacementDetailsModal
+      {/* Placement tracking modal */}
+      <PlacementTrackingModal
         isOpen={!!selectedPlacementId}
         placementId={selectedPlacementId}
         onClose={() => setSelectedPlacementId(null)}
         onSave={() => {
           setSelectedPlacementId(null);
           refresh();
-        }}
-        onDelete={(placementId) => {
-          clearPlacement(placementId);
-          setSelectedPlacementId(null);
         }}
       />
     </div>

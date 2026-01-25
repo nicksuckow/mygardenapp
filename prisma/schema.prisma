@@ -251,13 +251,15 @@ model BedPlacement {
 
   count Int @default(1)
 
-  // Lifecycle tracking
-  status                  String?   // "planned" | "planted" | "growing" | "harvesting" | "harvested" | "removed"
-  plantingDate            DateTime? // actual date planted
-  expectedHarvestDate     DateTime? // calculated from plant timing + planting date
-  actualHarvestStartDate  DateTime? // when harvesting actually started
-  actualHarvestEndDate    DateTime? // when harvesting finished
+  // Spring planting tracking
+  seedsStartedDate        DateTime? // when seeds were started indoors
+  transplantedDate        DateTime? // when transplanted outdoors
+  directSowedDate         DateTime? // when direct sowed
   notes                   String?   // user notes about this placement
+
+  // Harvest tracking
+  harvestStartedDate      DateTime? // when harvesting actually started
+  harvestEndedDate        DateTime? // when harvesting finished
 
   bed   Bed   @relation(fields: [bedId], references: [id], onDelete: Cascade)
   plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
