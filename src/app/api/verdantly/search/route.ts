@@ -49,13 +49,13 @@ export async function GET(req: Request) {
     // If response has a data property
     if (response.data && Array.isArray(response.data)) {
       // Verdantly API uses 'meta' not 'metadata'
-      const metadata = response.meta || response.metadata || {};
+      const metadata = response.meta || response.metadata;
 
       // Use the exact field names from Verdantly API
-      const totalCount = metadata.totalCount || metadata.total_count || metadata.total || response.data.length;
-      const totalPages = metadata.pages || metadata.totalPages || metadata.total_pages || 1;
-      const currentPage = metadata.page || metadata.currentPage || metadata.current_page || page;
-      const perPage = metadata.perPage || metadata.per_page || metadata.pageSize || metadata.page_size || response.data.length;
+      const totalCount = metadata?.totalCount || metadata?.total_count || metadata?.total || response.data.length;
+      const totalPages = metadata?.pages || metadata?.totalPages || metadata?.total_pages || 1;
+      const currentPage = metadata?.page || metadata?.currentPage || metadata?.current_page || page;
+      const perPage = metadata?.perPage || metadata?.per_page || metadata?.pageSize || metadata?.page_size || response.data.length;
 
       const responseData = {
         results: response.data,
