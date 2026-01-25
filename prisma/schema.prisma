@@ -124,6 +124,35 @@ model Plant {
 
   notes String?
 
+  // Additional Trefle data fields
+  scientificName   String? // Scientific/botanical name
+  growthForm       String? // e.g., "herb", "shrub", "tree"
+  growthHabit      String? // e.g., "erect", "spreading"
+  growthRate       String? // e.g., "slow", "moderate", "fast"
+  averageHeightCm  Float?  // Average height in cm
+  minTemperatureC  Float?  // Minimum temperature requirement (Celsius)
+  maxTemperatureC  Float?  // Maximum temperature requirement (Celsius)
+  lightRequirement Int?    // Light requirement (0-10 scale)
+  soilNutriments   Int?    // Soil nutrient requirements (0-10 scale)
+  soilHumidity     Int?    // Soil humidity requirements (0-10 scale)
+  edible           Boolean @default(false) // Is the plant edible
+  ediblePart       String? // Edible parts (comma-separated)
+
+  // Additional Perenual-specific fields
+  cycle              String? // "Annual", "Perennial", "Biennial"
+  watering           String? // Watering frequency (e.g., "Frequent", "Average")
+  sunlight           String? // Sunlight requirements (comma-separated)
+  floweringSeason    String? // When the plant flowers
+  harvestSeason      String? // When to harvest (important for vegetables)
+  careLevel          String? // "Easy", "Medium", "Hard"
+  maintenance        String? // Maintenance requirements
+  indoor             Boolean @default(false) // Can be grown indoors
+  droughtTolerant    Boolean @default(false) // Drought tolerant
+  medicinal          Boolean @default(false) // Has medicinal properties
+  poisonousToHumans  Int?    // 0 = not poisonous, 1 = poisonous
+  poisonousToPets    Int?    // 0 = not poisonous, 1 = poisonous
+  description        String? // Full plant description
+
   placements BedPlacement[]
   user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 

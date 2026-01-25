@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ui } from "@/lib/uiStyles";
+import PerenualSearchModal from "@/components/PerenualSearchModal";
 
 type Plant = {
   id: number;
@@ -18,6 +19,35 @@ type Plant = {
   plantingDepthInches: number | null;
 
   notes: string | null;
+
+  // Trefle fields
+  scientificName: string | null;
+  growthForm: string | null;
+  growthHabit: string | null;
+  growthRate: string | null;
+  averageHeightCm: number | null;
+  minTemperatureC: number | null;
+  maxTemperatureC: number | null;
+  lightRequirement: number | null;
+  soilNutriments: number | null;
+  soilHumidity: number | null;
+  edible: boolean;
+  ediblePart: string | null;
+
+  // Perenual-specific fields
+  cycle: string | null;
+  watering: string | null;
+  sunlight: string | null;
+  floweringSeason: string | null;
+  harvestSeason: string | null;
+  careLevel: string | null;
+  maintenance: string | null;
+  indoor: boolean;
+  droughtTolerant: boolean;
+  medicinal: boolean;
+  poisonousToHumans: number | null;
+  poisonousToPets: number | null;
+  description: string | null;
 };
 
 type PlantDraft = {
@@ -68,6 +98,9 @@ export default function PlantsPage() {
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [draft, setDraft] = useState<PlantDraft | null>(null);
+
+  // Perenual search modal
+  const [showPerenualModal, setShowPerenualModal] = useState(false);
 
   async function load() {
     try {
@@ -370,6 +403,17 @@ export default function PlantsPage() {
             Add Plant
           </button>
 
+          <button
+            className={`${ui.btn} ${ui.btnSecondary}`}
+            type="button"
+            onClick={() => setShowPerenualModal(true)}
+          >
+            <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Search Perenual Database
+          </button>
+
           {message ? (
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
               {message}
@@ -396,7 +440,9 @@ export default function PlantsPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="font-medium">{p.name}</p>
-                          <p className="text-xs text-slate-600">Spacing: {p.spacingInches}"</p>
+                          {p.variety && (
+                            <p className="text-xs text-slate-600">{p.variety}</p>
+                          )}
                         </div>
 
                         <div className="flex gap-2">
@@ -417,34 +463,138 @@ export default function PlantsPage() {
                         </div>
                       </div>
 
-                      <div className="mt-2 text-sm text-slate-700 space-y-1">
-                        <p>
-                          DTM: {p.daysToMaturityMin ?? "?"}
-                          {p.daysToMaturityMax ? `–${p.daysToMaturityMax}` : ""}
-                        </p>
-                        <p>
-                          Start indoors:{" "}
-                          {p.startIndoorsWeeksBeforeFrost != null
-                            ? `${p.startIndoorsWeeksBeforeFrost}w before frost`
-                            : "—"}
-                        </p>
-                        <p>
-                          Transplant:{" "}
-                          {p.transplantWeeksAfterFrost != null
-                            ? `${p.transplantWeeksAfterFrost}w after frost`
-                            : "—"}
-                        </p>
-                        <p>
-                          Direct sow:{" "}
-                          {p.directSowWeeksRelativeToFrost != null
-                            ? `${p.directSowWeeksRelativeToFrost}w relative`
-                            : "—"}
-                        </p>
+                      <div className="mt-2 space-y-2">
+                        {/* Scientific Name */}
+                        {p.scientificName && (
+                          <p className="text-xs italic text-slate-600">{p.scientificName}</p>
+                        )}
 
-                        <p>
-                          Planting depth:{" "}
-                          {p.plantingDepthInches != null ? `${fmtInches(p.plantingDepthInches)}"` : "—"}
-                        </p>
+                        {/* Badges for key properties */}
+                        <div className="flex flex-wrap gap-1">
+                          {p.cycle && (
+                            <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                              {p.cycle}
+                            </span>
+                          )}
+                          {p.edible && (
+                            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                              Edible{p.ediblePart ? `: ${p.ediblePart}` : ""}
+                            </span>
+                          )}
+                          {p.careLevel && (
+                            <span className="rounded bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                              {p.careLevel} care
+                            </span>
+                          )}
+                          {p.indoor && (
+                            <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
+                              Indoor
+                            </span>
+                          )}
+                          {p.medicinal && (
+                            <span className="rounded bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700">
+                              Medicinal
+                            </span>
+                          )}
+                          {p.droughtTolerant && (
+                            <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                              Drought tolerant
+                            </span>
+                          )}
+                          {(p.poisonousToHumans === 1 || p.poisonousToPets === 1) && (
+                            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                              ⚠️ {p.poisonousToHumans === 1 && "Toxic to humans"} {p.poisonousToPets === 1 && "Toxic to pets"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Description */}
+                        {p.description && (
+                          <p className="text-xs text-slate-600 line-clamp-2">{p.description}</p>
+                        )}
+
+                        {/* Growing Info */}
+                        <div className="text-xs text-slate-700 space-y-1">
+                          <p>
+                            Spacing: {p.spacingInches}"
+                            {p.averageHeightCm && ` • Height: ${Math.round(p.averageHeightCm)}cm`}
+                            {p.plantingDepthInches != null && ` • Depth: ${fmtInches(p.plantingDepthInches)}"`}
+                          </p>
+                          {(p.watering || p.sunlight) && (
+                            <p>
+                              {p.watering && `💧 ${p.watering}`}
+                              {p.watering && p.sunlight && " • "}
+                              {p.sunlight && `☀️ ${p.sunlight}`}
+                            </p>
+                          )}
+                          {(p.floweringSeason || p.harvestSeason) && (
+                            <p>
+                              {p.floweringSeason && `🌸 Flowers: ${p.floweringSeason}`}
+                              {p.floweringSeason && p.harvestSeason && " • "}
+                              {p.harvestSeason && `🌾 Harvest: ${p.harvestSeason}`}
+                            </p>
+                          )}
+                          {(p.growthForm || p.growthRate || p.maintenance) && (
+                            <p className="text-slate-600">
+                              {[p.growthForm, p.growthRate, p.maintenance].filter(Boolean).join(" • ")}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Expandable Details */}
+                        <details className="text-xs">
+                          <summary className="cursor-pointer text-slate-600 hover:text-slate-900 font-medium">
+                            More details
+                          </summary>
+                          <div className="mt-2 ml-2 space-y-1 text-slate-700">
+                            <p>
+                              DTM: {p.daysToMaturityMin ?? "?"}
+                              {p.daysToMaturityMax ? `–${p.daysToMaturityMax}` : ""} days
+                            </p>
+                            {(p.minTemperatureC != null || p.maxTemperatureC != null) && (
+                              <p>
+                                Temp: {p.minTemperatureC != null ? `${p.minTemperatureC}°C` : "?"}
+                                {" – "}
+                                {p.maxTemperatureC != null ? `${p.maxTemperatureC}°C` : "?"}
+                              </p>
+                            )}
+                            {(p.lightRequirement != null || p.soilHumidity != null) && (
+                              <p>
+                                {p.lightRequirement != null && `Light: ${p.lightRequirement}/10 `}
+                                {p.lightRequirement != null && p.soilHumidity != null && "• "}
+                                {p.soilHumidity != null && `Moisture: ${p.soilHumidity}/10`}
+                              </p>
+                            )}
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-slate-600 hover:text-slate-900">
+                                Planting schedule
+                              </summary>
+                              <div className="mt-1 ml-2 space-y-0.5">
+                                <p>
+                                  Start indoors:{" "}
+                                  {p.startIndoorsWeeksBeforeFrost != null
+                                    ? `${p.startIndoorsWeeksBeforeFrost}w before frost`
+                                    : "—"}
+                                </p>
+                                <p>
+                                  Transplant:{" "}
+                                  {p.transplantWeeksAfterFrost != null
+                                    ? `${p.transplantWeeksAfterFrost}w after frost`
+                                    : "—"}
+                                </p>
+                                <p>
+                                  Direct sow:{" "}
+                                  {p.directSowWeeksRelativeToFrost != null
+                                    ? `${p.directSowWeeksRelativeToFrost}w relative`
+                                    : "—"}
+                                </p>
+                              </div>
+                            </details>
+                            {p.notes && (
+                              <p className="mt-1 text-slate-600 whitespace-pre-line">{p.notes}</p>
+                            )}
+                          </div>
+                        </details>
                       </div>
                     </>
                   ) : (
@@ -634,6 +784,16 @@ export default function PlantsPage() {
           </div>
         )}
       </div>
+
+      {/* Perenual Search Modal */}
+      <PerenualSearchModal
+        isOpen={showPerenualModal}
+        onClose={() => setShowPerenualModal(false)}
+        onImport={() => {
+          load();
+          setMessage("Plant imported from Perenual!");
+        }}
+      />
     </div>
   );
 }
