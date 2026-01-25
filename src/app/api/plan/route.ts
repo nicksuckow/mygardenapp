@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserId } from "@/lib/auth-helpers";
+import { auth } from "@/auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const userId = await getCurrentUserId();
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Please sign in to view your planting schedule" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
 
     const placements = await prisma.bedPlacement.findMany({
       where: {
@@ -20,6 +26,6 @@ export async function GET() {
     return NextResponse.json(placements);
   } catch (error) {
     console.error("Error fetching plan:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to fetch plan" }, { status: 401 });
+    return NextResponse.json({ error: "Failed to fetch plan data" }, { status: 500 });
   }
 }

@@ -95,9 +95,29 @@ export default function BedsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className={ui.h1}>Beds</h1>
-        <p className={ui.sub}>Create a bed, then open it to lay out plants on a grid.</p>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border border-amber-100 p-6">
+        {/* Decorative grid pattern */}
+        <div className="absolute top-0 right-0 opacity-10">
+          <svg className="w-32 h-32 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+          </svg>
+        </div>
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white p-2.5 rounded-xl shadow-md">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              🌾 Garden Beds
+            </h1>
+            <p className="text-amber-900 text-sm mt-1">
+              Create a bed, then open it to lay out plants on a grid.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className={`${ui.card} ${ui.cardPad} space-y-4 sm:max-w-2xl`}>

@@ -295,9 +295,29 @@ export default function PlantsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className={ui.h1}>Plants</h1>
-        <p className={ui.sub}>Add plants with timing rules (weeks relative to last frost).</p>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border border-green-100 p-6">
+        {/* Decorative plant in corner */}
+        <div className="absolute top-0 right-0 opacity-10">
+          <svg className="w-32 h-32 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
+          </svg>
+        </div>
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex-shrink-0 bg-gradient-to-br from-green-400 to-emerald-500 text-white p-2.5 rounded-xl shadow-md">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              🌿 Plants
+            </h1>
+            <p className="text-emerald-800 text-sm mt-1">
+              Add plants with timing rules (weeks relative to last frost).
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Add form */}

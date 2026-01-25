@@ -101,11 +101,30 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className={ui.h1}>Location Data</h1>
-        <p className={ui.sub}>
-          Frost dates drive seed starting and planting timing. Zone is optional.
-        </p>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 border border-slate-200 p-6">
+        {/* Decorative location pin */}
+        <div className="absolute top-0 right-0 opacity-10">
+          <svg className="w-32 h-32 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+        </div>
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex-shrink-0 bg-gradient-to-br from-slate-400 to-gray-500 text-white p-2.5 rounded-xl shadow-md">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">
+              📍 Location Data
+            </h1>
+            <p className="text-slate-700 text-sm mt-1">
+              Frost dates drive seed starting and planting timing. Zone is optional.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className={`${ui.card} ${ui.cardPad} space-y-4 sm:max-w-2xl`}>

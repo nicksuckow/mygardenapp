@@ -662,29 +662,47 @@ export default function GardenPage() {
 
   return (
     <div className="space-y-6">
-      <div className={`${ui.card} ${ui.cardPad}`}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className={ui.h1}>Garden</h1>
-            <p className={ui.sub}>
-              Place beds on the garden grid. Drag beds to move them. Rotate a bed if it fits better.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/beds">
-              Manage beds
-            </Link>
-            <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/schedule">
-              Schedule
-            </Link>
-          </div>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-50 via-cyan-50 to-sky-50 border border-teal-100 p-6">
+        {/* Decorative garden layout */}
+        <div className="absolute top-0 right-0 opacity-10">
+          <svg className="w-32 h-32 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z" />
+          </svg>
         </div>
 
-        {message ? (
-          <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-            {message}
+        <div className="relative">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 bg-gradient-to-br from-teal-400 to-cyan-500 text-white p-2.5 rounded-xl shadow-md">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                  🏡 Garden Layout
+                </h1>
+                <p className="text-teal-900 text-sm mt-1">
+                  Place beds on the garden grid. Drag beds to move them. Rotate a bed if it fits better.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/beds">
+                Manage beds
+              </Link>
+              <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/schedule">
+                Schedule
+              </Link>
+            </div>
           </div>
-        ) : null}
+
+          {message ? (
+            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+              {message}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* Setup */}
