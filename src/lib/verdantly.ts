@@ -132,8 +132,8 @@ export async function searchVerdantlyPlants(
   ]);
 
   // Process both responses
-  let nameData = { data: [], meta: null };
-  let filterData = { data: [], meta: null };
+  let nameData: VerdantlySearchResponse = { data: [], meta: undefined };
+  let filterData: VerdantlySearchResponse = { data: [], meta: undefined };
 
   if (nameResponse.ok) {
     nameData = await nameResponse.json();
@@ -144,7 +144,7 @@ export async function searchVerdantlyPlants(
   }
 
   // Merge results and deduplicate by id
-  const allPlants = [...(nameData.data || []), ...(filterData.data || [])];
+  const allPlants: VerdantlyPlant[] = [...(nameData.data || []), ...(filterData.data || [])];
   const uniquePlants = Array.from(
     new Map(allPlants.map((plant) => [plant.id, plant])).values()
   );
