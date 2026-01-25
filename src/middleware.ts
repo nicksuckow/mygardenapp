@@ -1,18 +1,18 @@
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isLoginOrSignup =
-    req.nextUrl.pathname.startsWith("/login") ||
-    req.nextUrl.pathname.startsWith("/signup");
-  const isPasswordReset =
-    req.nextUrl.pathname.startsWith("/forgot-password") ||
-    req.nextUrl.pathname.startsWith("/reset-password");
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Check for session cookie (NextAuth uses this with JWT strategy)
+  const sessionToken = request.cookies.get("authjs.session-token") ||
+                       request.cookies.get("__Secure-authjs.session-token");
+  const isLoggedIn = !!sessionToken;
+
+  const isLoginOrSignup = pathname.startsWith("/login") || pathname.startsWith("/signup");
+  const isPasswordReset = pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password");
   const isAuthPage = isLoginOrSignup || isPasswordReset;
-  const isApiAuthRoute =
-    req.nextUrl.pathname.startsWith("/api/auth") ||
-    req.nextUrl.pathname.startsWith("/api/register");
+  const isApiAuthRoute = pathname.startsWith("/api/auth") || pathname.startsWith("/api/register");
 
   // Allow public auth routes
   if (isApiAuthRoute) {
@@ -21,16 +21,16 @@ export default auth((req) => {
 
   // Redirect logged-in users away from login/signup (but allow password reset)
   if (isLoginOrSignup && isLoggedIn) {
-    return NextResponse.redirect(new URL("/", req.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   // Redirect logged-out users to login (unless they're on an auth page)
   if (!isAuthPage && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
