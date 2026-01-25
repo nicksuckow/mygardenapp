@@ -111,7 +111,7 @@ model Plant {
 
   name          String
   variety       String?
-  spacingInches Int     @default(12)
+  spacingInches Float   @default(12)
 
   daysToMaturityMin Int?
   daysToMaturityMax Int?
@@ -205,11 +205,11 @@ model BedPlacement {
   bedId   Int
   plantId Int
 
-  // Grid coordinates (0-based)
-  x Int
-  y Int
-  w Int @default(1) // width in cells
-  h Int @default(1) // height in cells
+  // Position in inches from top-left (0-based, 1-inch precision)
+  x Float
+  y Float
+  w Float @default(1) // width/footprint in inches
+  h Float @default(1) // height/footprint in inches
 
   count Int @default(1)
 

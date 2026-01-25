@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Plant = {
   id: number;
@@ -35,16 +35,23 @@ async function readJson<T>(
   return { ok: true, data: (text ? JSON.parse(text) : null) as T };
 }
 
-function spacingToCells(spacingInches: number, cellInches: number) {
-  return Math.max(1, Math.ceil(spacingInches / cellInches));
-}
-
 export default function BedLayoutClient({ bedId }: { bedId: number }) {
   const [bed, setBed] = useState<Bed | null>(null);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selectedPlantId, setSelectedPlantId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
-  const [hoverCell, setHoverCell] = useState<{ x: number; y: number } | null>(null);
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Zoom and Pan state
+  const [zoom, setZoom] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  const BASE_PIXELS_PER_INCH = 4;
+  const PIXELS_PER_INCH = BASE_PIXELS_PER_INCH * zoom;
 
   const loadBed = useCallback(async () => {
     const res = await fetch(`/api/beds/${bedId}`, { cache: "no-store" });
@@ -63,7 +70,6 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     const data = parsed.data ?? [];
     setPlants(data);
 
-    // Keep selection if still valid; otherwise pick first plant
     setSelectedPlantId((prev) => {
       if (prev != null && data.some((p) => p.id === prev)) return prev;
       return data.length > 0 ? data[0].id : null;
@@ -83,44 +89,13 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     refresh();
   }, [refresh]);
 
-  const cols = useMemo(() => {
-    if (!bed) return 0;
-    return Math.max(1, Math.floor(bed.widthInches / bed.cellInches));
-  }, [bed]);
-
-  const rows = useMemo(() => {
-    if (!bed) return 0;
-    return Math.max(1, Math.floor(bed.heightInches / bed.cellInches));
-  }, [bed]);
+  const selectedPlant = useMemo(() => {
+    if (!selectedPlantId) return null;
+    return plants.find((p) => p.id === selectedPlantId) ?? null;
+  }, [plants, selectedPlantId]);
 
   const placements = useMemo(() => {
     return bed?.placements ?? [];
-  }, [bed]);
-
-  // Footprint-aware: maps every covered cell -> the Placement that occupies it
-  const cellMap = useMemo(() => {
-    const map = new Map<string, Placement>();
-    if (!bed) return map;
-
-    for (const p of bed.placements) {
-      const w = p.w ?? 1;
-      const h = p.h ?? 1;
-
-      for (let dy = 0; dy < h; dy++) {
-        for (let dx = 0; dx < w; dx++) {
-          map.set(`${p.x + dx},${p.y + dy}`, p);
-        }
-      }
-    }
-    return map;
-  }, [bed]);
-
-  // Anchor cells (top-left) of each footprint so we only print name once
-  const anchorSet = useMemo(() => {
-    const s = new Set<string>();
-    if (!bed) return s;
-    for (const p of bed.placements) s.add(`${p.x},${p.y}`);
-    return s;
   }, [bed]);
 
   const counts = useMemo(() => {
@@ -131,124 +106,53 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     return map;
   }, [bed]);
 
-  const selectedPlant = useMemo(() => {
-    if (!selectedPlantId) return null;
-    return plants.find((p) => p.id === selectedPlantId) ?? null;
-  }, [plants, selectedPlantId]);
+  const isPositionValid = useCallback((x: number, y: number, plantToPlace: Plant): { valid: boolean; reason?: string } => {
+    if (!bed) return { valid: false, reason: "Bed not loaded" };
 
-  // Use a clear alias name so the blocked preview code reads nicely
-  const placingPlant = selectedPlant;
+    const w = plantToPlace.spacingInches;
+    const h = plantToPlace.spacingInches;
+    if (x + w > bed.widthInches || y + h > bed.heightInches) {
+      return { valid: false, reason: "Would extend outside bed" };
+    }
 
-  // This is the footprint size (in grid cells) for the plant you're currently placing
-  const placingCells = useMemo(() => {
-    if (!bed || !placingPlant) return 1;
-    return spacingToCells(placingPlant.spacingInches, bed.cellInches);
-  }, [bed, placingPlant]);
+    const newCenterX = x + w / 2;
+    const newCenterY = y + h / 2;
 
-  // Keep this for your UI text and messaging (same meaning as before)
-  const requiredCells = useMemo(() => {
-    if (!bed || !selectedPlant) return 0;
-    return spacingToCells(selectedPlant.spacingInches, bed.cellInches);
-  }, [bed, selectedPlant]);
+    for (const p of placements) {
+      const pw = p.w ?? p.plant.spacingInches;
+      const ph = p.h ?? p.plant.spacingInches;
+      const existingCenterX = p.x + pw / 2;
+      const existingCenterY = p.y + ph / 2;
 
-  // Blocked cells preview:
-  // uses max(placingPlant.spacing, existingPlant.spacing) (in "cells")
-  const blockedMap = useMemo(() => {
-    if (!bed || !placingPlant) return new Set<string>();
+      const distanceX = Math.abs(newCenterX - existingCenterX);
+      const distanceY = Math.abs(newCenterY - existingCenterY);
+      const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
-    const blocked = new Set<string>();
+      const requiredSpacing = Math.max(plantToPlace.spacingInches, p.plant.spacingInches);
 
-    for (const plc of placements) {
-      const existingW = plc.w ?? 1;
-      const existingH = plc.h ?? 1;
-
-      // Convert the existing plant's spacing to cells
-      const existingCells = spacingToCells(plc.plant.spacingInches, bed.cellInches);
-
-      // Use the bigger spacing requirement between the placing plant and the existing plant
-      const blockCells = Math.max(placingCells, existingCells);
-
-      // Mark a block region around the existing plant’s anchor.
-      // This keeps your same anchor-based behavior, just with a better blockCells value.
-      for (let dy = -blockCells + 1; dy < existingH; dy++) {
-        for (let dx = -blockCells + 1; dx < existingW; dx++) {
-          const cx = plc.x + dx;
-          const cy = plc.y + dy;
-
-          if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) continue;
-
-          blocked.add(`${cx},${cy}`);
-        }
+      if (distance < requiredSpacing) {
+        return { valid: false, reason: `Too close to ${p.plant.name} (needs ${requiredSpacing}" spacing)` };
       }
     }
 
-    return blocked;
-  }, [bed, placingPlant, placements, placingCells, cols, rows]);
-// NEW: why each blocked cell is blocked (cellKey -> reason string)
-// why each blocked cell is blocked (cellKey -> reason string)
-// matches blockedMap logic: max(placingCells, existingCells)
-const blockedReasonMap = useMemo(() => {
-  const reasons = new Map<string, string>();
-  if (!bed || !placingPlant) return reasons;
+    return { valid: true };
+  }, [bed, placements]);
 
-  for (const plc of placements) {
-    const existingW = plc.w ?? 1;
-    const existingH = plc.h ?? 1;
+  const getInchPosition = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!canvasRef.current || !bed) return null;
 
-    const existingCells = spacingToCells(plc.plant.spacingInches, bed.cellInches);
-    const blockCells = Math.max(placingCells, existingCells);
+    const rect = canvasRef.current.getBoundingClientRect();
+    const pixelX = (e.clientX - rect.left - panOffset.x) / zoom;
+    const pixelY = (e.clientY - rect.top - panOffset.y) / zoom;
 
-    for (let dy = -blockCells + 1; dy < existingH; dy++) {
-      for (let dx = -blockCells + 1; dx < existingW; dx++) {
-        const cx = plc.x + dx;
-        const cy = plc.y + dy;
+    const inchX = Math.floor(pixelX / BASE_PIXELS_PER_INCH);
+    const inchY = Math.floor(pixelY / BASE_PIXELS_PER_INCH);
 
-        if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) continue;
+    const clampedX = Math.max(0, Math.min(inchX, bed.widthInches - 1));
+    const clampedY = Math.max(0, Math.min(inchY, bed.heightInches - 1));
 
-        const key = `${cx},${cy}`;
-
-        // If multiple plants block the same cell, keep the first reason (stable)
-        if (!reasons.has(key)) {
-          reasons.set(
-            key,
-            `Too close to ${plc.plant.name} (anchor at ${plc.x},${plc.y})`
-          );
-        }
-      }
-    }
-  }
-
-  return reasons;
-}, [bed, placingPlant, placements, placingCells, cols, rows]);
-
-
-  const hoverFootprintKeys = useMemo(() => {
-    if (!bed || !placingPlant || !hoverCell) return [];
-  
-    const keys: string[] = [];
-    for (let dy = 0; dy < placingCells; dy++) {
-      for (let dx = 0; dx < placingCells; dx++) {
-        const cx = hoverCell.x + dx;
-        const cy = hoverCell.y + dy;
-        if (cx < 0 || cy < 0 || cx >= cols || cy >= rows) continue;
-        keys.push(`${cx},${cy}`);
-      }
-    }
-    return keys;
-  }, [bed, placingPlant, hoverCell, placingCells, cols, rows]);
-  
-  const hoverIsBlocked = useMemo(() => {
-    if (!bed || !placingPlant || !hoverCell) return false;
-  
-    // blocked if ANY footprint cell is blocked AND empty
-    // (we still allow interacting with placed cells like you currently do)
-    for (const key of hoverFootprintKeys) {
-      const placed = cellMap.get(key);
-      const blocked = blockedMap.has(key);
-      if (blocked && !placed) return true;
-    }
-    return false;
-  }, [bed, placingPlant, hoverCell, hoverFootprintKeys, cellMap, blockedMap]);
+    return { x: clampedX, y: clampedY };
+  }, [bed, zoom, panOffset]);
 
   const placeAt = useCallback(
     async (x: number, y: number) => {
@@ -259,17 +163,12 @@ const blockedReasonMap = useMemo(() => {
         return;
       }
 
-      const key = `${x},${y}`;
-      const blocked = blockedMap.has(key);
-      const placed = cellMap.get(key);
-
-      // Block only if empty + blocked (still allow replacing occupied cells)
-      if (blocked && !placed) {
-        setMessage(
-          `Blocked: too close for ${selectedPlant.name} (needs ${requiredCells} cells spacing)`
-        );
+      const validation = isPositionValid(x, y, selectedPlant);
+      if (!validation.valid) {
+        setMessage(validation.reason || "Cannot place plant here");
         return;
       }
+
       const res = await fetch(`/api/beds/${bedId}/place`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -290,20 +189,59 @@ const blockedReasonMap = useMemo(() => {
 
       await loadBed();
     },
-    [bedId, blockedMap, cellMap, loadBed, requiredCells, selectedPlant, selectedPlantId]
+    [bedId, isPositionValid, loadBed, selectedPlant, selectedPlantId]
   );
 
-  const clearAt = useCallback(
-    async (x: number, y: number) => {
-      setMessage("");
+  const handleCanvasMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.button === 1 || e.shiftKey || e.ctrlKey || e.metaKey) {
+        // Middle click or modifier key - start panning
+        e.preventDefault();
+        setIsPanning(true);
+        setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+      }
+    },
+    [panOffset]
+  );
 
-      const p = cellMap.get(`${x},${y}`);
-      if (!p) return;
+  const handleCanvasMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (isPanning) {
+        setPanOffset({
+          x: e.clientX - panStart.x,
+          y: e.clientY - panStart.y,
+        });
+      } else {
+        const pos = getInchPosition(e);
+        setHoverPos(pos);
+      }
+    },
+    [isPanning, panStart, getInchPosition]
+  );
+
+  const handleCanvasMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (isPanning) return; // Don't place if we were panning
+      const pos = getInchPosition(e);
+      if (pos) {
+        placeAt(pos.x, pos.y);
+      }
+    },
+    [isPanning, getInchPosition, placeAt]
+  );
+
+  const clearPlacement = useCallback(
+    async (placementId: number) => {
+      setMessage("");
 
       const res = await fetch(`/api/beds/${bedId}/clear`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ placementId: p.id }),
+        body: JSON.stringify({ placementId }),
       });
 
       const text = await res.text();
@@ -314,10 +252,34 @@ const blockedReasonMap = useMemo(() => {
 
       await loadBed();
     },
-    [bedId, cellMap, loadBed]
+    [bedId, loadBed]
   );
 
-  // --- render ---
+  const handleZoomIn = useCallback(() => {
+    setZoom(z => Math.min(z * 1.5, 10));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoom(z => Math.max(z / 1.5, 0.5));
+  }, []);
+
+  const handleZoomReset = useCallback(() => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = -e.deltaY;
+      if (delta > 0) {
+        setZoom(z => Math.min(z * 1.1, 10));
+      } else {
+        setZoom(z => Math.max(z / 1.1, 0.5));
+      }
+    }
+  }, []);
+
   if (!bed) {
     return (
       <div className="space-y-3">
@@ -333,13 +295,21 @@ const blockedReasonMap = useMemo(() => {
     );
   }
 
+  const gridCols = Math.max(1, Math.floor(bed.widthInches / bed.cellInches));
+  const gridRows = Math.max(1, Math.floor(bed.heightInches / bed.cellInches));
+
+  const canvasWidth = bed.widthInches * BASE_PIXELS_PER_INCH;
+  const canvasHeight = bed.heightInches * BASE_PIXELS_PER_INCH;
+
+  const hoverValidation = hoverPos && selectedPlant ? isPositionValid(hoverPos.x, hoverPos.y, selectedPlant) : null;
+
   return (
     <div className="space-y-4">
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">{bed.name}</h1>
           <p className="text-sm text-gray-600">
-            {bed.widthInches}" × {bed.heightInches}" — grid {bed.cellInches}" ({cols}×{rows})
+            {bed.widthInches}" × {bed.heightInches}" — {bed.cellInches}" reference grid ({gridCols}×{gridRows})
           </p>
         </div>
         <Link className="text-sm underline" href="/beds">
@@ -369,28 +339,24 @@ const blockedReasonMap = useMemo(() => {
               >
                 {plants.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name}
+                    {p.name} ({p.spacingInches}")
                   </option>
                 ))}
               </select>
             </label>
           )}
 
-          <div className="rounded border p-2">
-            <p className="text-xs text-gray-600">
-              Click a cell to place the selected plant.
-              <br />
-              Right-click a cell to clear it.
-              <br />
-              {selectedPlant ? (
-                <>
-                  Spacing preview: <span className="font-mono">{requiredCells}</span> cells
-                </>
-              ) : null}
-            </p>
+          <div className="rounded border p-2 bg-blue-50 border-blue-200">
+            <p className="text-xs text-blue-900 font-medium">How to use:</p>
+            <ul className="text-xs text-blue-800 mt-1 space-y-0.5 list-disc pl-4">
+              <li>Click to place plants (1" precision)</li>
+              <li>Shift+Drag or Middle-click+Drag to pan</li>
+              <li>Ctrl+Scroll to zoom</li>
+              <li>Click a plant to remove it</li>
+            </ul>
           </div>
 
-          {message ? <p className="text-sm">{message}</p> : null}
+          {message ? <p className="text-sm text-red-600">{message}</p> : null}
 
           <div className="rounded-lg border p-3">
             <p className="text-sm font-medium">Counts in this bed</p>
@@ -408,76 +374,120 @@ const blockedReasonMap = useMemo(() => {
           </div>
         </div>
 
-        {/* Grid */}
+        {/* Canvas */}
         <div className="rounded-lg border p-3">
-          <p className="text-sm font-medium">Bed grid</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium">Bed layout</p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-block h-3 w-3 border border-gray-200 bg-white" />
-              available
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <span className="inline-block h-3 w-3 border border-gray-200 bg-red-50" />
-              blocked (spacing)
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-600">Zoom: {zoom.toFixed(1)}x</span>
+              <div className="flex gap-1">
+                <button
+                  onClick={handleZoomOut}
+                  className="px-2 py-1 text-xs border rounded hover:bg-gray-50"
+                  title="Zoom out"
+                >
+                  −
+                </button>
+                <button
+                  onClick={handleZoomReset}
+                  className="px-2 py-1 text-xs border rounded hover:bg-gray-50"
+                  title="Reset zoom"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={handleZoomIn}
+                  className="px-2 py-1 text-xs border rounded hover:bg-gray-50"
+                  title="Zoom in"
+                >
+                  +
+                </button>
+              </div>
+            </div>
           </div>
 
           <div
-            className="mt-2 grid rounded-lg border bg-white"
-            style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+            ref={containerRef}
+            className="overflow-auto rounded-lg border bg-white p-2"
+            style={{ height: "600px" }}
           >
-            {Array.from({ length: rows }).map((_, y) =>
-              Array.from({ length: cols }).map((__, x) => {
-                const key = `${x},${y}`;
-                const placed = cellMap.get(key);
-                const isAnchor = placed ? anchorSet.has(key) : false;
-                const blocked = blockedMap.has(key);
-                const isGhost = hoverFootprintKeys.includes(key);
-
+            <div
+              ref={canvasRef}
+              className={`relative ${isPanning ? 'cursor-grabbing' : 'cursor-crosshair'}`}
+              style={{
+                width: canvasWidth * zoom,
+                height: canvasHeight * zoom,
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px)`,
+                backgroundImage: `
+                  linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                  linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+                `,
+                backgroundSize: `${bed.cellInches * PIXELS_PER_INCH}px ${bed.cellInches * PIXELS_PER_INCH}px`,
+              }}
+              onClick={handleCanvasClick}
+              onMouseDown={handleCanvasMouseDown}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseUp={handleCanvasMouseUp}
+              onMouseLeave={() => {
+                setHoverPos(null);
+                setIsPanning(false);
+              }}
+              onWheel={handleWheel}
+            >
+              {/* Existing placements */}
+              {placements.map((p) => {
+                const w = p.w ?? p.plant.spacingInches;
+                const h = p.h ?? p.plant.spacingInches;
 
                 return (
                   <button
-                    key={key}
-                    onClick={() => placeAt(x, y)}
-                    onMouseEnter={() => setHoverCell({ x, y })}
-                    onMouseLeave={() => setHoverCell(null)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      clearAt(x, y);
+                    key={p.id}
+                    className="absolute rounded-lg bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-xs font-medium hover:bg-emerald-200 transition-colors"
+                    style={{
+                      left: p.x * PIXELS_PER_INCH,
+                      top: p.y * PIXELS_PER_INCH,
+                      width: w * PIXELS_PER_INCH,
+                      height: h * PIXELS_PER_INCH,
                     }}
-                    disabled={blocked && !placed}
-                    className={[
-                      "aspect-square border border-gray-200 p-1 text-[10px] leading-tight focus:outline-none focus:ring-2 focus:ring-black",
-                      placed
-                        ? "bg-white hover:bg-gray-50"
-                        : blocked
-                        ? "bg-red-50 cursor-not-allowed"
-                        : "bg-white hover:bg-gray-50",
-                    
-                      // ghost footprint outline
-                      isGhost
-                        ? hoverIsBlocked
-                          ? "ring-2 ring-red-400"
-                          : "ring-2 ring-green-400"
-                        : "",
-                    ].join(" ")}
-                    title={
-                      placed
-                        ? "Click to replace. Right-click to clear."
-                        : blocked
-                        ? `${blockedReasonMap.get(key) ?? "Blocked"} — placing ${selectedPlant?.name ?? "selected plant"} needs ${requiredCells} cells spacing`
-                        : "Click to place. Right-click to clear."
-                    }                    
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearPlacement(p.id);
+                    }}
+                    title={`${p.plant.name} at (${p.x}", ${p.y}") - Click to remove`}
                   >
-                    {placed ? (
-                      isAnchor ? <span className="font-medium">{placed.plant.name}</span> : null
-                    ) : (
-                      <span className="text-gray-200">•</span>
-                    )}
+                    <span className="text-center px-1 leading-tight">{p.plant.name}</span>
                   </button>
                 );
-              })
+              })}
+
+              {/* Hover preview */}
+              {hoverPos && selectedPlant && !isPanning && (
+                <div
+                  className={`absolute rounded-lg border-2 pointer-events-none ${
+                    hoverValidation?.valid
+                      ? "bg-green-100/50 border-green-400"
+                      : "bg-red-100/50 border-red-400"
+                  }`}
+                  style={{
+                    left: hoverPos.x * PIXELS_PER_INCH,
+                    top: hoverPos.y * PIXELS_PER_INCH,
+                    width: selectedPlant.spacingInches * PIXELS_PER_INCH,
+                    height: selectedPlant.spacingInches * PIXELS_PER_INCH,
+                  }}
+                >
+                  <div className="flex items-center justify-center h-full text-xs font-medium">
+                    ({hoverPos.x}", {hoverPos.y}")
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-2 text-xs text-gray-600">
+            Position: {hoverPos ? `(${hoverPos.x}", ${hoverPos.y}")` : "—"}
+            {hoverValidation && !hoverValidation.valid && (
+              <span className="ml-2 text-red-600">{hoverValidation.reason}</span>
             )}
           </div>
         </div>

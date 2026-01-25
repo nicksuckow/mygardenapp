@@ -222,8 +222,8 @@ export default function PlantsPage() {
         setMessage("Plant name is required.");
         return;
       }
-      if (!Number.isFinite(draft.spacingInches) || draft.spacingInches < 1) {
-        setMessage("Spacing must be a number ≥ 1.");
+      if (!Number.isFinite(draft.spacingInches) || draft.spacingInches < 0.5) {
+        setMessage("Spacing must be a number ≥ 0.5 inches.");
         return;
       }
 
@@ -320,7 +320,8 @@ export default function PlantsPage() {
               type="number"
               value={spacingInches}
               onChange={(e) => setSpacingInches(Number(e.target.value))}
-              min={1}
+              min={0.5}
+              step={0.5}
             />
           </label>
 
@@ -642,7 +643,8 @@ export default function PlantsPage() {
                                 d ? { ...d, spacingInches: Number(e.target.value) } : d
                               )
                             }
-                            min={1}
+                            min={0.5}
+                            step={0.5}
                           />
                         </label>
 

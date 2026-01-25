@@ -50,48 +50,44 @@ function bedSizeInGardenCells(bed: Bed, gardenCellInches: number) {
   };
 }
 
-// How many placement-grid cells are inside THIS bed (same idea as bed editor)
-function bedGridSize(bed: Bed) {
-  const cols = Math.max(1, Math.floor(bed.widthInches / bed.cellInches));
-  const rows = Math.max(1, Math.floor(bed.heightInches / bed.cellInches));
-  return { cols, rows };
-}
-
-// Convert placement x/y (+ optional w/h footprint) into % position INSIDE bed rectangle
+// Convert placement x/y (in inches) into % position INSIDE bed rectangle
 function dotPosPct(bed: Bed, p: PlanPlacement) {
-  const w = p.w ?? 1;
-  const h = p.h ?? 1;
+  // x, y are now in inches, not grid cells
+  const w = p.w ?? 12; // footprint width in inches
+  const h = p.h ?? 12; // footprint height in inches
 
-  const base = bedGridSize(bed);
-
-  // Start unrotated
-  let cols = base.cols;
-  let rows = base.rows;
-
+  // Calculate center of plant in inches
   let cx = p.x + w / 2;
   let cy = p.y + h / 2;
 
+  let bedWidth = bed.widthInches;
+  let bedHeight = bed.heightInches;
+
   // If bed is rotated in garden view, rotate dot positions too (90° clockwise)
-  // (x,y) -> (y, cols - x)
   if (bed.gardenRotated) {
+    // Rotate coordinates: (x,y) -> (y, width-x)
     const newCx = cy;
-    const newCy = cols - cx;
+    const newCy = bedWidth - cx;
 
     cx = newCx;
     cy = newCy;
 
-    // swapped grid size when rotated
-    cols = base.rows;
-    rows = base.cols;
+    // Swap dimensions when rotated
+    bedWidth = bed.heightInches;
+    bedHeight = bed.widthInches;
   }
 
-  // clamp to avoid weird values
-  const safeCx = Math.max(0, Math.min(cx, cols));
-  const safeCy = Math.max(0, Math.min(cy, rows));
+  // Convert to percentage of bed dimensions
+  const leftPct = (cx / bedWidth) * 100;
+  const topPct = (cy / bedHeight) * 100;
+
+  // Clamp to avoid weird values
+  const safeLeft = Math.max(0, Math.min(leftPct, 100));
+  const safeTop = Math.max(0, Math.min(topPct, 100));
 
   return {
-    left: `${(safeCx / cols) * 100}%`,
-    top: `${(safeCy / rows) * 100}%`,
+    left: `${safeLeft}%`,
+    top: `${safeTop}%`,
   };
 }
 
@@ -105,6 +101,9 @@ export default function GardenPage() {
   const [gWidth, setGWidth] = useState(240);
   const [gHeight, setGHeight] = useState(240);
   const [gCell, setGCell] = useState(12);
+
+  const gardenGridCols = Math.max(1, Math.floor(gWidth / gCell));
+  const gardenGridRows = Math.max(1, Math.floor(gHeight / gCell));
 
   // selection state
   const [selectedBedId, setSelectedBedId] = useState<number | null>(null);
@@ -356,11 +355,15 @@ export default function GardenPage() {
       </div>
 
       {/* Setup */}
-      <div className={`${ui.card} ${ui.cardPad} space-y-3`}>
-        <p className="text-sm font-medium">Garden dimensions</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <label className="grid gap-1">
-            <span className="text-xs text-slate-600">Width (inches)</span>
+      <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
+        <div>
+          <p className="text-base font-semibold">Garden dimensions</p>
+          <p className="text-sm text-slate-600">Define your overall garden space where beds will be placed</p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="grid gap-1.5">
+            <span className="text-sm font-medium">Width (inches)</span>
             <input
               className="rounded border px-3 py-2 text-sm"
               type="number"
@@ -368,10 +371,11 @@ export default function GardenPage() {
               value={gWidth}
               onChange={(e) => setGWidth(toInt(e.target.value, 240))}
             />
+            <span className="text-xs text-slate-500">Total garden width</span>
           </label>
 
-          <label className="grid gap-1">
-            <span className="text-xs text-slate-600">Height (inches)</span>
+          <label className="grid gap-1.5">
+            <span className="text-sm font-medium">Height (inches)</span>
             <input
               className="rounded border px-3 py-2 text-sm"
               type="number"
@@ -379,20 +383,32 @@ export default function GardenPage() {
               value={gHeight}
               onChange={(e) => setGHeight(toInt(e.target.value, 240))}
             />
+            <span className="text-xs text-slate-500">Total garden height</span>
           </label>
 
-          <label className="grid gap-1">
-            <span className="text-xs text-slate-600">Grid size (inches)</span>
-            <select
+          <label className="grid gap-1.5">
+            <span className="text-sm font-medium">Grid cell size (inches)</span>
+            <input
               className="rounded border px-3 py-2 text-sm"
+              type="number"
+              min={1}
+              step={0.5}
               value={gCell}
               onChange={(e) => setGCell(toInt(e.target.value, 12))}
-            >
-              <option value={6}>6</option>
-              <option value={12}>12</option>
-            </select>
+            />
+            <span className="text-xs text-slate-500">Cell size for bed placement</span>
           </label>
         </div>
+
+        {gardenGridCols > 0 && gardenGridRows > 0 ? (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
+            <p className="text-sm font-medium text-blue-900">Grid Preview</p>
+            <p className="text-sm text-blue-700">
+              Garden grid: <span className="font-semibold">{gardenGridCols} × {gardenGridRows}</span> cells
+              ({gardenGridCols * gardenGridRows} cells total for bed placement)
+            </p>
+          </div>
+        ) : null}
 
         <button className={`${ui.btn} ${ui.btnPrimary} w-fit`} onClick={saveGarden}>
           Save garden
@@ -401,20 +417,23 @@ export default function GardenPage() {
 
       <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
         {/* Left panel */}
-        <div className={`${ui.card} ${ui.cardPad} space-y-3`}>
-          <p className="text-sm font-medium">Beds</p>
+        <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
+          <div>
+            <p className="text-base font-semibold">Bed Management</p>
+            <p className="text-xs text-slate-600 mt-0.5">Click grid cells or drag beds to position them</p>
+          </div>
 
           {beds.length === 0 ? (
-            <div className="space-y-2">
-              <p className={ui.sub}>No beds yet.</p>
-              <Link className={`${ui.btn} ${ui.btnPrimary} w-fit`} href="/beds">
-                Create a bed →
+            <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm text-slate-700">No beds created yet.</p>
+              <Link className={`${ui.btn} ${ui.btnPrimary} w-full text-center`} href="/beds">
+                Create your first bed →
               </Link>
             </div>
           ) : (
             <>
-              <label className="grid gap-1">
-                <span className="text-xs text-slate-600">Selected bed</span>
+              <label className="grid gap-1.5">
+                <span className="text-sm font-medium">Selected bed to place</span>
                 <select
                   className="rounded border px-3 py-2 text-sm"
                   value={selectedBedId ?? ""}
@@ -426,74 +445,83 @@ export default function GardenPage() {
                     </option>
                   ))}
                 </select>
+                <span className="text-xs text-slate-500">Choose which bed to place or move</span>
               </label>
 
               {selectedBed && garden ? (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div>
-                      <div className="font-medium">{selectedBed.name}</div>
-                      <div className="text-xs text-slate-600">
-                        {selectedBed.gardenRotated ? "Rotated" : "Normal"} •{" "}
-                        {(plantCountByBed.get(selectedBed.id) ?? 0)} plants placed
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{selectedBed.name}</div>
+                      <div className="text-xs text-emerald-700 space-y-0.5 mt-1">
+                        <p>Size: {selectedBed.widthInches}" × {selectedBed.heightInches}"</p>
+                        <p>Status: {selectedBed.gardenRotated ? "Rotated 90°" : "Normal orientation"}</p>
+                        <p>Plants: {(plantCountByBed.get(selectedBed.id) ?? 0)} placed</p>
                       </div>
                     </div>
 
                     <button
-                      className={`${ui.btn} ${ui.btnSecondary} py-1`}
+                      className={`${ui.btn} ${ui.btnSecondary} py-1.5 px-3 text-xs`}
                       onClick={() => rotateBed(selectedBed.id, !selectedBed.gardenRotated)}
-                      title="Rotate bed (swap width/height)"
+                      title="Rotate bed 90 degrees (swap width/height)"
                     >
-                      Rotate
+                      ↻ Rotate
                     </button>
-                  </div>
-
-                  <div className="text-xs text-slate-600">
-                    Drag bed blocks in the garden to move them.
                   </div>
                 </div>
               ) : null}
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Placed beds ({placedBeds.length})</p>
+                {placedBeds.length === 0 ? (
+                  <p className="text-sm text-slate-600">Click a grid cell below to place the selected bed.</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {placedBeds.map((b) => (
+                      <button
+                        key={b.id}
+                        className={[
+                          "w-full rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                          selectedBedId === b.id
+                            ? "border-emerald-400 bg-emerald-50 shadow-sm"
+                            : "border-slate-200 bg-white hover:bg-slate-50",
+                        ].join(" ")}
+                        onClick={() => setSelectedBedId(b.id)}
+                        title="Click to select this bed"
+                      >
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="font-medium">{b.name}</span>
+                          <span className="text-xs text-slate-600">
+                            {(plantCountByBed.get(b.id) ?? 0)} plants
+                          </span>
+                        </div>
+                        <div className="mt-1 text-xs text-slate-600">
+                          Position: ({b.gardenX}, {b.gardenY}) • {b.gardenRotated ? "rotated" : "normal"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
           )}
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Placed beds</p>
-            {placedBeds.length === 0 ? (
-              <p className={ui.sub}>None placed yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {placedBeds.map((b) => (
-                  <button
-                    key={b.id}
-                    className={[
-                      "w-full rounded-lg border px-3 py-2 text-left text-sm",
-                      selectedBedId === b.id ? "border-emerald-300 bg-emerald-50" : "bg-white",
-                    ].join(" ")}
-                    onClick={() => setSelectedBedId(b.id)}
-                    title="Click to select this bed"
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-medium">{b.name}</span>
-                      <span className="text-xs text-slate-600">
-                        {(plantCountByBed.get(b.id) ?? 0)} plants
-                      </span>
-                    </div>
-                    <div className="mt-1 text-xs text-slate-600">
-                      at ({b.gardenX},{b.gardenY}) • {b.gardenRotated ? "rotated" : "normal"}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Garden canvas */}
         <div className={`${ui.card} ${ui.cardPad}`}>
-          <p className="text-sm font-medium">Garden layout</p>
+          <div className="space-y-1">
+            <p className="text-base font-semibold">Garden Layout</p>
+            {garden ? (
+              <p className="text-xs text-slate-600">
+                {cols} × {rows} grid ({garden.widthInches}" × {garden.heightInches}" @ {garden.cellInches}" cells)
+              </p>
+            ) : null}
+          </div>
 
           {!garden ? (
-            <p className={ui.sub}>Set garden dimensions above, then save.</p>
+            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-6 text-center">
+              <p className="text-sm text-slate-700">Set garden dimensions above and click "Save garden" to get started.</p>
+            </div>
           ) : (
             <div className="mt-3 overflow-auto rounded-xl border bg-white p-3">
               <div
@@ -686,8 +714,14 @@ export default function GardenPage() {
                 ) : null}
               </div>
 
-              <div className="mt-3 text-xs text-slate-500">
-                Tip: Hover a dot to see what’s planted there.
+              <div className="mt-3 space-y-1.5">
+                <p className="text-xs font-medium text-slate-700">How to use:</p>
+                <ul className="text-xs text-slate-600 space-y-0.5 list-disc pl-4">
+                  <li>Click any grid cell to place or move the selected bed</li>
+                  <li>Drag bed blocks to reposition them in the garden</li>
+                  <li>Hover over green dots to see which plants are placed</li>
+                  <li>Use the "Rotate" button to change bed orientation</li>
+                </ul>
               </div>
             </div>
           )}

@@ -43,8 +43,8 @@ export async function POST(req: Request) {
     if (!Number.isFinite(heightInches) || heightInches < 6 || heightInches > 10000) {
       return Response.json({ error: "Bed height must be between 6 and 10000 inches." }, { status: 400 });
     }
-    if (!Number.isFinite(cellInches) || (cellInches !== 6 && cellInches !== 12)) {
-      return Response.json({ error: "Cell size must be 6 or 12 inches." }, { status: 400 });
+    if (!Number.isFinite(cellInches) || cellInches < 0.5 || cellInches > 1000) {
+      return Response.json({ error: "Cell size must be between 0.5 and 1000 inches." }, { status: 400 });
     }
 
     const bed = await prisma.bed.create({

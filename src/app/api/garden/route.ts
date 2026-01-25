@@ -32,8 +32,8 @@ export async function POST(req: Request) {
     if (!Number.isFinite(heightInches) || heightInches < 12 || heightInches > 10000) {
       return NextResponse.json({ error: "Garden height must be between 12 and 10000 inches." }, { status: 400 });
     }
-    if (!Number.isFinite(cellInches) || (cellInches !== 6 && cellInches !== 12)) {
-      return NextResponse.json({ error: "cellInches must be 6 or 12." }, { status: 400 });
+    if (!Number.isFinite(cellInches) || cellInches < 0.5 || cellInches > 1000) {
+      return NextResponse.json({ error: "cellInches must be between 0.5 and 1000 inches." }, { status: 400 });
     }
 
     const garden = await prisma.garden.upsert({

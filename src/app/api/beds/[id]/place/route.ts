@@ -26,8 +26,11 @@ export async function POST(
     if (!Number.isInteger(plantId)) {
       return NextResponse.json({ error: "Invalid plant id" }, { status: 400 });
     }
-    if (!Number.isInteger(x) || !Number.isInteger(y)) {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) {
       return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
+    }
+    if (x < 0 || y < 0) {
+      return NextResponse.json({ error: "Coordinates must be non-negative" }, { status: 400 });
     }
 
     const bed = await prisma.bed.findUnique({
@@ -39,45 +42,49 @@ export async function POST(
     const plant = await prisma.plant.findUnique({ where: { id: plantId, userId } });
     if (!plant) return NextResponse.json({ error: "Plant not found or access denied" }, { status: 404 });
 
-    const cols = Math.max(1, Math.floor(bed.widthInches / bed.cellInches));
-    const rows = Math.max(1, Math.floor(bed.heightInches / bed.cellInches));
+    // footprint size in inches (square footprint derived from spacing)
+    const w = plant.spacingInches;
+    const h = plant.spacingInches;
 
-    // footprint size in cells (square footprint derived from spacing)
-    const footprint = Math.max(1, Math.ceil(plant.spacingInches / bed.cellInches));
-    const w = footprint;
-    const h = footprint;
-
-    // bounds check
-    if (x < 0 || y < 0 || x + w > cols || y + h > rows) {
+    // bounds check - ensure plant fits within bed dimensions
+    if (x + w > bed.widthInches || y + h > bed.heightInches) {
       return NextResponse.json(
-        { error: "Footprint does not fit in bed at that position", details: { x, y, w, h, cols, rows } },
+        { error: "Plant footprint does not fit in bed at that position", details: { x, y, w, h, bedWidth: bed.widthInches, bedHeight: bed.heightInches } },
         { status: 409 }
       );
     }
 
-    // overlap check against existing footprints
-    const newLeft = x;
-    const newTop = y;
-    const newRight = x + w - 1;
-    const newBottom = y + h - 1;
+    // Spacing check - ensure minimum distance from existing plants
+    // Calculate center of new plant
+    const newCenterX = x + w / 2;
+    const newCenterY = y + h / 2;
 
     for (const p of bed.placements) {
-      const pw = p.w ?? 1;
-      const ph = p.h ?? 1;
+      const pw = p.w ?? plant.spacingInches;
+      const ph = p.h ?? plant.spacingInches;
 
-      const left = p.x;
-      const top = p.y;
-      const right = p.x + pw - 1;
-      const bottom = p.y + ph - 1;
+      // Calculate center of existing plant
+      const existingCenterX = p.x + pw / 2;
+      const existingCenterY = p.y + ph / 2;
 
-      const overlaps =
-        newLeft <= right && newRight >= left && newTop <= bottom && newBottom >= top;
+      // Calculate distance between centers
+      const distanceX = Math.abs(newCenterX - existingCenterX);
+      const distanceY = Math.abs(newCenterY - existingCenterY);
+      const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
-      if (overlaps) {
+      // Required spacing is the larger of the two plants' spacing requirements
+      const requiredSpacing = Math.max(plant.spacingInches, p.plant.spacingInches);
+
+      if (distance < requiredSpacing) {
         return NextResponse.json(
           {
-            error: "Overlaps an existing plant footprint",
-            details: { existingPlant: p.plant.name, existingAt: { x: p.x, y: p.y, w: pw, h: ph } },
+            error: `Too close to existing ${p.plant.name}`,
+            details: {
+              existingPlant: p.plant.name,
+              existingAt: { x: p.x, y: p.y },
+              distance: distance.toFixed(1),
+              requiredSpacing: requiredSpacing
+            },
           },
           { status: 409 }
         );
