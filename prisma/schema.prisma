@@ -234,7 +234,7 @@ model Gate {
   @@index([userId])
 }
 
-// BedPlacement - no changes needed (inherits through Bed relationship)
+// BedPlacement - tracks plant placements in beds with lifecycle information
 model BedPlacement {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -250,6 +250,14 @@ model BedPlacement {
   h Float @default(1) // height/footprint in inches
 
   count Int @default(1)
+
+  // Lifecycle tracking
+  status                  String?   // "planned" | "planted" | "growing" | "harvesting" | "harvested" | "removed"
+  plantingDate            DateTime? // actual date planted
+  expectedHarvestDate     DateTime? // calculated from plant timing + planting date
+  actualHarvestStartDate  DateTime? // when harvesting actually started
+  actualHarvestEndDate    DateTime? // when harvesting finished
+  notes                   String?   // user notes about this placement
 
   bed   Bed   @relation(fields: [bedId], references: [id], onDelete: Cascade)
   plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)

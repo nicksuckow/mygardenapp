@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import PlacementDetailsModal from "@/components/PlacementDetailsModal";
 
 type Plant = {
   id: number;
@@ -15,6 +16,7 @@ type Placement = {
   y: number;
   w?: number | null;
   h?: number | null;
+  status?: string | null;
   plant: Plant;
 };
 
@@ -35,10 +37,29 @@ async function readJson<T>(
   return { ok: true, data: (text ? JSON.parse(text) : null) as T };
 }
 
+// Helper function to get status color
+function getStatusColor(status?: string | null): string {
+  switch (status) {
+    case "planted":
+      return "#3b82f6"; // blue
+    case "growing":
+      return "#10b981"; // green
+    case "harvesting":
+      return "#f59e0b"; // orange
+    case "harvested":
+      return "#8b5cf6"; // purple
+    case "removed":
+      return "#ef4444"; // red
+    default:
+      return "#10b981"; // green (planned or null)
+  }
+}
+
 export default function BedLayoutClient({ bedId }: { bedId: number }) {
   const [bed, setBed] = useState<Bed | null>(null);
   const [plants, setPlants] = useState<Plant[]>([]);
   const [selectedPlantId, setSelectedPlantId] = useState<number | null>(null);
+  const [selectedPlacementId, setSelectedPlacementId] = useState<number | null>(null);
   const [message, setMessage] = useState("");
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
@@ -352,7 +373,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               <li>Click to place plants (1" precision)</li>
               <li>Shift+Drag or Middle-click+Drag to pan</li>
               <li>Ctrl+Scroll to zoom</li>
-              <li>Click a plant to remove it</li>
+              <li>Click a plant to view/edit details</li>
             </ul>
           </div>
 
@@ -439,24 +460,31 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               {placements.map((p) => {
                 const w = p.w ?? p.plant.spacingInches;
                 const h = p.h ?? p.plant.spacingInches;
+                const statusColor = getStatusColor(p.status);
 
                 return (
                   <button
                     key={p.id}
-                    className="absolute rounded-lg bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-xs font-medium hover:bg-emerald-200 transition-colors"
+                    className="absolute rounded-lg bg-emerald-100 border-2 flex items-center justify-center text-xs font-medium hover:opacity-80 transition-opacity cursor-pointer"
                     style={{
                       left: p.x * PIXELS_PER_INCH,
                       top: p.y * PIXELS_PER_INCH,
                       width: w * PIXELS_PER_INCH,
                       height: h * PIXELS_PER_INCH,
+                      borderColor: statusColor,
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      clearPlacement(p.id);
+                      setSelectedPlacementId(p.id);
                     }}
-                    title={`${p.plant.name} at (${p.x}", ${p.y}") - Click to remove`}
+                    title={`${p.plant.name} at (${p.x}", ${p.y}") - Click for details`}
                   >
                     <span className="text-center px-1 leading-tight">{p.plant.name}</span>
+                    {p.status && p.status !== "planned" && (
+                      <span className="absolute top-1 right-1 text-[8px] font-bold uppercase bg-white/80 px-1 rounded">
+                        {p.status}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -492,6 +520,17 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
           </div>
         </div>
       </div>
+
+      {/* Placement details modal */}
+      <PlacementDetailsModal
+        isOpen={!!selectedPlacementId}
+        placementId={selectedPlacementId}
+        onClose={() => setSelectedPlacementId(null)}
+        onSave={() => {
+          setSelectedPlacementId(null);
+          refresh();
+        }}
+      />
     </div>
   );
 }

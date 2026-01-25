@@ -301,102 +301,136 @@ export default function PlantsPage() {
       </div>
 
       {/* Add form */}
-      <div className={`${ui.card} ${ui.cardPad}`}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Name *</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Tomato"
-            />
-          </label>
+      <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
+        <div>
+          <h2 className="text-base font-semibold">Add a New Plant</h2>
+          <p className="text-sm text-slate-600">Define plant characteristics and growing schedule</p>
+        </div>
 
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Spacing (inches)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              value={spacingInches}
-              onChange={(e) => setSpacingInches(Number(e.target.value))}
-              min={0.5}
-              step={0.5}
-            />
-          </label>
+        {/* Basic Info Section */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-slate-700">Basic Information</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium">Name *</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Tomato, Lettuce"
+              />
+            </label>
 
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Days to Maturity Min</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              value={dtmMin}
-              onChange={(e) => setDtmMin(e.target.value === "" ? "" : Number(e.target.value))}
-              min={1}
-            />
-          </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium">Spacing (inches)</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                value={spacingInches}
+                onChange={(e) => setSpacingInches(Number(e.target.value))}
+                min={0.5}
+                step={0.5}
+              />
+              <span className="text-xs text-slate-500">Distance between plants in your bed</span>
+            </label>
 
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Days to Maturity Max</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              value={dtmMax}
-              onChange={(e) => setDtmMax(e.target.value === "" ? "" : Number(e.target.value))}
-              min={1}
-            />
-          </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium">Planting Depth (inches)</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                value={plantingDepthInches}
+                onChange={(e) =>
+                  setPlantingDepthInches(e.target.value === "" ? "" : Number(e.target.value))
+                }
+                min={0}
+                step={0.25}
+                placeholder="e.g., 0.5 or 1"
+              />
+              <span className="text-xs text-slate-500">How deep to plant seeds or transplants</span>
+            </label>
+          </div>
+        </div>
 
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Start indoors (weeks before last frost)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              value={startWeeks}
-              onChange={(e) => setStartWeeks(e.target.value === "" ? "" : Number(e.target.value))}
-            />
-          </label>
+        {/* Timing Section */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-slate-700">Timing & Maturity</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium">Days to Maturity Min</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                value={dtmMin}
+                onChange={(e) => setDtmMin(e.target.value === "" ? "" : Number(e.target.value))}
+                min={1}
+                placeholder="e.g., 60"
+              />
+              <span className="text-xs text-slate-500">Earliest days from planting to harvest</span>
+            </label>
 
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Transplant (weeks after last frost)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              value={transplantWeeks}
-              onChange={(e) =>
-                setTransplantWeeks(e.target.value === "" ? "" : Number(e.target.value))
-              }
-            />
-          </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium">Days to Maturity Max</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                value={dtmMax}
+                onChange={(e) => setDtmMax(e.target.value === "" ? "" : Number(e.target.value))}
+                min={1}
+                placeholder="e.g., 80"
+              />
+              <span className="text-xs text-slate-500">Latest days from planting to harvest</span>
+            </label>
 
-          {/* ✅ NOW 2 columns: Direct sow (left) + Planting depth (right) */}
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Direct sow (weeks relative to last frost)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              value={directSowWeeks}
-              onChange={(e) =>
-                setDirectSowWeeks(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              placeholder="e.g. -2 means 2 weeks before last frost"
-            />
-          </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium">Start indoors (weeks before last frost)</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                value={startWeeks}
+                onChange={(e) => setStartWeeks(e.target.value === "" ? "" : Number(e.target.value))}
+                placeholder="e.g., 6"
+              />
+              <span className="text-xs text-slate-500">When to start seeds indoors before frost date</span>
+            </label>
 
-          <label className="grid gap-1">
-            <span className="text-sm font-medium">Planting Depth (inches)</span>
-            <input
-              className="rounded border px-3 py-2 text-sm"
-              type="number"
-              value={plantingDepthInches}
-              onChange={(e) =>
-                setPlantingDepthInches(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              min={0}
-              step={0.25}
-              placeholder="e.g. 0.5"
-            />
-          </label>
+            <label className="grid gap-1.5">
+              <span className="text-sm font-medium">Transplant (weeks after last frost)</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                value={transplantWeeks}
+                onChange={(e) =>
+                  setTransplantWeeks(e.target.value === "" ? "" : Number(e.target.value))
+                }
+                placeholder="e.g., 2"
+              />
+              <span className="text-xs text-slate-500">When to transplant outside after frost date</span>
+            </label>
+
+            <label className="grid gap-1.5 sm:col-span-2">
+              <span className="text-sm font-medium">Direct sow (weeks relative to last frost)</span>
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                value={directSowWeeks}
+                onChange={(e) =>
+                  setDirectSowWeeks(e.target.value === "" ? "" : Number(e.target.value))
+                }
+                placeholder="e.g., -2 for 2 weeks before frost, or 1 for 1 week after"
+              />
+              <span className="text-xs text-slate-500">
+                Negative = weeks before frost, Positive = weeks after frost
+              </span>
+            </label>
+          </div>
+
+          {/* Validation warnings */}
+          {dtmMin !== "" && dtmMax !== "" && Number(dtmMax) < Number(dtmMin) && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Warning: Maximum days to maturity should be greater than or equal to minimum
+            </div>
+          )}
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-3">

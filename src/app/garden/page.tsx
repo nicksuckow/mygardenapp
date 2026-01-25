@@ -49,12 +49,31 @@ type PlanPlacement = {
   y: number;
   w: number | null;
   h: number | null;
+  status?: string | null;
   bed: { id: number; name: string };
   plant: { id: number; name: string };
 };
 
 // Header height reserved for dots offset (still a small top margin)
 const BED_HEADER_PX = 22;
+
+// Helper function to get status color for dots
+function getStatusDotColor(status?: string | null): string {
+  switch (status) {
+    case "planted":
+      return "bg-blue-500"; // blue
+    case "growing":
+      return "bg-green-500"; // green
+    case "harvesting":
+      return "bg-orange-500"; // orange
+    case "harvested":
+      return "bg-purple-500"; // purple
+    case "removed":
+      return "bg-red-500"; // red
+    default:
+      return "bg-emerald-600"; // emerald (planned or null)
+  }
+}
 
 function toInt(v: any, fallback: number) {
   const n = Number(v);
@@ -328,24 +347,37 @@ export default function GardenPage() {
   }
 
   async function removeBedFromGarden(bedId: number) {
+    console.log('Removing bed from garden:', bedId);
     setMessage("");
-    const res = await fetch(`/api/beds/${bedId}/position`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gardenX: null, gardenY: null }),
-    });
+    try {
+      const res = await fetch(`/api/beds/${bedId}/position`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gardenX: null, gardenY: null }),
+      });
 
-    const text = await res.text();
-    if (!res.ok) {
-      try {
-        setMessage(JSON.parse(text)?.error ?? `Remove failed (${res.status})`);
-      } catch {
-        setMessage(`Remove failed (${res.status})`);
+      console.log('Remove bed response:', res.status);
+      const text = await res.text();
+      console.log('Remove bed response text:', text);
+
+      if (!res.ok) {
+        try {
+          const errorMsg = JSON.parse(text)?.error ?? `Remove failed (${res.status})`;
+          console.error('Remove bed failed:', errorMsg);
+          setMessage(errorMsg);
+        } catch {
+          console.error('Remove bed failed with non-JSON response:', text);
+          setMessage(`Remove failed (${res.status}): ${text}`);
+        }
+        return;
       }
-      return;
-    }
 
-    await load();
+      setMessage("Bed removed from garden");
+      await load();
+    } catch (error) {
+      console.error('Remove bed error:', error);
+      setMessage(`Error removing bed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   async function addWalkway(x: number, y: number, width: number, height: number) {
@@ -420,14 +452,103 @@ export default function GardenPage() {
     await load();
   }
 
+  // Zoom handlers
+  const handleZoomIn = () => {
+    setZoom(z => Math.min(z * 1.5, 10));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(z => Math.max(z / 1.5, 0.5));
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = -e.deltaY;
+      if (delta > 0) {
+        setZoom(z => Math.min(z * 1.1, 10));
+      } else {
+        setZoom(z => Math.max(z / 1.1, 0.5));
+      }
+    }
+  };
+
+  // Pan handlers
+  const handlePanStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.shiftKey || e.button === 1 || (e.ctrlKey && !e.metaKey)) {
+      e.preventDefault();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+    }
+  };
+
+  const handlePanMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isPanning) {
+      setPanOffset({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y,
+      });
+    }
+  };
+
+  const handlePanEnd = () => {
+    setIsPanning(false);
+  };
+
+  // Rotation handlers
+  const handleRotate = () => {
+    setRotation(r => {
+      const next = (r + 90) % 360;
+      return next as 0 | 90 | 180 | 270;
+    });
+  };
+
   // Convert mouse/pointer position to grid cell
   function pointerToCell(clientX: number, clientY: number) {
     const el = gridRef.current;
     if (!el) return null;
 
     const rect = el.getBoundingClientRect();
-    const px = clientX - rect.left;
-    const py = clientY - rect.top;
+
+    // Get position relative to the grid container
+    let px = clientX - rect.left;
+    let py = clientY - rect.top;
+
+    // Reverse the transformations: translate, scale, rotate
+    // First, account for pan offset (reverse translate)
+    px -= panOffset.x;
+    py -= panOffset.y;
+
+    // Then account for zoom (reverse scale)
+    px /= zoom;
+    py /= zoom;
+
+    // Finally, account for rotation (rotate back around center)
+    if (rotation !== 0) {
+      const centerX = (cols * CELL_PX) / 2;
+      const centerY = (rows * CELL_PX) / 2;
+
+      // Translate to origin (center)
+      const relX = px - centerX;
+      const relY = py - centerY;
+
+      // Rotate by -rotation degrees
+      const angleRad = (-rotation * Math.PI) / 180;
+      const cosA = Math.cos(angleRad);
+      const sinA = Math.sin(angleRad);
+
+      const rotatedX = relX * cosA - relY * sinA;
+      const rotatedY = relX * sinA + relY * cosA;
+
+      // Translate back from origin
+      px = rotatedX + centerX;
+      py = rotatedY + centerY;
+    }
 
     const x = Math.floor(px / CELL_PX);
     const y = Math.floor(py / CELL_PX);
@@ -798,7 +919,10 @@ export default function GardenPage() {
                         <div className="border-t px-3 py-2">
                           <button
                             className="text-xs text-red-600 hover:text-red-700 hover:underline"
-                            onClick={() => removeBedFromGarden(b.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeBedFromGarden(b.id);
+                            }}
                             title="Remove this bed from the garden layout"
                           >
                             Remove from garden
@@ -815,12 +939,52 @@ export default function GardenPage() {
 
         {/* Garden canvas */}
         <div className={`${ui.card} ${ui.cardPad}`}>
-          <div className="space-y-1">
-            <p className="text-base font-semibold">Garden Layout</p>
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-base font-semibold">Garden Layout</p>
+              {garden ? (
+                <p className="text-xs text-slate-600">
+                  {cols} × {rows} grid ({inchesToFeetInches(garden.widthInches)} × {inchesToFeetInches(garden.heightInches)} @ {inchesToFeetInches(garden.cellInches)} cells)
+                </p>
+              ) : null}
+            </div>
+
             {garden ? (
-              <p className="text-xs text-slate-600">
-                {cols} × {rows} grid ({inchesToFeetInches(garden.widthInches)} × {inchesToFeetInches(garden.heightInches)} @ {inchesToFeetInches(garden.cellInches)} cells)
-              </p>
+              <div className="flex gap-2 items-center">
+                <div className="flex gap-1 items-center border rounded-lg p-1">
+                  <button
+                    className="px-2 py-1 text-sm hover:bg-gray-100 rounded"
+                    onClick={handleZoomOut}
+                    title="Zoom out"
+                  >
+                    −
+                  </button>
+                  <span className="px-2 text-xs text-slate-600 min-w-[3rem] text-center">
+                    {Math.round(zoom * 100)}%
+                  </span>
+                  <button
+                    className="px-2 py-1 text-sm hover:bg-gray-100 rounded"
+                    onClick={handleZoomIn}
+                    title="Zoom in"
+                  >
+                    +
+                  </button>
+                  <button
+                    className="px-2 py-1 text-xs hover:bg-gray-100 rounded border-l"
+                    onClick={handleZoomReset}
+                    title="Reset zoom and pan"
+                  >
+                    Reset
+                  </button>
+                </div>
+                <button
+                  className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-100"
+                  onClick={handleRotate}
+                  title={`Rotate garden view (currently ${rotation}°)`}
+                >
+                  ↻ Rotate
+                </button>
+              </div>
             ) : null}
           </div>
 
@@ -829,13 +993,33 @@ export default function GardenPage() {
               <p className="text-sm text-slate-700">Set garden dimensions above and click "Save garden" to get started.</p>
             </div>
           ) : (
-            <div className="mt-3 overflow-auto rounded-xl border bg-white p-3">
+            <div
+              className="mt-3 overflow-auto rounded-xl border bg-white p-3"
+              style={{
+                maxHeight: '600px',
+                cursor: isPanning ? 'grabbing' : 'default'
+              }}
+              onWheel={handleWheel}
+            >
               <div
                 ref={gridRef}
                 className="relative touch-none select-none"
-                style={{ width: cols * CELL_PX, height: rows * CELL_PX }}
-                onPointerMove={onGridPointerMove}
-                onPointerUp={onGridPointerUp}
+                style={{
+                  width: cols * CELL_PX,
+                  height: rows * CELL_PX,
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom}) rotate(${rotation}deg)`,
+                  transformOrigin: 'center center',
+                  transition: isPanning ? 'none' : 'transform 0.1s ease-out'
+                }}
+                onPointerMove={(e) => {
+                  handlePanMove(e);
+                  onGridPointerMove(e);
+                }}
+                onPointerUp={(e) => {
+                  handlePanEnd();
+                  onGridPointerUp(e);
+                }}
+                onPointerDown={handlePanStart}
               >
                 {/* grid buttons (click-to-place) */}
                 <div
@@ -1000,11 +1184,12 @@ export default function GardenPage() {
                         >
                           {bedPlacements.map((p) => {
                             const pos = dotPosPct(b, p);
+                            const dotColor = getStatusDotColor(p.status);
                             return (
                               <button
                                 key={p.id}
                                 type="button"
-                                className="absolute h-2 w-2 rounded-full bg-emerald-600 opacity-80 hover:scale-110"
+                                className={`absolute h-2 w-2 rounded-full ${dotColor} opacity-80 hover:scale-110`}
                                 style={{
                                   left: pos.left,
                                   top: pos.top,
@@ -1112,9 +1297,41 @@ export default function GardenPage() {
                   <li><strong>Beds:</strong> Click grid cell to place, or drag bed blocks to reposition</li>
                   <li><strong>Walkways:</strong> Click and drag on grid to create rectangular walkways</li>
                   <li><strong>Gates:</strong> Click grid cell to place gate (auto-detects nearest edge)</li>
-                  <li>Hover over green dots to see which plants are placed in beds</li>
-                  <li>Use the "Rotate" button (↻) to change bed orientation</li>
+                  <li><strong>Zoom:</strong> Use +/− buttons, or Ctrl+Scroll wheel to zoom in/out</li>
+                  <li><strong>Pan:</strong> Shift+Drag, Middle-click+Drag, or Ctrl+Drag to pan the view</li>
+                  <li><strong>Rotate View:</strong> Click "Rotate" button to rotate entire garden layout</li>
+                  <li>Hover over colored dots to see which plants are placed in beds</li>
                 </ul>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                <p className="text-xs font-medium text-slate-700 mb-2">Plant Status Colors:</p>
+                <div className="grid grid-cols-2 gap-1 text-xs text-slate-600">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-600"></div>
+                    <span>Planned</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                    <span>Planted</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span>Growing</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                    <span>Harvesting</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    <span>Harvested</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                    <span>Removed</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}

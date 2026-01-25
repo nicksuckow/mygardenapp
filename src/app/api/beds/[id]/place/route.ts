@@ -5,6 +5,13 @@ import { getCurrentUserId } from "@/lib/auth-helpers";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+// Helper function to add days to a date
+function addDays(d: Date, days: number) {
+  const out = new Date(d);
+  out.setDate(out.getDate() + days);
+  return out;
+}
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -91,9 +98,47 @@ export async function POST(
       }
     }
 
+    // Build placement data with optional lifecycle fields
+    const placementData: {
+      bedId: number;
+      plantId: number;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      count: number;
+      status?: string;
+      plantingDate?: Date;
+      expectedHarvestDate?: Date;
+      notes?: string;
+    } = { bedId, plantId, x, y, w, h, count: 1 };
+
+    // Add optional lifecycle fields if provided
+    if (typeof body.status === "string" && body.status) {
+      placementData.status = body.status;
+    } else {
+      placementData.status = "planned"; // Default status
+    }
+
+    if (body.plantingDate) {
+      const plantingDate = new Date(body.plantingDate);
+      if (!isNaN(plantingDate.getTime())) {
+        placementData.plantingDate = plantingDate;
+
+        // Auto-calculate expected harvest date
+        if (plant.daysToMaturityMin) {
+          placementData.expectedHarvestDate = addDays(plantingDate, plant.daysToMaturityMin);
+        }
+      }
+    }
+
+    if (typeof body.notes === "string" && body.notes.trim()) {
+      placementData.notes = body.notes.trim();
+    }
+
     // create a single placement row representing the whole plant footprint
     const placement = await prisma.bedPlacement.create({
-      data: { bedId, plantId, x, y, w, h, count: 1 },
+      data: placementData,
     });
 
     return NextResponse.json(placement);
