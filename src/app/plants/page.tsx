@@ -304,7 +304,44 @@ export default function PlantsPage() {
       <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
         <div>
           <h2 className="text-base font-semibold">Add a New Plant</h2>
-          <p className="text-sm text-slate-600">Define plant characteristics and growing schedule</p>
+          <p className="text-sm text-slate-600">Search the Verdantly database first, or manually enter plant details below</p>
+        </div>
+
+        {/* Verdantly Search - Primary Action */}
+        <div className="rounded-lg border-2 border-emerald-200 bg-emerald-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-emerald-900 mb-1">Search Plant Database</h3>
+              <p className="text-sm text-emerald-800 mb-3">
+                Find pre-filled plant data including timing, spacing, and growing requirements
+              </p>
+              <button
+                className={`${ui.btn} ${ui.btnPrimary}`}
+                type="button"
+                onClick={() => setShowVerdantlyModal(true)}
+              >
+                <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Search Verdantly Database
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Or divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-white px-2 text-slate-500">Or enter manually</span>
+          </div>
         </div>
 
         {/* Basic Info Section */}
@@ -436,17 +473,6 @@ export default function PlantsPage() {
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button className={`${ui.btn} ${ui.btnPrimary}`} type="button" onClick={addPlant}>
             Add Plant
-          </button>
-
-          <button
-            className={`${ui.btn} ${ui.btnSecondary}`}
-            type="button"
-            onClick={() => setShowVerdantlyModal(true)}
-          >
-            <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            Search Verdantly Database
           </button>
 
           {message ? (
