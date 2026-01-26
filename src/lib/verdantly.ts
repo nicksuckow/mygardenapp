@@ -347,6 +347,10 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
     startIndoorsWeeksBeforeFrost,
     transplantWeeksAfterFrost,
     directSowWeeksRelativeToFrost,
+    // Full text planting instructions
+    startIndoorsInstructions: plantingInstr?.startIndoors || null,
+    transplantInstructions: plantingInstr?.transplantOutdoors || null,
+    directSowInstructions: plantingInstr?.directSow || null,
     notes,
 
     // Core fields

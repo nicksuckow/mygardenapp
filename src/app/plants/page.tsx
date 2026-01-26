@@ -14,6 +14,10 @@ type Plant = {
   startIndoorsWeeksBeforeFrost: number | null;
   transplantWeeksAfterFrost: number | null;
   directSowWeeksRelativeToFrost: number | null;
+  // Full text planting instructions
+  startIndoorsInstructions: string | null;
+  transplantInstructions: string | null;
+  directSowInstructions: string | null;
 
   // ✅ NEW (supports fractions via Prisma Float)
   plantingDepthInches: number | null;
@@ -650,24 +654,27 @@ export default function PlantsPage() {
                               <summary className="cursor-pointer text-slate-600 hover:text-slate-900">
                                 Planting schedule
                               </summary>
-                              <div className="mt-1 ml-2 space-y-0.5">
+                              <div className="mt-1 ml-2 space-y-1">
                                 <p>
-                                  Start indoors:{" "}
-                                  {p.startIndoorsWeeksBeforeFrost != null
-                                    ? `${p.startIndoorsWeeksBeforeFrost}w before frost`
-                                    : "—"}
+                                  <span className="font-medium">Start indoors:</span>{" "}
+                                  {p.startIndoorsInstructions ||
+                                    (p.startIndoorsWeeksBeforeFrost != null
+                                      ? `${p.startIndoorsWeeksBeforeFrost}w before frost`
+                                      : "—")}
                                 </p>
                                 <p>
-                                  Transplant:{" "}
-                                  {p.transplantWeeksAfterFrost != null
-                                    ? `${p.transplantWeeksAfterFrost}w after frost`
-                                    : "—"}
+                                  <span className="font-medium">Transplant:</span>{" "}
+                                  {p.transplantInstructions ||
+                                    (p.transplantWeeksAfterFrost != null
+                                      ? `${p.transplantWeeksAfterFrost}w after frost`
+                                      : "—")}
                                 </p>
                                 <p>
-                                  Direct sow:{" "}
-                                  {p.directSowWeeksRelativeToFrost != null
-                                    ? `${p.directSowWeeksRelativeToFrost}w relative`
-                                    : "—"}
+                                  <span className="font-medium">Direct sow:</span>{" "}
+                                  {p.directSowInstructions ||
+                                    (p.directSowWeeksRelativeToFrost != null
+                                      ? `${p.directSowWeeksRelativeToFrost}w relative`
+                                      : "—")}
                                 </p>
                               </div>
                             </details>

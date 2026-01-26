@@ -120,6 +120,11 @@ model Plant {
   transplantWeeksAfterFrost     Int?
   directSowWeeksRelativeToFrost Int?
 
+  // Full text planting instructions from Verdantly
+  startIndoorsInstructions String? // e.g., "Yes, 3-4 weeks before the last frost."
+  transplantInstructions   String? // e.g., "After last frost when soil temp reaches 50°F."
+  directSowInstructions    String? // e.g., "Yes, directly sow once frost has passed."
+
   plantingDepthInches Float?
 
   notes String?

@@ -24,8 +24,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // Debug: Log what planting instructions we received
+    console.log("=== Verdantly Import Debug ===");
+    console.log("Plant name:", verdantlyPlant.name);
+    console.log("careInstructions:", JSON.stringify(verdantlyPlant.careInstructions, null, 2));
+    console.log("plantingInstructions:", JSON.stringify(verdantlyPlant.careInstructions?.plantingInstructions, null, 2));
+
     // Convert to our plant format
     const plantData = convertVerdantlyToPlant(verdantlyPlant as VerdantlyPlant);
+
+    console.log("Converted planting schedule fields:", {
+      startIndoorsWeeksBeforeFrost: plantData.startIndoorsWeeksBeforeFrost,
+      transplantWeeksAfterFrost: plantData.transplantWeeksAfterFrost,
+      directSowWeeksRelativeToFrost: plantData.directSowWeeksRelativeToFrost,
+    });
+    console.log("==============================");
 
     // Check if plant already exists for this user
     const existingPlant = await prisma.plant.findFirst({

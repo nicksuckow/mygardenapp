@@ -20,6 +20,10 @@ type PlacementData = {
     startIndoorsWeeksBeforeFrost: number | null;
     transplantWeeksAfterFrost: number | null;
     directSowWeeksRelativeToFrost: number | null;
+    // Full text planting instructions
+    startIndoorsInstructions: string | null;
+    transplantInstructions: string | null;
+    directSowInstructions: string | null;
     daysToMaturityMin: number | null;
     daysToMaturityMax: number | null;
     notes: string | null;
@@ -385,32 +389,41 @@ export default function PlacementTrackingModal({
                 </div>
               )}
 
-              {/* Expected timing info */}
-              {(placement.plant.startIndoorsWeeksBeforeFrost ||
+              {/* Planting instructions */}
+              {(placement.plant.startIndoorsInstructions ||
+                placement.plant.transplantInstructions ||
+                placement.plant.directSowInstructions ||
+                placement.plant.startIndoorsWeeksBeforeFrost ||
                 placement.plant.transplantWeeksAfterFrost ||
                 placement.plant.directSowWeeksRelativeToFrost ||
                 placement.plant.daysToMaturityMin) && (
                 <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm">
-                  <div className="font-medium text-blue-800 mb-2">Expected Timing</div>
-                  {placement.plant.startIndoorsWeeksBeforeFrost && (
-                    <div className="text-blue-700">
-                      • Start indoors: {placement.plant.startIndoorsWeeksBeforeFrost} weeks before last frost
+                  <div className="font-medium text-blue-800 mb-2">Planting Instructions</div>
+                  {(placement.plant.startIndoorsInstructions || placement.plant.startIndoorsWeeksBeforeFrost) && (
+                    <div className="text-blue-700 mb-1">
+                      <span className="font-medium">Start indoors:</span>{" "}
+                      {placement.plant.startIndoorsInstructions ||
+                        `${placement.plant.startIndoorsWeeksBeforeFrost} weeks before last frost`}
                     </div>
                   )}
-                  {placement.plant.transplantWeeksAfterFrost && (
-                    <div className="text-blue-700">
-                      • Transplant: {placement.plant.transplantWeeksAfterFrost} weeks after last frost
+                  {(placement.plant.transplantInstructions || placement.plant.transplantWeeksAfterFrost) && (
+                    <div className="text-blue-700 mb-1">
+                      <span className="font-medium">Transplant:</span>{" "}
+                      {placement.plant.transplantInstructions ||
+                        `${placement.plant.transplantWeeksAfterFrost} weeks after last frost`}
                     </div>
                   )}
-                  {placement.plant.directSowWeeksRelativeToFrost && (
-                    <div className="text-blue-700">
-                      • Direct sow: {placement.plant.directSowWeeksRelativeToFrost > 0 ? "+" : ""}
-                      {placement.plant.directSowWeeksRelativeToFrost} weeks from last frost
+                  {(placement.plant.directSowInstructions || placement.plant.directSowWeeksRelativeToFrost) && (
+                    <div className="text-blue-700 mb-1">
+                      <span className="font-medium">Direct sow:</span>{" "}
+                      {placement.plant.directSowInstructions ||
+                        `${placement.plant.directSowWeeksRelativeToFrost! > 0 ? "+" : ""}${placement.plant.directSowWeeksRelativeToFrost} weeks from last frost`}
                     </div>
                   )}
                   {placement.plant.daysToMaturityMin && (
                     <div className="text-blue-700">
-                      • Days to maturity: {placement.plant.daysToMaturityMin}
+                      <span className="font-medium">Days to maturity:</span>{" "}
+                      {placement.plant.daysToMaturityMin}
                       {placement.plant.daysToMaturityMax && ` - ${placement.plant.daysToMaturityMax}`} days
                     </div>
                   )}
