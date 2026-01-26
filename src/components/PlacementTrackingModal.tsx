@@ -15,11 +15,40 @@ type PlacementData = {
   plant: {
     name: string;
     variety: string | null;
+    spacingInches: number;
+    plantingDepthInches: number | null;
     startIndoorsWeeksBeforeFrost: number | null;
     transplantWeeksAfterFrost: number | null;
     directSowWeeksRelativeToFrost: number | null;
     daysToMaturityMin: number | null;
     daysToMaturityMax: number | null;
+    notes: string | null;
+    // Verdantly/additional fields
+    scientificName: string | null;
+    growthForm: string | null;
+    growthHabit: string | null;
+    growthRate: string | null;
+    averageHeightCm: number | null;
+    minTemperatureC: number | null;
+    maxTemperatureC: number | null;
+    lightRequirement: number | null;
+    soilNutriments: number | null;
+    soilHumidity: number | null;
+    edible: boolean;
+    ediblePart: string | null;
+    cycle: string | null;
+    watering: string | null;
+    sunlight: string | null;
+    floweringSeason: string | null;
+    harvestSeason: string | null;
+    careLevel: string | null;
+    maintenance: string | null;
+    indoor: boolean;
+    droughtTolerant: boolean;
+    medicinal: boolean;
+    poisonousToHumans: number | null;
+    poisonousToPets: number | null;
+    description: string | null;
   };
   bed: {
     name: string;
@@ -171,34 +200,228 @@ export default function PlacementTrackingModal({
             </p>
 
             <div className="space-y-4">
+              {/* Plant description */}
+              {placement.plant.description && (
+                <p className="text-sm text-slate-600">{placement.plant.description}</p>
+              )}
+
+              {/* Plant details grid */}
+              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+                <div className="font-medium text-slate-700 mb-2 text-sm">Plant Details</div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  {placement.plant.scientificName && (
+                    <>
+                      <span className="text-slate-500">Scientific name:</span>
+                      <span className="text-slate-700 italic">{placement.plant.scientificName}</span>
+                    </>
+                  )}
+                  <span className="text-slate-500">Spacing:</span>
+                  <span className="text-slate-700">{placement.plant.spacingInches}"</span>
+                  {placement.plant.plantingDepthInches && (
+                    <>
+                      <span className="text-slate-500">Planting depth:</span>
+                      <span className="text-slate-700">{placement.plant.plantingDepthInches}"</span>
+                    </>
+                  )}
+                  {placement.plant.cycle && (
+                    <>
+                      <span className="text-slate-500">Cycle:</span>
+                      <span className="text-slate-700">{placement.plant.cycle}</span>
+                    </>
+                  )}
+                  {placement.plant.growthForm && (
+                    <>
+                      <span className="text-slate-500">Growth form:</span>
+                      <span className="text-slate-700">{placement.plant.growthForm}</span>
+                    </>
+                  )}
+                  {placement.plant.growthHabit && (
+                    <>
+                      <span className="text-slate-500">Growth habit:</span>
+                      <span className="text-slate-700">{placement.plant.growthHabit}</span>
+                    </>
+                  )}
+                  {placement.plant.growthRate && (
+                    <>
+                      <span className="text-slate-500">Growth rate:</span>
+                      <span className="text-slate-700">{placement.plant.growthRate}</span>
+                    </>
+                  )}
+                  {placement.plant.averageHeightCm && (
+                    <>
+                      <span className="text-slate-500">Mature height:</span>
+                      <span className="text-slate-700">{placement.plant.averageHeightCm} cm</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Growing requirements */}
+              {(placement.plant.sunlight ||
+                placement.plant.watering ||
+                placement.plant.lightRequirement !== null ||
+                placement.plant.soilHumidity !== null ||
+                placement.plant.soilNutriments !== null ||
+                placement.plant.minTemperatureC !== null ||
+                placement.plant.careLevel) && (
+                <div className="rounded-lg bg-green-50 border border-green-200 p-3">
+                  <div className="font-medium text-green-800 mb-2 text-sm">Growing Requirements</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    {placement.plant.sunlight && (
+                      <>
+                        <span className="text-green-700">Sunlight:</span>
+                        <span className="text-green-900">{placement.plant.sunlight}</span>
+                      </>
+                    )}
+                    {placement.plant.lightRequirement !== null && (
+                      <>
+                        <span className="text-green-700">Light level:</span>
+                        <span className="text-green-900">{placement.plant.lightRequirement}/10</span>
+                      </>
+                    )}
+                    {placement.plant.watering && (
+                      <>
+                        <span className="text-green-700">Watering:</span>
+                        <span className="text-green-900">{placement.plant.watering}</span>
+                      </>
+                    )}
+                    {placement.plant.soilHumidity !== null && (
+                      <>
+                        <span className="text-green-700">Soil humidity:</span>
+                        <span className="text-green-900">{placement.plant.soilHumidity}/10</span>
+                      </>
+                    )}
+                    {placement.plant.soilNutriments !== null && (
+                      <>
+                        <span className="text-green-700">Soil nutrients:</span>
+                        <span className="text-green-900">{placement.plant.soilNutriments}/10</span>
+                      </>
+                    )}
+                    {(placement.plant.minTemperatureC !== null || placement.plant.maxTemperatureC !== null) && (
+                      <>
+                        <span className="text-green-700">Temperature:</span>
+                        <span className="text-green-900">
+                          {placement.plant.minTemperatureC !== null && `${placement.plant.minTemperatureC}°C`}
+                          {placement.plant.minTemperatureC !== null && placement.plant.maxTemperatureC !== null && " - "}
+                          {placement.plant.maxTemperatureC !== null && `${placement.plant.maxTemperatureC}°C`}
+                        </span>
+                      </>
+                    )}
+                    {placement.plant.careLevel && (
+                      <>
+                        <span className="text-green-700">Care level:</span>
+                        <span className="text-green-900">{placement.plant.careLevel}</span>
+                      </>
+                    )}
+                    {placement.plant.maintenance && (
+                      <>
+                        <span className="text-green-700">Maintenance:</span>
+                        <span className="text-green-900">{placement.plant.maintenance}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Characteristics badges */}
+              {(placement.plant.edible ||
+                placement.plant.indoor ||
+                placement.plant.droughtTolerant ||
+                placement.plant.medicinal ||
+                placement.plant.poisonousToHumans ||
+                placement.plant.poisonousToPets) && (
+                <div className="flex flex-wrap gap-2">
+                  {placement.plant.edible && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                      Edible{placement.plant.ediblePart && `: ${placement.plant.ediblePart}`}
+                    </span>
+                  )}
+                  {placement.plant.indoor && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                      Indoor
+                    </span>
+                  )}
+                  {placement.plant.droughtTolerant && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-amber-100 text-amber-800">
+                      Drought tolerant
+                    </span>
+                  )}
+                  {placement.plant.medicinal && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                      Medicinal
+                    </span>
+                  )}
+                  {placement.plant.poisonousToHumans === 1 && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                      Toxic to humans
+                    </span>
+                  )}
+                  {placement.plant.poisonousToPets === 1 && (
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                      Toxic to pets
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Seasons */}
+              {(placement.plant.floweringSeason || placement.plant.harvestSeason) && (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+                  <div className="font-medium text-amber-800 mb-2 text-sm">Seasons</div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    {placement.plant.floweringSeason && (
+                      <>
+                        <span className="text-amber-700">Flowering:</span>
+                        <span className="text-amber-900">{placement.plant.floweringSeason}</span>
+                      </>
+                    )}
+                    {placement.plant.harvestSeason && (
+                      <>
+                        <span className="text-amber-700">Harvest:</span>
+                        <span className="text-amber-900">{placement.plant.harvestSeason}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Expected timing info */}
               {(placement.plant.startIndoorsWeeksBeforeFrost ||
                 placement.plant.transplantWeeksAfterFrost ||
-                placement.plant.directSowWeeksRelativeToFrost) && (
-                <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm">
-                  <div className="font-medium text-slate-700 mb-2">Expected Timing:</div>
+                placement.plant.directSowWeeksRelativeToFrost ||
+                placement.plant.daysToMaturityMin) && (
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm">
+                  <div className="font-medium text-blue-800 mb-2">Expected Timing</div>
                   {placement.plant.startIndoorsWeeksBeforeFrost && (
-                    <div className="text-slate-600">
+                    <div className="text-blue-700">
                       • Start indoors: {placement.plant.startIndoorsWeeksBeforeFrost} weeks before last frost
                     </div>
                   )}
                   {placement.plant.transplantWeeksAfterFrost && (
-                    <div className="text-slate-600">
+                    <div className="text-blue-700">
                       • Transplant: {placement.plant.transplantWeeksAfterFrost} weeks after last frost
                     </div>
                   )}
                   {placement.plant.directSowWeeksRelativeToFrost && (
-                    <div className="text-slate-600">
+                    <div className="text-blue-700">
                       • Direct sow: {placement.plant.directSowWeeksRelativeToFrost > 0 ? "+" : ""}
                       {placement.plant.directSowWeeksRelativeToFrost} weeks from last frost
                     </div>
                   )}
                   {placement.plant.daysToMaturityMin && (
-                    <div className="text-slate-600">
+                    <div className="text-blue-700">
                       • Days to maturity: {placement.plant.daysToMaturityMin}
                       {placement.plant.daysToMaturityMax && ` - ${placement.plant.daysToMaturityMax}`} days
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Plant notes from Verdantly */}
+              {placement.plant.notes && (
+                <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
+                  <div className="font-medium text-slate-700 mb-2 text-sm">Plant Notes</div>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap">{placement.plant.notes}</p>
                 </div>
               )}
 
