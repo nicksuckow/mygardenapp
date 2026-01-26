@@ -220,6 +220,33 @@ export async function lookupHardinessZone(zipCode: string): Promise<VerdantlyZon
 }
 
 /**
+ * Parse planting instruction text like "6-8 weeks before last frost" into weeks
+ * Returns negative for "before", positive for "after"
+ */
+function parseWeeksFromFrost(text: string | undefined, type: "before" | "after" | "relative"): number | null {
+  if (!text) return null;
+
+  const lower = text.toLowerCase();
+  const match = lower.match(/(\d+)(?:\s*-\s*\d+)?\s*weeks?/);
+  if (!match) return null;
+
+  const weeks = parseInt(match[1], 10);
+
+  if (type === "before") {
+    // startIndoors is weeks BEFORE frost, stored as positive
+    return weeks;
+  } else if (type === "after") {
+    // transplant is weeks AFTER frost, stored as positive
+    return weeks;
+  } else {
+    // directSow: negative if before frost, positive if after
+    if (lower.includes("before")) return -weeks;
+    if (lower.includes("after")) return weeks;
+    return weeks; // default to positive if unclear
+  }
+}
+
+/**
  * Convert Verdantly plant data to our Plant model format
  */
 export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
@@ -304,6 +331,12 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
   // Determine edible (vegetables, fruits, herbs are generally edible)
   const edible = ["vegetable", "fruit", "herb"].includes(verdantly.category.toLowerCase());
 
+  // Parse planting instructions into week fields
+  const plantingInstr = ci?.plantingInstructions;
+  const startIndoorsWeeksBeforeFrost = parseWeeksFromFrost(plantingInstr?.startIndoors, "before");
+  const transplantWeeksAfterFrost = parseWeeksFromFrost(plantingInstr?.transplantOutdoors, "after");
+  const directSowWeeksRelativeToFrost = parseWeeksFromFrost(plantingInstr?.directSow, "relative");
+
   return {
     name: verdantly.name,
     variety: verdantly.subtype || null,
@@ -311,6 +344,9 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
     plantingDepthInches: null, // Not provided by Verdantly API
     daysToMaturityMin: null, // Would need to calculate from planting/harvest dates
     daysToMaturityMax: null,
+    startIndoorsWeeksBeforeFrost,
+    transplantWeeksAfterFrost,
+    directSowWeeksRelativeToFrost,
     notes,
 
     // Core fields
