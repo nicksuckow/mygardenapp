@@ -56,6 +56,7 @@ type PlanPlacement = {
   transplantedDate?: string | null;
   directSowedDate?: string | null;
   harvestStartedDate?: string | null;
+  harvestEndedDate?: string | null;
   bed: { id: number; name: string };
   plant: FullPlantData;
 };
@@ -65,6 +66,7 @@ const BED_HEADER_PX = 22;
 
 // Helper function to get status string from placement dates
 function getPlacementStatus(placement: PlanPlacement): string | null {
+  if (placement.harvestEndedDate) return "completed";
   if (placement.harvestStartedDate) return "harvesting";
   if (placement.transplantedDate || placement.directSowedDate) return "growing";
   if (placement.seedsStartedDate) return "planted";
@@ -74,6 +76,9 @@ function getPlacementStatus(placement: PlanPlacement): string | null {
 // Helper function to get status color for dots based on spring tracking
 function getStatusDotColor(placement: PlanPlacement): string {
   // Priority: latest stage completed
+  if (placement.harvestEndedDate) {
+    return "bg-purple-500"; // purple - harvest complete
+  }
   if (placement.harvestStartedDate) {
     return "bg-orange-500"; // orange - harvesting
   }

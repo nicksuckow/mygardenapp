@@ -20,6 +20,7 @@ type Placement = {
   transplantedDate?: string | null;
   directSowedDate?: string | null;
   harvestStartedDate?: string | null;
+  harvestEndedDate?: string | null;
   plant: Plant;
 };
 
@@ -43,6 +44,9 @@ async function readJson<T>(
 // Helper function to get status color based on spring tracking
 function getStatusColor(placement: Placement): string {
   // Priority: latest stage completed
+  if (placement.harvestEndedDate) {
+    return "#a855f7"; // purple - harvest complete
+  }
   if (placement.harvestStartedDate) {
     return "#f59e0b"; // orange - harvesting
   }
