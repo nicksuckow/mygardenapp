@@ -116,6 +116,8 @@ export async function PATCH(
       harvestStartedDate,
       harvestEndedDate,
       notes,
+      x,
+      y,
     } = body;
 
     // Validate dates if provided
@@ -126,6 +128,8 @@ export async function PATCH(
       harvestStartedDate?: Date | null;
       harvestEndedDate?: Date | null;
       notes?: string | null;
+      x?: number;
+      y?: number;
     } = {};
 
     if (seedsStartedDate !== undefined) {
@@ -145,6 +149,12 @@ export async function PATCH(
     }
     if (notes !== undefined) {
       updates.notes = notes;
+    }
+    if (x !== undefined && typeof x === "number" && x >= 0) {
+      updates.x = x;
+    }
+    if (y !== undefined && typeof y === "number" && y >= 0) {
+      updates.y = y;
     }
 
     const updated = await prisma.bedPlacement.update({
