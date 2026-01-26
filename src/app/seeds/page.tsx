@@ -196,6 +196,50 @@ export default function SeedsPage() {
     setSaving(true);
     setError("");
 
+    let plantId = form.plantId ? parseInt(form.plantId, 10) : null;
+
+    // If adding a new seed and no plant is linked, try to find/import from Verdantly
+    if (!editingId && !plantId && form.name.trim()) {
+      try {
+        // Search Verdantly for matching plant
+        const searchQuery = form.variety
+          ? `${form.name} ${form.variety}`
+          : form.name;
+        const searchRes = await fetch(
+          `/api/verdantly/search?q=${encodeURIComponent(searchQuery)}`
+        );
+
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+
+          if (searchData.results && searchData.results.length > 0) {
+            // Found a match - import the first result
+            const verdantlyPlant = searchData.results[0];
+
+            const importRes = await fetch("/api/verdantly/import", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ plantData: verdantlyPlant }),
+            });
+
+            if (importRes.ok) {
+              const importedPlant = await importRes.json();
+              plantId = importedPlant.id;
+            } else if (importRes.status === 409) {
+              // Plant already exists - use the existing one
+              const existingData = await importRes.json();
+              if (existingData.plant?.id) {
+                plantId = existingData.plant.id;
+              }
+            }
+          }
+        }
+      } catch (err) {
+        // Verdantly lookup failed - continue without linking
+        console.log("Verdantly lookup failed, continuing without plant link");
+      }
+    }
+
     const payload = {
       name: form.name,
       variety: form.variety || null,
@@ -210,7 +254,7 @@ export default function SeedsPage() {
       daysToGermination: form.daysToGermination ? parseInt(form.daysToGermination, 10) : null,
       germinationRate: form.germinationRate ? parseFloat(form.germinationRate) : null,
       status: form.status,
-      plantId: form.plantId ? parseInt(form.plantId, 10) : null,
+      plantId,
     };
 
     try {
