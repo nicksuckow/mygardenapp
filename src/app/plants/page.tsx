@@ -98,6 +98,10 @@ export default function PlantsPage() {
   // ✅ NEW
   const [plantingDepthInches, setPlantingDepthInches] = useState<number | "">("");
 
+  // Seed inventory checkbox
+  const [hasSeeds, setHasSeeds] = useState(false);
+  const [seedQuantity, setSeedQuantity] = useState(1);
+
   const [message, setMessage] = useState("");
 
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -177,6 +181,21 @@ export default function PlantsPage() {
         return;
       }
 
+      // If user has seeds, create a seed inventory entry
+      if (hasSeeds && parsed.data?.id) {
+        const seedUrl = new URL("/api/seeds", window.location.origin);
+        await fetch(seedUrl.toString(), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name,
+            plantId: parsed.data.id,
+            quantity: seedQuantity,
+            status: "available",
+          }),
+        });
+      }
+
       // reset
       setName("");
       setSpacingInches(12);
@@ -186,9 +205,11 @@ export default function PlantsPage() {
       setTransplantWeeks("");
       setDirectSowWeeks("");
       setPlantingDepthInches("");
+      setHasSeeds(false);
+      setSeedQuantity(1);
 
       await load();
-      setMessage("Added!");
+      setMessage(hasSeeds ? "Added plant and seeds!" : "Added!");
     } catch (e) {
       setMessage("Add failed (network error).");
     }
@@ -492,6 +513,36 @@ export default function PlantsPage() {
               Warning: Maximum days to maturity should be greater than or equal to minimum
             </div>
           )}
+        </div>
+
+        {/* Seed Inventory Checkbox */}
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={hasSeeds}
+              onChange={(e) => setHasSeeds(e.target.checked)}
+              className="mt-1 rounded border-amber-300"
+            />
+            <div className="flex-1">
+              <span className="text-sm font-medium text-amber-900">I have seeds for this plant</span>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Automatically add to your seed inventory when you add this plant
+              </p>
+              {hasSeeds && (
+                <div className="mt-2 flex items-center gap-2">
+                  <label className="text-xs text-amber-800">Packets:</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={seedQuantity}
+                    onChange={(e) => setSeedQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-16 rounded border border-amber-300 px-2 py-1 text-sm"
+                  />
+                </div>
+              )}
+            </div>
+          </label>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-3">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PlacementTrackingModal from "@/components/PlacementTrackingModal";
+import { getCompanionSuggestions } from "@/lib/companionPlanting";
 
 type Plant = {
   id: number;
@@ -130,6 +131,13 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
       map.set(p.plant.name, (map.get(p.plant.name) ?? 0) + 1);
     return map;
   }, [bed]);
+
+  // Companion planting suggestions
+  const companionSuggestions = useMemo(() => {
+    const plantNames = Array.from(counts.keys());
+    if (plantNames.length < 2) return { goodPairs: [], badPairs: [] };
+    return getCompanionSuggestions(plantNames);
+  }, [counts]);
 
   const isPositionValid = useCallback((x: number, y: number, plantToPlace: Plant): { valid: boolean; reason?: string } => {
     if (!bed) return { valid: false, reason: "Bed not loaded" };
@@ -397,6 +405,42 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               </ul>
             )}
           </div>
+
+          {/* Companion Planting */}
+          {(companionSuggestions.goodPairs.length > 0 || companionSuggestions.badPairs.length > 0) && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Companion Planting</p>
+
+              {companionSuggestions.badPairs.length > 0 && (
+                <div className="rounded-lg border border-rose-200 bg-rose-50 p-2">
+                  <p className="text-xs font-medium text-rose-800 mb-1">Conflicts</p>
+                  <ul className="text-xs text-rose-700 space-y-1">
+                    {companionSuggestions.badPairs.map((pair, idx) => (
+                      <li key={idx}>
+                        <span className="font-medium">{pair.plant1}</span> + <span className="font-medium">{pair.plant2}</span>: {pair.reason}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {companionSuggestions.goodPairs.length > 0 && (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-2">
+                  <p className="text-xs font-medium text-green-800 mb-1">Good Pairings</p>
+                  <ul className="text-xs text-green-700 space-y-1">
+                    {companionSuggestions.goodPairs.slice(0, 5).map((pair, idx) => (
+                      <li key={idx}>
+                        <span className="font-medium">{pair.plant1}</span> + <span className="font-medium">{pair.plant2}</span>: {pair.reason}
+                      </li>
+                    ))}
+                    {companionSuggestions.goodPairs.length > 5 && (
+                      <li className="text-green-600">+{companionSuggestions.goodPairs.length - 5} more good pairings</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Canvas */}

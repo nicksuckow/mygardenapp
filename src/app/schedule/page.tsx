@@ -69,7 +69,7 @@ export default function SchedulePage() {
   // Filters and view mode
   const [filterBedId, setFilterBedId] = useState<number | "all">("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "planned" | "completed">("all");
-  const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
+  const [viewMode, setViewMode] = useState<"table" | "calendar" | "week" | "grid">("table");
 
   useEffect(() => {
     (async () => {
@@ -338,6 +338,126 @@ export default function SchedulePage() {
     return grouped;
   }, [filteredEvents]);
 
+  // Upcoming tasks - next 7 and 14 days
+  const upcomingTasks = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const in7Days = new Date(today);
+    in7Days.setDate(in7Days.getDate() + 7);
+    const in14Days = new Date(today);
+    in14Days.setDate(in14Days.getDate() + 14);
+
+    const plannedEvents = events.filter((e) => e.status === "planned");
+
+    const overdue: EventRow[] = [];
+    const thisWeek: EventRow[] = [];
+    const nextWeek: EventRow[] = [];
+
+    for (const event of plannedEvents) {
+      const eventDate = new Date(event.date);
+      eventDate.setHours(0, 0, 0, 0);
+
+      if (eventDate < today) {
+        overdue.push(event);
+      } else if (eventDate <= in7Days) {
+        thisWeek.push(event);
+      } else if (eventDate <= in14Days) {
+        nextWeek.push(event);
+      }
+    }
+
+    return { overdue, thisWeek, nextWeek };
+  }, [events]);
+
+  // Week view - group events by week
+  const eventsByWeek = useMemo(() => {
+    const weeks: { weekStart: Date; weekEnd: Date; events: EventRow[] }[] = [];
+
+    if (filteredEvents.length === 0) return weeks;
+
+    // Find date range
+    const dates = filteredEvents.map((e) => new Date(e.date));
+    const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+
+    // Start from the Sunday of the first week
+    const current = new Date(minDate);
+    current.setDate(current.getDate() - current.getDay());
+
+    while (current <= maxDate) {
+      const weekStart = new Date(current);
+      const weekEnd = new Date(current);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+
+      const weekEvents = filteredEvents.filter((e) => {
+        const eventDate = new Date(e.date);
+        return eventDate >= weekStart && eventDate <= weekEnd;
+      });
+
+      if (weekEvents.length > 0) {
+        weeks.push({ weekStart, weekEnd, events: weekEvents });
+      }
+
+      current.setDate(current.getDate() + 7);
+    }
+
+    return weeks;
+  }, [filteredEvents]);
+
+  // Grid view - create a month calendar grid
+  const calendarGrid = useMemo(() => {
+    if (filteredEvents.length === 0) return [];
+
+    // Find the month range we need to display
+    const dates = filteredEvents.map((e) => new Date(e.date));
+    const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
+    const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+
+    const months: {
+      year: number;
+      month: number;
+      monthName: string;
+      days: { date: Date; events: EventRow[]; isCurrentMonth: boolean }[];
+    }[] = [];
+
+    const current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    const endMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+
+    while (current <= endMonth) {
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      const monthName = current.toLocaleDateString("en-US", { year: "numeric", month: "long" });
+
+      // Find first day to display (Sunday of the week containing the 1st)
+      const firstOfMonth = new Date(year, month, 1);
+      const lastOfMonth = new Date(year, month + 1, 0);
+      const startDay = new Date(firstOfMonth);
+      startDay.setDate(startDay.getDate() - startDay.getDay());
+
+      const days: { date: Date; events: EventRow[]; isCurrentMonth: boolean }[] = [];
+
+      // Generate 6 weeks of days (42 days)
+      for (let i = 0; i < 42; i++) {
+        const day = new Date(startDay);
+        day.setDate(day.getDate() + i);
+
+        const dateStr = fmt(day);
+        const dayEvents = filteredEvents.filter((e) => e.date === dateStr);
+
+        days.push({
+          date: day,
+          events: dayEvents,
+          isCurrentMonth: day.getMonth() === month,
+        });
+      }
+
+      months.push({ year, month, monthName, days });
+      current.setMonth(current.getMonth() + 1);
+    }
+
+    return months;
+  }, [filteredEvents]);
+
   // CSV export function
   function exportToCSV() {
     const csv = [
@@ -443,13 +563,33 @@ export default function SchedulePage() {
               </button>
               <button
                 className={`px-3 py-1.5 text-sm font-medium transition ${
+                  viewMode === "week"
+                    ? "bg-emerald-600 text-white"
+                    : "text-slate-700 hover:bg-slate-50"
+                } border-l border-slate-200`}
+                onClick={() => setViewMode("week")}
+              >
+                Week
+              </button>
+              <button
+                className={`px-3 py-1.5 text-sm font-medium transition ${
+                  viewMode === "grid"
+                    ? "bg-emerald-600 text-white"
+                    : "text-slate-700 hover:bg-slate-50"
+                } border-l border-slate-200`}
+                onClick={() => setViewMode("grid")}
+              >
+                Grid
+              </button>
+              <button
+                className={`px-3 py-1.5 text-sm font-medium transition ${
                   viewMode === "calendar"
                     ? "bg-emerald-600 text-white"
                     : "text-slate-700 hover:bg-slate-50"
                 } rounded-r-lg border-l border-slate-200`}
                 onClick={() => setViewMode("calendar")}
               >
-                Calendar
+                List
               </button>
             </div>
 
@@ -459,6 +599,95 @@ export default function SchedulePage() {
           </div>
         </div>
       </div>
+
+      {/* Upcoming Tasks Notifications */}
+      {!error && settings && events.length > 0 && (upcomingTasks.overdue.length > 0 || upcomingTasks.thisWeek.length > 0 || upcomingTasks.nextWeek.length > 0) && (
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Overdue */}
+          {upcomingTasks.overdue.length > 0 && (
+            <div className="rounded-xl border-2 border-rose-300 bg-rose-50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 rounded-lg bg-rose-200">
+                  <svg className="w-4 h-4 text-rose-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-rose-900">Overdue ({upcomingTasks.overdue.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {upcomingTasks.overdue.slice(0, 5).map((task, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm">
+                    <span className="font-mono text-rose-600 text-xs mt-0.5">{task.date}</span>
+                    <div>
+                      <span className="font-medium text-rose-800">{task.task}</span>
+                      <span className="text-rose-700"> - {task.plantName}</span>
+                    </div>
+                  </div>
+                ))}
+                {upcomingTasks.overdue.length > 5 && (
+                  <p className="text-xs text-rose-600">+{upcomingTasks.overdue.length - 5} more</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* This Week */}
+          {upcomingTasks.thisWeek.length > 0 && (
+            <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 rounded-lg bg-amber-200">
+                  <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-amber-900">This Week ({upcomingTasks.thisWeek.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {upcomingTasks.thisWeek.slice(0, 5).map((task, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm">
+                    <span className="font-mono text-amber-600 text-xs mt-0.5">{task.date}</span>
+                    <div>
+                      <span className="font-medium text-amber-800">{task.task}</span>
+                      <span className="text-amber-700"> - {task.plantName}</span>
+                    </div>
+                  </div>
+                ))}
+                {upcomingTasks.thisWeek.length > 5 && (
+                  <p className="text-xs text-amber-600">+{upcomingTasks.thisWeek.length - 5} more</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Next Week */}
+          {upcomingTasks.nextWeek.length > 0 && (
+            <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="p-1.5 rounded-lg bg-blue-200">
+                  <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="font-semibold text-blue-900">Next Week ({upcomingTasks.nextWeek.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {upcomingTasks.nextWeek.slice(0, 5).map((task, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-sm">
+                    <span className="font-mono text-blue-600 text-xs mt-0.5">{task.date}</span>
+                    <div>
+                      <span className="font-medium text-blue-800">{task.task}</span>
+                      <span className="text-blue-700"> - {task.plantName}</span>
+                    </div>
+                  </div>
+                ))}
+                {upcomingTasks.nextWeek.length > 5 && (
+                  <p className="text-xs text-blue-600">+{upcomingTasks.nextWeek.length - 5} more</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {error ? (
         <div className={`${ui.card} ${ui.cardPad} space-y-3`}>
@@ -496,7 +725,7 @@ export default function SchedulePage() {
           No schedule items match your filters.
         </p>
       ) : viewMode === "calendar" ? (
-        /* Calendar View */
+        /* List View (by month) */
         <div className="space-y-4">
           {Object.entries(eventsByMonth).map(([month, monthEvents]) => (
             <div key={month} className={`${ui.card} ${ui.cardPad}`}>
@@ -521,6 +750,116 @@ export default function SchedulePage() {
                     <span className="text-slate-500 text-xs">in {event.bedName}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : viewMode === "week" ? (
+        /* Week View */
+        <div className="space-y-4">
+          {eventsByWeek.map((week, idx) => (
+            <div key={idx} className={`${ui.card} ${ui.cardPad}`}>
+              <h3 className="text-base font-semibold mb-3 text-slate-800">
+                Week of {week.weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {week.weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </h3>
+              <div className="grid gap-2 md:grid-cols-7">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, dayIdx) => {
+                  const dayDate = new Date(week.weekStart);
+                  dayDate.setDate(dayDate.getDate() + dayIdx);
+                  const dateStr = fmt(dayDate);
+                  const dayEvents = week.events.filter((e) => e.date === dateStr);
+                  const isToday = dateStr === fmt(new Date());
+
+                  return (
+                    <div
+                      key={day}
+                      className={`rounded-lg border p-2 min-h-[80px] ${
+                        isToday ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-slate-500">{day}</span>
+                        <span className={`text-xs font-mono ${isToday ? "text-emerald-700 font-bold" : "text-slate-400"}`}>
+                          {dayDate.getDate()}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {dayEvents.slice(0, 3).map((event, eIdx) => (
+                          <div
+                            key={eIdx}
+                            className={`text-xs px-1.5 py-0.5 rounded truncate ${getTaskColorClass(event.task)}`}
+                            title={`${event.task} - ${event.plantName}`}
+                          >
+                            {event.plantName}
+                          </div>
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <div className="text-xs text-slate-500">+{dayEvents.length - 3} more</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : viewMode === "grid" ? (
+        /* Grid View (Monthly Calendar) */
+        <div className="space-y-6">
+          {calendarGrid.map((month, mIdx) => (
+            <div key={mIdx} className={`${ui.card} ${ui.cardPad}`}>
+              <h3 className="text-lg font-semibold mb-4 text-slate-800">{month.monthName}</h3>
+              <div className="grid grid-cols-7 gap-1">
+                {/* Day headers */}
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                  <div key={day} className="text-center text-xs font-medium text-slate-500 py-2">
+                    {day}
+                  </div>
+                ))}
+                {/* Day cells */}
+                {month.days.map((day, dIdx) => {
+                  const isToday = fmt(day.date) === fmt(new Date());
+                  const hasEvents = day.events.length > 0;
+                  const hasOverdue = day.events.some((e) => e.status === "planned" && new Date(e.date) < new Date());
+
+                  return (
+                    <div
+                      key={dIdx}
+                      className={`min-h-[60px] rounded border p-1 ${
+                        !day.isCurrentMonth
+                          ? "bg-slate-50 border-slate-100"
+                          : isToday
+                          ? "border-emerald-400 bg-emerald-50"
+                          : hasOverdue
+                          ? "border-rose-300 bg-rose-50"
+                          : hasEvents
+                          ? "border-blue-200 bg-blue-50"
+                          : "border-slate-200 bg-white"
+                      }`}
+                    >
+                      <div className={`text-xs text-right mb-1 ${
+                        !day.isCurrentMonth ? "text-slate-300" : isToday ? "text-emerald-700 font-bold" : "text-slate-500"
+                      }`}>
+                        {day.date.getDate()}
+                      </div>
+                      <div className="space-y-0.5">
+                        {day.events.slice(0, 2).map((event, eIdx) => (
+                          <div
+                            key={eIdx}
+                            className={`text-xs px-1 py-0.5 rounded truncate ${getTaskColorClass(event.task)}`}
+                            title={`${event.task} - ${event.plantName} (${event.bedName})`}
+                          >
+                            {event.plantName.slice(0, 8)}
+                          </div>
+                        ))}
+                        {day.events.length > 2 && (
+                          <div className="text-xs text-slate-500 text-center">+{day.events.length - 2}</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

@@ -64,6 +64,10 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Seed import option
+  const [importSeeds, setImportSeeds] = useState(true);
+  const [seedQuantity, setSeedQuantity] = useState(1);
+
   async function handleSearch(e?: React.FormEvent, page: number = 1) {
     e?.preventDefault();
     if (!query.trim() || query.trim().length < 2) {
@@ -127,6 +131,23 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
         return;
       }
 
+      // If user wants to add seeds, create a seed inventory entry
+      if (importSeeds && data.id) {
+        await fetch("/api/seeds", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: plant.name,
+            variety: plant.subtype || null,
+            plantId: data.id,
+            quantity: seedQuantity,
+            status: "available",
+            sowingInstructions: plant.careInstructions?.plantingInstructions?.directSow ||
+              plant.careInstructions?.plantingInstructions?.startIndoors || null,
+          }),
+        });
+      }
+
       // Success - close modal and refresh plants list
       setImporting(null);
       onImport();
@@ -185,6 +206,30 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
               >
                 {searching ? "Searching..." : "Search"}
               </button>
+
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={importSeeds}
+                  onChange={(e) => setImportSeeds(e.target.checked)}
+                  className="rounded border-slate-300"
+                />
+                <span className="text-slate-700">Add to seed inventory</span>
+                {importSeeds && (
+                  <span className="flex items-center gap-1 text-slate-600">
+                    <span>(</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={seedQuantity}
+                      onChange={(e) => setSeedQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-12 rounded border border-slate-300 px-1 py-0.5 text-sm text-center"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <span>packets)</span>
+                  </span>
+                )}
+              </label>
             </div>
           </form>
 

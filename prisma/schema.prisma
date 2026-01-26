@@ -19,10 +19,11 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  settings   UserSettings?
-  gardens    Garden[]
-  beds       Bed[]
-  plants     Plant[]
+  settings      UserSettings?
+  gardens       Garden[]
+  beds          Bed[]
+  plants        Plant[]
+  seedInventory SeedInventory[]
 
   // NextAuth.js session support
   accounts           Account[]
@@ -158,8 +159,9 @@ model Plant {
   poisonousToPets    Int?    // 0 = not poisonous, 1 = poisonous
   description        String? // Full plant description
 
-  placements BedPlacement[]
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placements    BedPlacement[]
+  seedInventory SeedInventory[]
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, name])
@@ -237,6 +239,39 @@ model Gate {
   garden Garden @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// SeedInventory - tracks seed packets and their quantities
+model SeedInventory {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  plantId     Int?    // optional link to a plant in the user's library
+  name        String  // seed name (may differ from plant name for varieties)
+  variety     String? // specific variety
+  brand       String? // seed company/brand
+  quantity    Int     @default(1) // number of seed packets
+  seedCount   Int?    // approximate number of seeds per packet
+  purchaseDate DateTime? // when purchased
+  expirationDate DateTime? // seed viability date
+  lotNumber   String? // lot number for tracking
+  notes       String? // user notes
+
+  // Planting info
+  sowingInstructions String? // instructions from packet
+  daysToGermination  Int?    // days until germination
+  germinationRate    Float?  // percentage (0-100)
+
+  // Status tracking
+  status      String @default("available") // "available", "low", "empty", "expired"
+
+  plant Plant? @relation(fields: [plantId], references: [id], onDelete: SetNull)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, status])
 }
 
 // BedPlacement - tracks plant placements in beds with lifecycle information
