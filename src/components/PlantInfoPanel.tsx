@@ -193,9 +193,9 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
             {plant.watering && <p>💧 {plant.watering}</p>}
             {(plant.minTemperatureC != null || plant.maxTemperatureC != null) && (
               <p>
-                🌡️ {plant.minTemperatureC != null ? `${plant.minTemperatureC}°C` : "?"}
+                🌡️ {plant.minTemperatureC != null ? `${Math.round(plant.minTemperatureC * 9/5 + 32)}°F` : "?"}
                 {" – "}
-                {plant.maxTemperatureC != null ? `${plant.maxTemperatureC}°C` : "?"}
+                {plant.maxTemperatureC != null ? `${Math.round(plant.maxTemperatureC * 9/5 + 32)}°F` : "?"}
               </p>
             )}
             {(plant.lightRequirement != null || plant.soilHumidity != null) && (

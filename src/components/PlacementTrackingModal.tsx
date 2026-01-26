@@ -254,7 +254,7 @@ export default function PlacementTrackingModal({
                   {placement.plant.averageHeightCm && (
                     <>
                       <span className="text-slate-500">Mature height:</span>
-                      <span className="text-slate-700">{placement.plant.averageHeightCm} cm</span>
+                      <span className="text-slate-700">{Math.round(placement.plant.averageHeightCm / 2.54)}"</span>
                     </>
                   )}
                 </div>
@@ -305,9 +305,9 @@ export default function PlacementTrackingModal({
                       <>
                         <span className="text-green-700">Temperature:</span>
                         <span className="text-green-900">
-                          {placement.plant.minTemperatureC !== null && `${placement.plant.minTemperatureC}°C`}
+                          {placement.plant.minTemperatureC !== null && `${Math.round(placement.plant.minTemperatureC * 9/5 + 32)}°F`}
                           {placement.plant.minTemperatureC !== null && placement.plant.maxTemperatureC !== null && " - "}
-                          {placement.plant.maxTemperatureC !== null && `${placement.plant.maxTemperatureC}°C`}
+                          {placement.plant.maxTemperatureC !== null && `${Math.round(placement.plant.maxTemperatureC * 9/5 + 32)}°F`}
                         </span>
                       </>
                     )}

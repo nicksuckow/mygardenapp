@@ -638,9 +638,9 @@ export default function PlantsPage() {
                             </p>
                             {(p.minTemperatureC != null || p.maxTemperatureC != null) && (
                               <p>
-                                Temp: {p.minTemperatureC != null ? `${p.minTemperatureC}°C` : "?"}
+                                Temp: {p.minTemperatureC != null ? `${Math.round(p.minTemperatureC * 9/5 + 32)}°F` : "?"}
                                 {" – "}
-                                {p.maxTemperatureC != null ? `${p.maxTemperatureC}°C` : "?"}
+                                {p.maxTemperatureC != null ? `${Math.round(p.maxTemperatureC * 9/5 + 32)}°F` : "?"}
                               </p>
                             )}
                             {(p.lightRequirement != null || p.soilHumidity != null) && (
