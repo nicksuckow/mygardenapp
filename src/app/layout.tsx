@@ -4,10 +4,17 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { SessionProvider } from "next-auth/react";
 import UserMenu from "@/components/UserMenu";
+import MobileNav from "@/components/MobileNav";
 
 export const metadata = {
   title: "Garden Planner",
   description: "Plan your garden with dates and a virtual bed layout",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default async function RootLayout({
@@ -22,57 +29,61 @@ export default async function RootLayout({
       <body className={ui.page}>
         <SessionProvider session={session}>
           <div className="min-h-screen">
-            <header className="border-b border-slate-200 bg-white/80 backdrop-blur">
-              <nav className="mx-auto flex items-center gap-4 px-6 py-4">
-                <Link className="font-semibold text-slate-900" href="/">
+            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+              <nav className="mx-auto flex items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4">
+                <Link className="font-semibold text-slate-900 text-sm sm:text-base" href="/">
                   Garden Planner
                 </Link>
 
                 {session?.user && (
                   <>
-                    <Link
-                      className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
-                      href="/settings"
-                    >
-                      Location Data
-                    </Link>
-                    <Link
-                      className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
-                      href="/plants"
-                    >
-                      Plants
-                    </Link>
-                    <Link
-                      className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
-                      href="/seeds"
-                    >
-                      Seeds
-                    </Link>
-                    <Link
-                      className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
-                      href="/beds"
-                    >
-                      Beds
-                    </Link>
-                    <Link
-                      className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
-                      href="/schedule"
-                    >
-                      Schedule
-                    </Link>
-                    <Link className="text-sm hover:underline" href="/garden">
-                      Garden View
-                    </Link>
+                    {/* Desktop navigation - hidden on mobile */}
+                    <div className="hidden md:flex items-center gap-4">
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/settings"
+                      >
+                        Location Data
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/plants"
+                      >
+                        Plants
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/seeds"
+                      >
+                        Seeds
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/beds"
+                      >
+                        Beds
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/schedule"
+                      >
+                        Schedule
+                      </Link>
+                      <Link className="text-sm hover:underline" href="/garden">
+                        Garden View
+                      </Link>
+                    </div>
                   </>
                 )}
 
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-2">
                   <UserMenu session={session} />
+                  {session?.user && <MobileNav />}
                 </div>
               </nav>
             </header>
 
-            <main className="mx-auto px-6 py-4">{children}</main>
+            <main className="mx-auto px-4 sm:px-6 py-4">{children}</main>
           </div>
         </SessionProvider>
       </body>

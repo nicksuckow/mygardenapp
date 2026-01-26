@@ -394,14 +394,14 @@ export default function SeedsPage() {
 
       {/* Controls */}
       <div className={`${ui.card} ${ui.cardPad}`}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
             <input
               type="text"
               placeholder="Search seeds..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="rounded border border-slate-300 px-3 py-2 text-sm w-48"
+              className="rounded border border-slate-300 px-3 py-2 text-sm w-full sm:w-48"
             />
             <select
               value={filterStatus}

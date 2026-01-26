@@ -514,12 +514,13 @@ export default function SchedulePage() {
       </div>
 
       <div className={`${ui.card} ${ui.cardPad}`}>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col gap-3">
+          {/* Filters row */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700">Bed:</label>
+              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Bed:</label>
               <select
-                className="rounded border px-3 py-2 text-sm"
+                className="rounded border px-3 py-2 text-sm flex-1 sm:flex-none"
                 value={filterBedId}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -536,9 +537,9 @@ export default function SchedulePage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700">Status:</label>
+              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Status:</label>
               <select
-                className="rounded border px-3 py-2 text-sm"
+                className="rounded border px-3 py-2 text-sm flex-1 sm:flex-none"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as "all" | "planned" | "completed")}
               >
@@ -549,10 +550,11 @@ export default function SchedulePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border border-slate-200 bg-white">
+          {/* View mode and export row */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="flex rounded-lg border border-slate-200 bg-white overflow-x-auto">
               <button
-                className={`px-3 py-1.5 text-sm font-medium transition ${
+                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                   viewMode === "table"
                     ? "bg-emerald-600 text-white"
                     : "text-slate-700 hover:bg-slate-50"
@@ -562,7 +564,7 @@ export default function SchedulePage() {
                 Table
               </button>
               <button
-                className={`px-3 py-1.5 text-sm font-medium transition ${
+                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                   viewMode === "week"
                     ? "bg-emerald-600 text-white"
                     : "text-slate-700 hover:bg-slate-50"
@@ -572,7 +574,7 @@ export default function SchedulePage() {
                 Week
               </button>
               <button
-                className={`px-3 py-1.5 text-sm font-medium transition ${
+                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                   viewMode === "grid"
                     ? "bg-emerald-600 text-white"
                     : "text-slate-700 hover:bg-slate-50"
@@ -582,7 +584,7 @@ export default function SchedulePage() {
                 Grid
               </button>
               <button
-                className={`px-3 py-1.5 text-sm font-medium transition ${
+                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                   viewMode === "calendar"
                     ? "bg-emerald-600 text-white"
                     : "text-slate-700 hover:bg-slate-50"
@@ -593,7 +595,7 @@ export default function SchedulePage() {
               </button>
             </div>
 
-            <button className={`${ui.btn} ${ui.btnSecondary}`} onClick={exportToCSV}>
+            <button className={`${ui.btn} ${ui.btnSecondary} whitespace-nowrap`} onClick={exportToCSV}>
               Export CSV
             </button>
           </div>
