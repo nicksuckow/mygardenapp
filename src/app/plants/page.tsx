@@ -157,9 +157,8 @@ export default function PlantsPage() {
         startIndoorsWeeksBeforeFrost: startWeeks === "" ? null : Number(startWeeks),
         transplantWeeksAfterFrost: transplantWeeks === "" ? null : Number(transplantWeeks),
         directSowWeeksRelativeToFrost: directSowWeeks === "" ? null : Number(directSowWeeks),
-
-        // ✅ NEW (float)
         plantingDepthInches: plantingDepthInches === "" ? null : Number(plantingDepthInches),
+        hasSeeds,
       };
 
       const url = new URL("/api/plants", window.location.origin);

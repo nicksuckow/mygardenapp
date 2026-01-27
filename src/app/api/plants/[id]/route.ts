@@ -113,6 +113,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
       data.plantingDepthInches = parsed;
     }
 
+    // Seed tracking
+    if (typeof body.hasSeeds === "boolean") data.hasSeeds = body.hasSeeds;
+
     if ("name" in data && data.name === "") {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }

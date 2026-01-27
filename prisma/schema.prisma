@@ -130,6 +130,9 @@ model Plant {
 
   notes String?
 
+  // Seed tracking
+  hasSeeds Boolean @default(false) // User has seeds for this plant
+
   // Additional Trefle data fields
   scientificName   String? // Scientific/botanical name
   growthForm       String? // e.g., "herb", "shrub", "tree"

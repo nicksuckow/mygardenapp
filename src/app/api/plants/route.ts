@@ -140,6 +140,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Planting depth must be between 0 and 24 inches." }, { status: 400 });
     }
 
+    const hasSeeds = body?.hasSeeds === true;
+
     const plant = await prisma.plant.create({
       data: {
         userId,
@@ -151,6 +153,7 @@ export async function POST(req: Request) {
         transplantWeeksAfterFrost,
         directSowWeeksRelativeToFrost,
         plantingDepthInches,
+        hasSeeds,
       },
     });
 

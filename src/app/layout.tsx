@@ -47,15 +47,15 @@ export default async function RootLayout({
                       </Link>
                       <Link
                         className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
-                        href="/seeds"
-                      >
-                        Seeds
-                      </Link>
-                      <Link
-                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
                         href="/plants"
                       >
                         Plants
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/seeds"
+                      >
+                        Seed Inventory
                       </Link>
                       <Link
                         className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
