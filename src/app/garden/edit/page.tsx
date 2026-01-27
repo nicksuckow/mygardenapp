@@ -256,6 +256,24 @@ export default function GardenPage() {
     isDragging: false,
   });
 
+  // Walkway selection and resize state
+  const [selectedWalkwayId, setSelectedWalkwayId] = useState<number | null>(null);
+  const [walkwayResize, setWalkwayResize] = useState<{
+    walkwayId: number;
+    edge: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+    original: { x: number; y: number; width: number; height: number };
+    startCell: { x: number; y: number };
+  } | null>(null);
+
+  // Gate selection and resize state
+  const [selectedGateId, setSelectedGateId] = useState<number | null>(null);
+  const [gateResize, setGateResize] = useState<{
+    gateId: number;
+    edge: 'left' | 'right';
+    original: { x: number; y: number; width: number };
+    startCell: { x: number; y: number };
+  } | null>(null);
+
   // ✅ dot tooltip state
   const [dotTip, setDotTip] = useState<{
     bedId: number;
@@ -595,6 +613,27 @@ export default function GardenPage() {
     await load();
   }
 
+  async function updateWalkway(id: number, x: number, y: number, width: number, height: number) {
+    setMessage("");
+    const res = await fetch(`/api/walkways/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x, y, width, height }),
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      try {
+        setMessage(JSON.parse(text)?.error ?? `Update path failed (${res.status})`);
+      } catch {
+        setMessage(`Update path failed (${res.status})`);
+      }
+      return;
+    }
+
+    await load();
+  }
+
   async function deleteWalkway(id: number) {
     setMessage("");
     const res = await fetch(`/api/walkways/${id}`, {
@@ -640,6 +679,27 @@ export default function GardenPage() {
     const text = await res.text();
     if (!res.ok) {
       setMessage(`Delete gate failed (${res.status}): ${text}`);
+      return;
+    }
+
+    await load();
+  }
+
+  async function updateGate(id: number, x: number, y: number, width: number) {
+    setMessage("");
+    const res = await fetch(`/api/gates/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ x, y, width }),
+    });
+
+    const text = await res.text();
+    if (!res.ok) {
+      try {
+        setMessage(JSON.parse(text)?.error ?? `Update gate failed (${res.status})`);
+      } catch {
+        setMessage(`Update gate failed (${res.status})`);
+      }
       return;
     }
 
@@ -787,20 +847,111 @@ export default function GardenPage() {
 
   // While dragging
   function onGridPointerMove(e: React.PointerEvent) {
-    if (!dragBedId) return;
     const cell = pointerToCell(e.clientX, e.clientY);
-    setDragPreview(cell);
+
+    // Handle bed dragging
+    if (dragBedId) {
+      setDragPreview(cell);
+      return;
+    }
+
+    // Handle walkway resize
+    if (walkwayResize && cell) {
+      setDragPreview(cell);
+      return;
+    }
+
+    // Handle gate resize
+    if (gateResize && cell) {
+      setDragPreview(cell);
+      return;
+    }
   }
 
   // Drop
   async function onGridPointerUp(e: React.PointerEvent) {
-    if (!dragBedId) return;
-    const cell = pointerToCell(e.clientX, e.clientY);
-    setDragBedId(null);
-    setDragPreview(null);
+    // Handle bed drop
+    if (dragBedId) {
+      const cell = pointerToCell(e.clientX, e.clientY);
+      setDragBedId(null);
+      setDragPreview(null);
 
-    if (!cell) return;
-    await setBedPosition(dragBedId, cell.x, cell.y);
+      if (!cell) return;
+      await setBedPosition(dragBedId, cell.x, cell.y);
+      return;
+    }
+
+    // Handle walkway resize completion
+    if (walkwayResize && dragPreview) {
+      const { edge, original, startCell, walkwayId } = walkwayResize;
+      const dx = dragPreview.x - startCell.x;
+      const dy = dragPreview.y - startCell.y;
+
+      let newX = original.x;
+      let newY = original.y;
+      let newW = original.width;
+      let newH = original.height;
+
+      if (edge.includes('n')) {
+        newY = Math.min(original.y + dy, original.y + original.height - 1);
+        newH = original.height - (newY - original.y);
+      }
+      if (edge.includes('s')) {
+        newH = Math.max(1, original.height + dy);
+      }
+      if (edge.includes('w')) {
+        newX = Math.min(original.x + dx, original.x + original.width - 1);
+        newW = original.width - (newX - original.x);
+      }
+      if (edge.includes('e')) {
+        newW = Math.max(1, original.width + dx);
+      }
+
+      // Clamp to grid bounds
+      newX = Math.max(0, newX);
+      newY = Math.max(0, newY);
+      newW = Math.max(1, Math.min(newW, cols - newX));
+      newH = Math.max(1, Math.min(newH, rows - newY));
+
+      setWalkwayResize(null);
+      setDragPreview(null);
+
+      // Only update if something changed
+      if (newX !== original.x || newY !== original.y || newW !== original.width || newH !== original.height) {
+        await updateWalkway(walkwayId, newX, newY, newW, newH);
+      }
+      return;
+    }
+
+    // Handle gate resize completion
+    if (gateResize && dragPreview) {
+      const { edge, original, startCell, gateId } = gateResize;
+      const dx = dragPreview.x - startCell.x;
+
+      let newX = original.x;
+      let newW = original.width;
+
+      if (edge === 'left') {
+        newX = Math.min(original.x + dx, original.x + original.width - 1);
+        newW = original.width - (newX - original.x);
+      }
+      if (edge === 'right') {
+        newW = Math.max(1, original.width + dx);
+      }
+
+      // Clamp to grid bounds
+      newX = Math.max(0, newX);
+      newW = Math.max(1, Math.min(newW, cols - newX));
+
+      setGateResize(null);
+      setDragPreview(null);
+
+      // Only update if something changed
+      if (newX !== original.x || newW !== original.width) {
+        await updateGate(gateId, newX, original.y, newW);
+      }
+      return;
+    }
   }
 
   // Grid cell pointer down - start walkway drag or place bed/gate
@@ -1027,7 +1178,7 @@ export default function GardenPage() {
                     setWalkwayDraft({ start: null, end: null, isDragging: false });
                   }}
                 >
-                  Beds
+                  🌱 Beds
                 </button>
                 <button
                   className={`flex-1 px-2 py-1.5 text-xs rounded border transition-colors ${
@@ -1040,7 +1191,7 @@ export default function GardenPage() {
                     setWalkwayDraft({ start: null, end: null, isDragging: false });
                   }}
                 >
-                  Walkways
+                  🚶 Paths
                 </button>
                 <button
                   className={`flex-1 px-2 py-1.5 text-xs rounded border transition-colors ${
@@ -1053,14 +1204,122 @@ export default function GardenPage() {
                     setWalkwayDraft({ start: null, end: null, isDragging: false });
                   }}
                 >
-                  Gates
+                  🚪 Gates
                 </button>
               </div>
+
+              {/* Walkway mode expanded UI */}
               {placementMode === 'walkway' && (
-                <p className="text-xs text-amber-700">Drag on the grid to create walkways</p>
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-200 to-amber-300 flex items-center justify-center">
+                      <span className="text-lg">🚶</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-amber-900">Add Path</p>
+                      <p className="text-xs text-amber-700">Click & drag on grid</p>
+                    </div>
+                  </div>
+
+                  {/* Existing walkways list */}
+                  {(garden?.walkways ?? []).length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-amber-800 mb-1">
+                        Existing Paths ({garden?.walkways?.length})
+                      </p>
+                      <p className="text-[10px] text-amber-600 mb-1">Click to select, then drag edges to resize</p>
+                      <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                        {(garden?.walkways ?? []).map((w) => (
+                          <div
+                            key={w.id}
+                            onClick={() => setSelectedWalkwayId(selectedWalkwayId === w.id ? null : w.id)}
+                            className={`flex items-center justify-between text-xs rounded border px-2 py-1.5 cursor-pointer transition-colors ${
+                              selectedWalkwayId === w.id
+                                ? 'bg-amber-100 border-amber-400 ring-1 ring-amber-400'
+                                : 'bg-white border-amber-200 hover:bg-amber-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {selectedWalkwayId === w.id && (
+                                <span className="text-amber-600">✓</span>
+                              )}
+                              <span className="text-amber-800">
+                                {w.width} × {w.height} cells
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteWalkway(w.id);
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                              title="Delete path"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
+
+              {/* Gate mode expanded UI */}
               {placementMode === 'gate' && (
-                <p className="text-xs text-blue-700">Click grid cell to place gate</p>
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-200 to-blue-300 flex items-center justify-center">
+                      <span className="text-lg">🚪</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-900">Add Gate</p>
+                      <p className="text-xs text-blue-700">Click on garden edge</p>
+                    </div>
+                  </div>
+
+                  {/* Existing gates list */}
+                  {(garden?.gates ?? []).length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-blue-800 mb-1">
+                        Existing Gates ({garden?.gates?.length})
+                      </p>
+                      <p className="text-[10px] text-blue-600 mb-1">Click to select, drag edges to resize width</p>
+                      <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                        {(garden?.gates ?? []).map((g) => (
+                          <div
+                            key={g.id}
+                            onClick={() => setSelectedGateId(selectedGateId === g.id ? null : g.id)}
+                            className={`flex items-center justify-between text-xs rounded border px-2 py-1.5 cursor-pointer transition-colors ${
+                              selectedGateId === g.id
+                                ? 'bg-blue-100 border-blue-400 ring-1 ring-blue-400'
+                                : 'bg-white border-blue-200 hover:bg-blue-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {selectedGateId === g.id && (
+                                <span className="text-blue-600">✓</span>
+                              )}
+                              <span className="text-blue-800">
+                                {g.side} • {g.width} cell{g.width > 1 ? 's' : ''} wide
+                              </span>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteGate(g.id);
+                              }}
+                              className="text-red-500 hover:text-red-700 font-bold"
+                              title="Delete gate"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -1409,40 +1668,262 @@ export default function GardenPage() {
                         gridTemplateRows: `repeat(${rows}, ${CELL_PX * zoom}px)`,
                       }}
                     >
-                      {(garden?.walkways ?? []).map((w) => (
-                        <div
-                          key={w.id}
-                          className="relative h-full bg-amber-200/60 border border-amber-400 pointer-events-auto"
-                          style={{
-                            gridColumnStart: w.x + 1,
-                            gridRowStart: w.y + 1,
-                            gridColumnEnd: w.x + 1 + w.width,
-                            gridRowEnd: w.y + 1 + w.height,
-                          }}
-                          title={w.name || "Walkway"}
-                        >
-                          <button
-                            className="absolute top-0.5 right-0.5 bg-white rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600"
-                            onClick={() => deleteWalkway(w.id)}
-                            title="Delete walkway"
+                      {(garden?.walkways ?? []).map((w) => {
+                        const isSelected = selectedWalkwayId === w.id;
+                        // Calculate preview dimensions if this walkway is being resized
+                        let previewX = w.x;
+                        let previewY = w.y;
+                        let previewW = w.width;
+                        let previewH = w.height;
+
+                        if (walkwayResize && walkwayResize.walkwayId === w.id && dragPreview) {
+                          const { edge, original, startCell } = walkwayResize;
+                          const dx = dragPreview.x - startCell.x;
+                          const dy = dragPreview.y - startCell.y;
+
+                          if (edge.includes('n')) {
+                            previewY = Math.min(original.y + dy, original.y + original.height - 1);
+                            previewH = original.height - (previewY - original.y);
+                          }
+                          if (edge.includes('s')) {
+                            previewH = Math.max(1, original.height + dy);
+                          }
+                          if (edge.includes('w')) {
+                            previewX = Math.min(original.x + dx, original.x + original.width - 1);
+                            previewW = original.width - (previewX - original.x);
+                          }
+                          if (edge.includes('e')) {
+                            previewW = Math.max(1, original.width + dx);
+                          }
+
+                          // Clamp to grid bounds
+                          previewX = Math.max(0, previewX);
+                          previewY = Math.max(0, previewY);
+                          previewW = Math.max(1, Math.min(previewW, cols - previewX));
+                          previewH = Math.max(1, Math.min(previewH, rows - previewY));
+                        }
+
+                        return (
+                          <div
+                            key={w.id}
+                            className={`relative h-full rounded-sm pointer-events-auto overflow-visible ${
+                              isSelected ? 'z-20' : ''
+                            }`}
+                            style={{
+                              gridColumnStart: previewX + 1,
+                              gridRowStart: previewY + 1,
+                              gridColumnEnd: previewX + 1 + previewW,
+                              gridRowEnd: previewY + 1 + previewH,
+                              background: `
+                                radial-gradient(circle at 20% 30%, rgba(180,160,140,0.3) 0%, transparent 20%),
+                                radial-gradient(circle at 60% 70%, rgba(160,140,120,0.3) 0%, transparent 15%),
+                                radial-gradient(circle at 80% 20%, rgba(170,150,130,0.3) 0%, transparent 18%),
+                                radial-gradient(circle at 40% 80%, rgba(175,155,135,0.3) 0%, transparent 12%),
+                                linear-gradient(180deg, #C4B5A0 0%, #B8A890 50%, #A89880 100%)
+                              `,
+                              boxShadow: isSelected
+                                ? '0 0 0 3px rgba(217,119,6,0.5), inset 0 2px 4px rgba(0,0,0,0.15)'
+                                : 'inset 0 2px 4px rgba(0,0,0,0.15), inset 0 -1px 2px rgba(255,255,255,0.2)',
+                              border: isSelected ? '2px solid #D97706' : '1px solid rgba(139,119,101,0.5)',
+                            }}
+                            title={w.name || "Garden Path - Click to select"}
+                            onClick={() => setSelectedWalkwayId(isSelected ? null : w.id)}
                           >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                            {/* Gravel texture dots */}
+                            <div className="absolute inset-0 opacity-30 rounded-sm overflow-hidden" style={{
+                              backgroundImage: `
+                                radial-gradient(circle, #8B7355 1px, transparent 1px),
+                                radial-gradient(circle, #6B5344 1px, transparent 1px)
+                              `,
+                              backgroundSize: '8px 8px, 12px 12px',
+                              backgroundPosition: '0 0, 4px 4px',
+                            }} />
+
+                            {/* Delete button */}
+                            <button
+                              className="absolute top-1 right-1 bg-white/90 backdrop-blur rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600 shadow-sm z-10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteWalkway(w.id);
+                              }}
+                              title="Delete path"
+                            >
+                              ×
+                            </button>
+
+                            {/* Resize handles - only show when selected */}
+                            {isSelected && (
+                              <>
+                                {/* Edge handles */}
+                                <div
+                                  className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-3 bg-amber-500 rounded cursor-ns-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 'n',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                                <div
+                                  className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-6 h-3 bg-amber-500 rounded cursor-ns-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 's',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                                <div
+                                  className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-amber-500 rounded cursor-ew-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 'w',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                                <div
+                                  className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-amber-500 rounded cursor-ew-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 'e',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+
+                                {/* Corner handles */}
+                                <div
+                                  className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-amber-500 rounded-full cursor-nwse-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 'nw',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                                <div
+                                  className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-amber-500 rounded-full cursor-nesw-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 'ne',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                                <div
+                                  className="absolute bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-amber-500 rounded-full cursor-nesw-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 'sw',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                                <div
+                                  className="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-4 h-4 bg-amber-500 rounded-full cursor-nwse-resize z-20 hover:bg-amber-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setWalkwayResize({
+                                        walkwayId: w.id,
+                                        edge: 'se',
+                                        original: { x: w.x, y: w.y, width: w.width, height: w.height },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+
+                                {/* Size label */}
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                  <div className="bg-white/90 backdrop-blur rounded px-2 py-1 shadow">
+                                    <p className="text-xs font-bold text-amber-800">
+                                      {previewW} × {previewH}
+                                    </p>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
 
                       {/* Walkway draft preview */}
-                      {placementMode === 'walkway' && walkwayDraft.start && walkwayDraft.end && (
-                        <div
-                          className="h-full bg-amber-300/40 border-2 border-dashed border-amber-500"
-                          style={{
-                            gridColumnStart: Math.min(walkwayDraft.start.x, walkwayDraft.end.x) + 1,
-                            gridRowStart: Math.min(walkwayDraft.start.y, walkwayDraft.end.y) + 1,
-                            gridColumnEnd: Math.max(walkwayDraft.start.x, walkwayDraft.end.x) + 2,
-                            gridRowEnd: Math.max(walkwayDraft.start.y, walkwayDraft.end.y) + 2,
-                          }}
-                        />
-                      )}
+                      {placementMode === 'walkway' && walkwayDraft.start && walkwayDraft.end && (() => {
+                        const startX = Math.min(walkwayDraft.start.x, walkwayDraft.end.x);
+                        const startY = Math.min(walkwayDraft.start.y, walkwayDraft.end.y);
+                        const endX = Math.max(walkwayDraft.start.x, walkwayDraft.end.x);
+                        const endY = Math.max(walkwayDraft.start.y, walkwayDraft.end.y);
+                        const width = endX - startX + 1;
+                        const height = endY - startY + 1;
+
+                        return (
+                          <div
+                            className="h-full rounded-sm flex items-center justify-center"
+                            style={{
+                              gridColumnStart: startX + 1,
+                              gridRowStart: startY + 1,
+                              gridColumnEnd: endX + 2,
+                              gridRowEnd: endY + 2,
+                              background: `
+                                linear-gradient(180deg, rgba(196,181,160,0.7) 0%, rgba(184,168,144,0.7) 50%, rgba(168,152,128,0.7) 100%)
+                              `,
+                              border: '2px dashed #8B7355',
+                              boxShadow: '0 0 0 2px rgba(139,115,85,0.3)',
+                            }}
+                          >
+                            <div className="bg-white/90 backdrop-blur rounded px-2 py-1 shadow-lg">
+                              <p className="text-xs font-bold text-amber-800">
+                                {width} × {height}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* overlay: gates */}
@@ -1453,28 +1934,107 @@ export default function GardenPage() {
                         gridTemplateRows: `repeat(${rows}, ${CELL_PX * zoom}px)`,
                       }}
                     >
-                      {(garden?.gates ?? []).map((g) => (
-                        <div
-                          key={g.id}
-                          className="relative h-full flex items-center justify-center bg-blue-200/60 border-2 border-blue-500 pointer-events-auto"
-                          style={{
-                            gridColumnStart: g.x + 1,
-                            gridRowStart: g.y + 1,
-                            gridColumnEnd: g.x + 1 + g.width,
-                            gridRowEnd: g.y + 2,
-                          }}
-                          title={g.name || `Gate (${g.side})`}
-                        >
-                          <span className="text-xs font-bold text-blue-700">GATE</span>
-                          <button
-                            className="absolute top-0.5 right-0.5 bg-white rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600"
-                            onClick={() => deleteGate(g.id)}
-                            title="Delete gate"
+                      {(garden?.gates ?? []).map((g) => {
+                        const isSelected = selectedGateId === g.id;
+                        // Calculate preview dimensions if this gate is being resized
+                        let previewX = g.x;
+                        let previewW = g.width;
+
+                        if (gateResize && gateResize.gateId === g.id && dragPreview) {
+                          const { edge, original, startCell } = gateResize;
+                          const dx = dragPreview.x - startCell.x;
+
+                          if (edge === 'left') {
+                            previewX = Math.min(original.x + dx, original.x + original.width - 1);
+                            previewW = original.width - (previewX - original.x);
+                          }
+                          if (edge === 'right') {
+                            previewW = Math.max(1, original.width + dx);
+                          }
+
+                          // Clamp to grid bounds
+                          previewX = Math.max(0, previewX);
+                          previewW = Math.max(1, Math.min(previewW, cols - previewX));
+                        }
+
+                        return (
+                          <div
+                            key={g.id}
+                            className={`relative h-full flex items-center justify-center pointer-events-auto rounded-sm overflow-visible ${
+                              isSelected ? 'z-20' : ''
+                            }`}
+                            style={{
+                              gridColumnStart: previewX + 1,
+                              gridRowStart: g.y + 1,
+                              gridColumnEnd: previewX + 1 + previewW,
+                              gridRowEnd: g.y + 2,
+                              background: 'linear-gradient(180deg, #6B8E7B 0%, #5A7D6A 50%, #4A6D5A 100%)',
+                              boxShadow: isSelected
+                                ? '0 0 0 3px rgba(59,130,246,0.5), inset 0 2px 4px rgba(0,0,0,0.2)'
+                                : 'inset 0 2px 4px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15)',
+                              border: isSelected ? '2px solid #3B82F6' : '2px solid #3D5A4A',
+                            }}
+                            title={g.name || `Gate (${g.side}) - Click to select`}
+                            onClick={() => setSelectedGateId(isSelected ? null : g.id)}
                           >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-1 bg-white/90 backdrop-blur rounded px-1.5 py-0.5 shadow">
+                              <span className="text-sm">🚪</span>
+                              <span className="text-[10px] font-bold text-emerald-800 uppercase">{g.side}</span>
+                              {isSelected && (
+                                <span className="text-[10px] font-bold text-blue-600">• {previewW}</span>
+                              )}
+                            </div>
+                            <button
+                              className="absolute top-1 right-1 bg-white/90 backdrop-blur rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600 shadow-sm z-10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteGate(g.id);
+                              }}
+                              title="Delete gate"
+                            >
+                              ×
+                            </button>
+
+                            {/* Resize handles - only show when selected */}
+                            {isSelected && (
+                              <>
+                                {/* Left edge handle */}
+                                <div
+                                  className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize z-20 hover:bg-blue-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setGateResize({
+                                        gateId: g.id,
+                                        edge: 'left',
+                                        original: { x: g.x, y: g.y, width: g.width },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                                {/* Right edge handle */}
+                                <div
+                                  className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize z-20 hover:bg-blue-600"
+                                  onPointerDown={(e) => {
+                                    e.stopPropagation();
+                                    const cell = pointerToCell(e.clientX, e.clientY);
+                                    if (cell) {
+                                      setGateResize({
+                                        gateId: g.id,
+                                        edge: 'right',
+                                        original: { x: g.x, y: g.y, width: g.width },
+                                        startCell: cell,
+                                      });
+                                    }
+                                  }}
+                                />
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* overlay: placed beds */}

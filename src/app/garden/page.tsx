@@ -371,15 +371,34 @@ export default function GardenPage() {
             {(garden?.walkways ?? []).map((w) => (
               <div
                 key={w.id}
-                className="h-full bg-amber-200/60 border border-amber-400"
+                className="h-full rounded-sm overflow-hidden"
                 style={{
                   gridColumnStart: w.x + 1,
                   gridRowStart: w.y + 1,
                   gridColumnEnd: w.x + 1 + w.width,
                   gridRowEnd: w.y + 1 + w.height,
+                  background: `
+                    radial-gradient(circle at 20% 30%, rgba(180,160,140,0.3) 0%, transparent 20%),
+                    radial-gradient(circle at 60% 70%, rgba(160,140,120,0.3) 0%, transparent 15%),
+                    radial-gradient(circle at 80% 20%, rgba(170,150,130,0.3) 0%, transparent 18%),
+                    radial-gradient(circle at 40% 80%, rgba(175,155,135,0.3) 0%, transparent 12%),
+                    linear-gradient(180deg, #C4B5A0 0%, #B8A890 50%, #A89880 100%)
+                  `,
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.15), inset 0 -1px 2px rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(139,119,101,0.5)',
                 }}
-                title={w.name || "Walkway"}
-              />
+                title={w.name || "Garden Path"}
+              >
+                {/* Gravel texture dots */}
+                <div className="absolute inset-0 opacity-30" style={{
+                  backgroundImage: `
+                    radial-gradient(circle, #8B7355 1px, transparent 1px),
+                    radial-gradient(circle, #6B5344 1px, transparent 1px)
+                  `,
+                  backgroundSize: '8px 8px, 12px 12px',
+                  backgroundPosition: '0 0, 4px 4px',
+                }} />
+              </div>
             ))}
           </div>
 
@@ -394,16 +413,22 @@ export default function GardenPage() {
             {(garden?.gates ?? []).map((g) => (
               <div
                 key={g.id}
-                className="h-full flex items-center justify-center bg-blue-200/60 border-2 border-blue-500"
+                className="h-full flex items-center justify-center rounded-sm overflow-hidden"
                 style={{
                   gridColumnStart: g.x + 1,
                   gridRowStart: g.y + 1,
                   gridColumnEnd: g.x + 1 + g.width,
                   gridRowEnd: g.y + 2,
+                  background: 'linear-gradient(180deg, #6B8E7B 0%, #5A7D6A 50%, #4A6D5A 100%)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.15)',
+                  border: '2px solid #3D5A4A',
                 }}
                 title={g.name || `Gate (${g.side})`}
               >
-                <span className="text-xs font-bold text-blue-700">GATE</span>
+                <div className="flex items-center gap-1 bg-white/90 backdrop-blur rounded px-1.5 py-0.5 shadow">
+                  <span className="text-sm">🚪</span>
+                  <span className="text-[10px] font-bold text-emerald-800 uppercase">{g.side}</span>
+                </div>
               </div>
             ))}
           </div>
