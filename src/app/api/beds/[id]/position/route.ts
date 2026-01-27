@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -24,87 +25,105 @@ function bedSizeInGardenCells(
 }
 
 export async function POST(req: Request, ctx: Ctx) {
-  const { id: idStr } = await ctx.params;
-  const bedId = Number(idStr);
-  if (!Number.isFinite(bedId)) {
-    return NextResponse.json({ error: "Invalid bed id" }, { status: 400 });
-  }
+  try {
+    const userId = await getCurrentUserId();
 
-  const body = await req.json().catch(() => ({}));
+    const { id: idStr } = await ctx.params;
+    const bedId = Number(idStr);
+    if (!Number.isFinite(bedId)) {
+      return NextResponse.json({ error: "Invalid bed id" }, { status: 400 });
+    }
 
-  // Allow null to remove bed from garden
-  const gardenX = body.gardenX === null ? null : Number(body.gardenX);
-  const gardenY = body.gardenY === null ? null : Number(body.gardenY);
+    const body = await req.json().catch(() => ({}));
 
-  // If removing from garden (null values), update and return early
-  if (gardenX === null || gardenY === null) {
+    // Allow null to remove bed from garden
+    const gardenX = body.gardenX === null ? null : Number(body.gardenX);
+    const gardenY = body.gardenY === null ? null : Number(body.gardenY);
+
+    // Verify bed belongs to user
+    const bed = await prisma.bed.findUnique({
+      where: { id: bedId },
+      select: { id: true, userId: true, name: true, widthInches: true, heightInches: true, gardenRotated: true },
+    });
+    if (!bed) {
+      return NextResponse.json({ error: "Bed not found." }, { status: 404 });
+    }
+    if (bed.userId !== userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // If removing from garden (null values), update and return early
+    if (gardenX === null || gardenY === null) {
+      const updated = await prisma.bed.update({
+        where: { id: bedId },
+        data: { gardenX: null, gardenY: null },
+      });
+      return NextResponse.json(updated);
+    }
+
+    if (!Number.isFinite(gardenX) || !Number.isFinite(gardenY)) {
+      return NextResponse.json({ error: "gardenX and gardenY must be valid numbers or null." }, { status: 400 });
+    }
+
+    // Get the user's garden
+    const garden = await prisma.garden.findUnique({ where: { userId } });
+    if (!garden) {
+      return NextResponse.json({ error: "Garden not set up yet." }, { status: 400 });
+    }
+
+    const gardenCols = Math.max(1, Math.floor(garden.widthInches / garden.cellInches));
+    const gardenRows = Math.max(1, Math.floor(garden.heightInches / garden.cellInches));
+
+    const mySize = bedSizeInGardenCells(bed, garden.cellInches);
+
+    if (
+      gardenX < 0 ||
+      gardenY < 0 ||
+      gardenX + mySize.w > gardenCols ||
+      gardenY + mySize.h > gardenRows
+    ) {
+      return NextResponse.json({ error: "Bed would be outside the garden bounds." }, { status: 400 });
+    }
+
+    // Check for overlaps with OTHER beds belonging to this user
+    const others = await prisma.bed.findMany({
+      where: {
+        userId,
+        id: { not: bedId },
+        gardenX: { not: null },
+        gardenY: { not: null }
+      },
+      select: {
+        id: true,
+        name: true,
+        gardenX: true,
+        gardenY: true,
+        widthInches: true,
+        heightInches: true,
+        gardenRotated: true,
+      },
+    });
+
+    const myRect = { x: gardenX, y: gardenY, w: mySize.w, h: mySize.h };
+
+    for (const o of others) {
+      const ox = o.gardenX ?? 0;
+      const oy = o.gardenY ?? 0;
+      const os = bedSizeInGardenCells(o, garden.cellInches);
+
+      if (rectsOverlap(myRect, { x: ox, y: oy, w: os.w, h: os.h })) {
+        return NextResponse.json({ error: `Overlaps with "${o.name}".` }, { status: 400 });
+      }
+    }
+
     const updated = await prisma.bed.update({
       where: { id: bedId },
-      data: { gardenX: null, gardenY: null },
+      data: { gardenX, gardenY },
     });
+
     return NextResponse.json(updated);
+  } catch (error) {
+    console.error("Error updating bed position:", error);
+    return NextResponse.json({ error: "Unauthorized or failed to update position" }, { status: 401 });
   }
-
-  if (!Number.isFinite(gardenX) || !Number.isFinite(gardenY)) {
-    return NextResponse.json({ error: "gardenX and gardenY must be valid numbers or null." }, { status: 400 });
-  }
-
-  const garden = await prisma.garden.findUnique({ where: { id: 1 } });
-  if (!garden) {
-    return NextResponse.json({ error: "Garden not set up yet." }, { status: 400 });
-  }
-
-  const bed = await prisma.bed.findUnique({
-    where: { id: bedId },
-    select: { id: true, name: true, widthInches: true, heightInches: true, gardenRotated: true },
-  });
-  if (!bed) {
-    return NextResponse.json({ error: "Bed not found." }, { status: 404 });
-  }
-
-  const gardenCols = Math.max(1, Math.floor(garden.widthInches / garden.cellInches));
-  const gardenRows = Math.max(1, Math.floor(garden.heightInches / garden.cellInches));
-
-  const mySize = bedSizeInGardenCells(bed, garden.cellInches);
-
-  if (
-    gardenX < 0 ||
-    gardenY < 0 ||
-    gardenX + mySize.w > gardenCols ||
-    gardenY + mySize.h > gardenRows
-  ) {
-    return NextResponse.json({ error: "Bed would be outside the garden bounds." }, { status: 400 });
-  }
-
-  const others = await prisma.bed.findMany({
-    where: { id: { not: bedId }, gardenX: { not: null }, gardenY: { not: null } },
-    select: {
-      id: true,
-      name: true,
-      gardenX: true,
-      gardenY: true,
-      widthInches: true,
-      heightInches: true,
-      gardenRotated: true,
-    },
-  });
-
-  const myRect = { x: gardenX, y: gardenY, w: mySize.w, h: mySize.h };
-
-  for (const o of others) {
-    const ox = o.gardenX ?? 0;
-    const oy = o.gardenY ?? 0;
-    const os = bedSizeInGardenCells(o, garden.cellInches);
-
-    if (rectsOverlap(myRect, { x: ox, y: oy, w: os.w, h: os.h })) {
-      return NextResponse.json({ error: `Overlaps with "${o.name}".` }, { status: 400 });
-    }
-  }
-
-  const updated = await prisma.bed.update({
-    where: { id: bedId },
-    data: { gardenX, gardenY },
-  });
-
-  return NextResponse.json(updated);
 }
