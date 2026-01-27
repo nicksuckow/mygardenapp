@@ -17,7 +17,10 @@ export async function GET() {
     return NextResponse.json(garden);
   } catch (error) {
     console.error("Error fetching garden:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to fetch garden" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to fetch garden" }, { status: 500 });
   }
 }
 
@@ -49,6 +52,9 @@ export async function POST(req: Request) {
     return NextResponse.json(garden);
   } catch (error) {
     console.error("Error updating garden:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to update garden" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to update garden" }, { status: 500 });
   }
 }

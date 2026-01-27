@@ -94,7 +94,6 @@ export async function GET(req: Request) {
 
     // Try Verdantly API first (most accurate)
     try {
-      console.log("Attempting Verdantly zone lookup for ZIP:", zipCode);
       const verdantlyData = await lookupHardinessZone(zipCode);
 
       if (verdantlyData && verdantlyData.zone) {
@@ -102,8 +101,6 @@ export async function GET(req: Request) {
         const currentYear = new Date().getFullYear();
         const zone = verdantlyData.zone;
         const frostEstimates = FROST_DATE_ESTIMATES[zone.toLowerCase()] || FROST_DATE_ESTIMATES["6a"];
-
-        console.log("Verdantly zone lookup successful:", zone);
 
         return NextResponse.json({
           zone,
@@ -118,7 +115,6 @@ export async function GET(req: Request) {
     }
 
     // Fallback: Get coordinates from ZIP code using Zippopotam.us and estimate zone
-    console.log("Using geocoding fallback for ZIP:", zipCode);
     const geocodeUrl = `https://api.zippopotam.us/us/${zipCode}`;
 
     const geocodeRes = await fetch(geocodeUrl);
@@ -144,8 +140,6 @@ export async function GET(req: Request) {
 
     // Determine USDA Plant Hardiness Zone from latitude
     const zone = estimateZoneFromLatitude(lat);
-
-    console.log(`Fallback: Coordinates: ${lat}, ${lon} -> Zone: ${zone}`);
 
     // Get frost date estimates based on zone
     const currentYear = new Date().getFullYear();

@@ -115,6 +115,9 @@ export async function POST(
     return NextResponse.json(placement);
   } catch (error) {
     console.error("Error placing plant:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to place plant" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to place plant" }, { status: 500 });
   }
 }

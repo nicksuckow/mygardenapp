@@ -42,7 +42,10 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Error updating gate:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to update gate" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to update gate" }, { status: 500 });
   }
 }
 
@@ -75,6 +78,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting gate:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to delete gate" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to delete gate" }, { status: 500 });
   }
 }

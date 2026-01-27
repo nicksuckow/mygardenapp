@@ -19,6 +19,8 @@ type Stats = {
   };
   topPlants: { name: string; count: number }[];
   harvestYields: { unit: string; amount: number }[];
+  plantYields: { plantName: string; amount: number; unit: string }[];
+  historicalYields: { year: number; yields: { unit: string; amount: number }[] }[];
   companionPlanting: {
     score: number | null;
     goodPairs: { plant1: string; plant2: string; reason: string }[];
@@ -274,7 +276,58 @@ export default function StatsPage() {
             </div>
           </div>
         )}
+
+        {/* Yield by Plant */}
+        {stats.plantYields && stats.plantYields.length > 0 && (
+          <div className={`${ui.card} ${ui.cardPad}`}>
+            <h2 className="font-semibold mb-3">Yields by Plant</h2>
+            <div className="space-y-2">
+              {stats.plantYields.map((item, idx) => (
+                <div key={`${item.plantName}-${item.unit}`} className="flex items-center gap-2">
+                  <span className="text-sm text-slate-500 w-5">{idx + 1}.</span>
+                  <div className="flex-1 flex items-center gap-2">
+                    <span className="text-sm font-medium">{item.plantName}</span>
+                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-400 rounded-full"
+                        style={{ width: `${(item.amount / stats.plantYields[0].amount) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-sm text-slate-600">
+                      {item.amount} {item.unit}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Historical Yields by Year */}
+      {stats.historicalYields && stats.historicalYields.length > 0 && (
+        <div className={`${ui.card} ${ui.cardPad}`}>
+          <h2 className="font-semibold mb-3">Historical Yields by Year</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {stats.historicalYields.map((yearData) => (
+              <div key={yearData.year} className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 p-4">
+                <h3 className="font-semibold text-amber-800 mb-2">{yearData.year}</h3>
+                <div className="space-y-1">
+                  {yearData.yields.map((y) => (
+                    <div key={y.unit} className="flex justify-between text-sm">
+                      <span className="text-amber-700">{y.unit}</span>
+                      <span className="font-medium text-amber-900">{y.amount}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-3">
+            Archive completed harvests to build your historical yield data for comparison
+          </p>
+        </div>
+      )}
 
       {/* Companion Planting */}
       {(stats.companionPlanting.goodPairs.length > 0 || stats.companionPlanting.badPairs.length > 0) && (

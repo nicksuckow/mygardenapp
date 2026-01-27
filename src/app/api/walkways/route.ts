@@ -34,6 +34,9 @@ export async function POST(req: Request) {
     return NextResponse.json(walkway);
   } catch (error) {
     console.error("Error creating walkway:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to create walkway" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to create walkway" }, { status: 500 });
   }
 }

@@ -127,7 +127,10 @@ export async function PATCH(req: Request, ctx: Ctx) {
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Error updating plant:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to update plant" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to update plant" }, { status: 500 });
   }
 }
 
@@ -170,6 +173,9 @@ export async function DELETE(_: Request, ctx: Ctx) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error deleting plant:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to delete plant" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to delete plant" }, { status: 500 });
   }
 }

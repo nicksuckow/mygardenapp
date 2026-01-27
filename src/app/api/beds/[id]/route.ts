@@ -31,7 +31,10 @@ export async function GET(_: Request, ctx: Ctx) {
     return NextResponse.json(bed);
   } catch (error) {
     console.error("Error fetching bed:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to fetch bed" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to fetch bed" }, { status: 500 });
   }
 }
 
@@ -56,25 +59,52 @@ export async function PATCH(req: Request, ctx: Ctx) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const gardenRotated =
-      typeof body.gardenRotated === "boolean" ? body.gardenRotated : null;
 
-    if (gardenRotated == null) {
+    // Build update data object with supported fields
+    const updateData: { name?: string; notes?: string | null; gardenRotated?: boolean } = {};
+
+    // Handle name update
+    if (typeof body.name === "string") {
+      const name = body.name.trim();
+      if (!name) {
+        return NextResponse.json({ error: "Bed name cannot be empty" }, { status: 400 });
+      }
+      if (name.length > 100) {
+        return NextResponse.json({ error: "Bed name must be 100 characters or less" }, { status: 400 });
+      }
+      updateData.name = name;
+    }
+
+    // Handle notes update
+    if (body.notes !== undefined) {
+      updateData.notes = typeof body.notes === "string" ? body.notes.trim() || null : null;
+    }
+
+    // Handle gardenRotated update
+    if (typeof body.gardenRotated === "boolean") {
+      updateData.gardenRotated = body.gardenRotated;
+    }
+
+    // Require at least one field to update
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: "gardenRotated boolean is required." },
+        { error: "At least one field (name, notes, or gardenRotated) is required" },
         { status: 400 }
       );
     }
 
     const updated = await prisma.bed.update({
       where: { id },
-      data: { gardenRotated },
+      data: updateData,
     });
 
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Error updating bed:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to update bed" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to update bed" }, { status: 500 });
   }
 }
 
@@ -114,6 +144,9 @@ export async function DELETE(_: Request, ctx: Ctx) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error deleting bed:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to delete bed" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to delete bed" }, { status: 500 });
   }
 }

@@ -77,15 +77,86 @@ export async function GET() {
 
     // Harvest yield totals
     const yieldsByUnit: Record<string, number> = {};
+    const yieldsByPlant: Record<string, { amount: number; unit: string }> = {};
     allPlacements.forEach((p) => {
       if (p.harvestYield && p.harvestYieldUnit) {
         yieldsByUnit[p.harvestYieldUnit] = (yieldsByUnit[p.harvestYieldUnit] || 0) + p.harvestYield;
+
+        // Track yield by plant name
+        const key = `${p.plant.name}:${p.harvestYieldUnit}`;
+        if (!yieldsByPlant[key]) {
+          yieldsByPlant[key] = { amount: 0, unit: p.harvestYieldUnit };
+        }
+        yieldsByPlant[key].amount += p.harvestYield;
       }
     });
     const harvestYields = Object.entries(yieldsByUnit).map(([unit, amount]) => ({
       unit,
       amount: Math.round(amount * 10) / 10,
     }));
+
+    // Get historical yields from PlacementHistory
+    const historicalYields = await prisma.placementHistory.findMany({
+      where: {
+        bed: { userId },
+        harvestYield: { not: null },
+      },
+      select: {
+        plantName: true,
+        harvestYield: true,
+        harvestYieldUnit: true,
+        seasonYear: true,
+      },
+    });
+
+    // Add historical yields to yieldsByPlant
+    historicalYields.forEach((h) => {
+      if (h.harvestYield && h.harvestYieldUnit) {
+        const key = `${h.plantName}:${h.harvestYieldUnit}`;
+        if (!yieldsByPlant[key]) {
+          yieldsByPlant[key] = { amount: 0, unit: h.harvestYieldUnit };
+        }
+        yieldsByPlant[key].amount += h.harvestYield;
+
+        // Add to total yields by unit
+        yieldsByUnit[h.harvestYieldUnit] = (yieldsByUnit[h.harvestYieldUnit] || 0) + h.harvestYield;
+      }
+    });
+
+    // Convert yieldsByPlant to array and sort by amount
+    const plantYields = Object.entries(yieldsByPlant)
+      .map(([key, data]) => {
+        const [plantName] = key.split(":");
+        return {
+          plantName,
+          amount: Math.round(data.amount * 10) / 10,
+          unit: data.unit,
+        };
+      })
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10);
+
+    // Calculate yearly totals for historical comparison
+    const yieldsByYear: Record<number, Record<string, number>> = {};
+    historicalYields.forEach((h) => {
+      if (h.harvestYield && h.harvestYieldUnit) {
+        if (!yieldsByYear[h.seasonYear]) {
+          yieldsByYear[h.seasonYear] = {};
+        }
+        yieldsByYear[h.seasonYear][h.harvestYieldUnit] =
+          (yieldsByYear[h.seasonYear][h.harvestYieldUnit] || 0) + h.harvestYield;
+      }
+    });
+
+    const historicalYieldsSummary = Object.entries(yieldsByYear)
+      .map(([year, yields]) => ({
+        year: Number(year),
+        yields: Object.entries(yields).map(([unit, amount]) => ({
+          unit,
+          amount: Math.round(amount * 10) / 10,
+        })),
+      }))
+      .sort((a, b) => b.year - a.year);
 
     // Companion planting analysis
     const uniquePlantNames = [...new Set(allPlacements.map((p) => p.plant.name))];
@@ -148,6 +219,8 @@ export async function GET() {
       statusBreakdown: statusCounts,
       topPlants,
       harvestYields,
+      plantYields,
+      historicalYields: historicalYieldsSummary,
       companionPlanting: {
         score: companionScore,
         goodPairs: companionAnalysis.goodPairs.slice(0, 5),

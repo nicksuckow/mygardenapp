@@ -11,6 +11,7 @@ type Bed = {
   widthInches: number;
   heightInches: number;
   cellInches: number;
+  notes?: string | null;
 };
 
 export default function BedsPage() {
@@ -28,6 +29,9 @@ export default function BedsPage() {
   // Cell size in feet and inches
   const [cellFeet, setCellFeet] = useState(1);
   const [cellInches, setCellInches] = useState(0);
+
+  // Notes for the bed
+  const [notes, setNotes] = useState("");
 
   const [message, setMessage] = useState("");
 
@@ -59,7 +63,13 @@ export default function BedsPage() {
     const res = await fetch("/api/beds", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, widthInches: totalWidthInches, heightInches: totalHeightInches, cellInches: totalCellInches }),
+      body: JSON.stringify({
+        name,
+        widthInches: totalWidthInches,
+        heightInches: totalHeightInches,
+        cellInches: totalCellInches,
+        notes: notes.trim() || null,
+      }),
     });
 
     if (!res.ok) {
@@ -68,6 +78,7 @@ export default function BedsPage() {
     }
 
     setMessage("Created!");
+    setNotes(""); // Reset notes after creation
     await load();
   }
 
@@ -90,6 +101,25 @@ export default function BedsPage() {
     }
 
     setMessage("Deleted.");
+    await load();
+  }
+
+  async function duplicateBed(id: number, name: string) {
+    setMessage("");
+    const res = await fetch(`/api/beds/${id}/duplicate`, { method: "POST" });
+    const text = await res.text();
+
+    if (!res.ok) {
+      try {
+        const j = JSON.parse(text);
+        setMessage(j?.error ?? `Duplicate failed (${res.status})`);
+      } catch {
+        setMessage(`Duplicate failed (${res.status})`);
+      }
+      return;
+    }
+
+    setMessage(`Duplicated "${name}"!`);
     await load();
   }
 
@@ -222,8 +252,19 @@ export default function BedsPage() {
               </div>
             </div>
             <span className="text-xs text-slate-500">
-              Size of each grid square for plant placement (Total: {inchesToFeetInches(totalCellInches)}). Common: 6" (intensive), 1' (standard), 1'6" (large plants)
+              Size of each grid square for plant placement (Total: {inchesToFeetInches(totalCellInches)}). Common: 6&quot; (intensive), 1&apos; (standard), 1&apos;6&quot; (large plants)
             </span>
+          </div>
+
+          <div className="grid gap-1.5 sm:col-span-2">
+            <span className="text-sm font-medium">Notes (optional)</span>
+            <textarea
+              className="w-full rounded border px-3 py-2 text-sm resize-none"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g., North side of garden, gets afternoon shade, raised bed with compost mix"
+              rows={2}
+            />
           </div>
         </div>
 
@@ -272,12 +313,23 @@ export default function BedsPage() {
                         <p>Grid: {cols} × {rows} cells ({inchesToFeetInches(b.cellInches)} each)</p>
                         <p className="text-slate-500">{cols * rows} planting spots</p>
                       </div>
+                      {b.notes && (
+                        <p className="mt-2 text-xs text-slate-600 italic line-clamp-2">{b.notes}</p>
+                      )}
                     </div>
 
-                    <div className="flex gap-2">
-                      <Link className={`${ui.btn} ${ui.btnPrimary} flex-1 text-center py-2`} href={`/beds/${b.id}`}>
-                        Open layout
+                    <div className="flex flex-wrap gap-2">
+                      <Link className={`${ui.btn} ${ui.btnPrimary} flex-1 min-w-[100px] text-center py-2`} href={`/beds/${b.id}`}>
+                        Open
                       </Link>
+
+                      <button
+                        className={`${ui.btn} ${ui.btnSecondary} px-3 py-2`}
+                        onClick={() => duplicateBed(b.id, b.name)}
+                        title="Duplicate bed"
+                      >
+                        Copy
+                      </button>
 
                       <button
                         className={`${ui.btn} ${ui.btnDanger} px-3 py-2`}

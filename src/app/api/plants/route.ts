@@ -59,7 +59,10 @@ export async function GET() {
     return NextResponse.json(plants);
   } catch (error) {
     console.error("Error fetching plants:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to fetch plants" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to fetch plants" }, { status: 500 });
   }
 }
 
@@ -160,6 +163,9 @@ export async function POST(req: Request) {
     return NextResponse.json(plant, { status: 201 });
   } catch (error) {
     console.error("Error creating plant:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to create plant" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to create plant" }, { status: 500 });
   }
 }

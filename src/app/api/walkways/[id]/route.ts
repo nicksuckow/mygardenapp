@@ -40,7 +40,10 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Error updating walkway:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to update walkway" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to update walkway" }, { status: 500 });
   }
 }
 
@@ -73,6 +76,9 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting walkway:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to delete walkway" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to delete walkway" }, { status: 500 });
   }
 }

@@ -55,6 +55,9 @@ export async function POST(
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error deleting placement:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to delete placement" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to delete placement" }, { status: 500 });
   }
 }

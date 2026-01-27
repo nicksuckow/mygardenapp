@@ -14,7 +14,10 @@ export async function GET() {
     return Response.json(beds);
   } catch (error) {
     console.error("Error fetching beds:", error);
-    return Response.json({ error: "Unauthorized or failed to fetch beds" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return Response.json({ error: "Failed to fetch beds" }, { status: 500 });
   }
 }
 
@@ -47,6 +50,9 @@ export async function POST(req: Request) {
       return Response.json({ error: "Cell size must be between 0.5 and 1000 inches." }, { status: 400 });
     }
 
+    // Handle optional notes
+    const notes = typeof body?.notes === "string" ? body.notes.trim() || null : null;
+
     const bed = await prisma.bed.create({
       data: {
         userId,
@@ -54,12 +60,16 @@ export async function POST(req: Request) {
         widthInches,
         heightInches,
         cellInches,
+        notes,
       },
     });
 
     return Response.json(bed);
   } catch (error) {
     console.error("Error creating bed:", error);
-    return Response.json({ error: "Unauthorized or failed to create bed" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return Response.json({ error: "Failed to create bed" }, { status: 500 });
   }
 }

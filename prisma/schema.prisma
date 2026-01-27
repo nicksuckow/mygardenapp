@@ -181,12 +181,14 @@ model Bed {
   widthInches  Int
   heightInches Int
   cellInches   Int     @default(12) // grid size: 6 or 12 are common
+  notes        String? // user notes about this bed (e.g., "North side, afternoon shade")
   gardenX      Int? // top-left position in garden grid cells
   gardenY      Int? // top-left position in garden grid cells
   gardenRotated Boolean @default(false)
 
-  placements BedPlacement[]
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placements        BedPlacement[]
+  placementHistory  PlacementHistory[]
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -310,4 +312,34 @@ model BedPlacement {
   plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
 
   @@unique([bedId, x, y]) // prevents two placements from sharing the exact same cell
+}
+
+// PlacementHistory - archived placements for crop rotation tracking
+model PlacementHistory {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  bedId      Int
+  plantName  String  // Store plant name directly (in case plant is deleted)
+  plantType  String? // Store plant type/family for rotation warnings (e.g., "nightshade", "brassica")
+
+  // Position in inches (same coordinate system as BedPlacement)
+  x Float
+  y Float
+  w Float @default(12)
+  h Float @default(12)
+
+  // Season tracking
+  seasonYear   Int     // e.g., 2025
+  seasonName   String  // "spring", "summer", "fall", "winter"
+
+  // Harvest summary
+  harvestYield     Float?
+  harvestYieldUnit String?
+  notes            String?
+
+  bed Bed @relation(fields: [bedId], references: [id], onDelete: Cascade)
+
+  @@index([bedId, seasonYear])
+  @@index([bedId, x, y])
 }

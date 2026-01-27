@@ -37,6 +37,9 @@ export async function POST(req: Request) {
     return NextResponse.json(gate);
   } catch (error) {
     console.error("Error creating gate:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to create gate" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to create gate" }, { status: 500 });
   }
 }

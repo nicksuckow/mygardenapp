@@ -319,14 +319,6 @@ export default function GardenPage() {
     setBeds(Array.isArray(bJson) ? bJson : []);
     setPlacements(Array.isArray(pJson) ? pJson : []);
 
-    // Debug: log bed positions after load
-    console.log('[load] Beds loaded:', (Array.isArray(bJson) ? bJson : []).map((b: Bed) => ({
-      id: b.id,
-      name: b.name,
-      gardenX: b.gardenX,
-      gardenY: b.gardenY,
-    })));
-
     if (gJson) {
       // Convert inches to feet and inches
       setGWidthFeet(Math.floor(gJson.widthInches / 12));
@@ -506,14 +498,6 @@ export default function GardenPage() {
       return;
     }
 
-    const bed = beds.find(b => b.id === bedId);
-    console.log('[setBedPosition] Moving bed:', {
-      bedId,
-      bedName: bed?.name,
-      from: { x: bed?.gardenX, y: bed?.gardenY },
-      to: { x, y }
-    });
-
     const res = await fetch(`/api/beds/${bedId}/position`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -521,7 +505,6 @@ export default function GardenPage() {
     });
 
     const text = await res.text();
-    console.log('[setBedPosition] API response:', { status: res.status, text });
 
     if (!res.ok) {
       try {
@@ -532,9 +515,7 @@ export default function GardenPage() {
       return;
     }
 
-    console.log('[setBedPosition] Success, reloading beds...');
     await load();
-    console.log('[setBedPosition] Reload complete');
   }
 
   async function rotateBed(bedId: number, nextRotated: boolean) {
@@ -559,7 +540,6 @@ export default function GardenPage() {
   }
 
   async function removeBedFromGarden(bedId: number) {
-    console.log('Removing bed from garden:', bedId);
     setMessage("");
     try {
       const res = await fetch(`/api/beds/${bedId}/position`, {
@@ -568,17 +548,13 @@ export default function GardenPage() {
         body: JSON.stringify({ gardenX: null, gardenY: null }),
       });
 
-      console.log('Remove bed response:', res.status);
       const text = await res.text();
-      console.log('Remove bed response text:', text);
 
       if (!res.ok) {
         try {
           const errorMsg = JSON.parse(text)?.error ?? `Remove failed (${res.status})`;
-          console.error('Remove bed failed:', errorMsg);
           setMessage(errorMsg);
         } catch {
-          console.error('Remove bed failed with non-JSON response:', text);
           setMessage(`Remove failed (${res.status}): ${text}`);
         }
         return;

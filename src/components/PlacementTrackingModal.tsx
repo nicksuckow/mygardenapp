@@ -188,6 +188,52 @@ export default function PlacementTrackingModal({
     }
   }
 
+  async function handleArchive() {
+    if (!placementId) return;
+    if (!harvestEndedDate) {
+      setError("Please mark harvest as ended before archiving");
+      return;
+    }
+    if (!confirm("Archive this planting to history? This will remove it from the bed and save it to your crop rotation history.")) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      // First save current state
+      const saveRes = await fetch(`/api/placements/${placementId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seedsStartedDate: seedsStartedDate || null,
+          transplantedDate: transplantedDate || null,
+          directSowedDate: directSowedDate || null,
+          harvestStartedDate: harvestStartedDate || null,
+          harvestEndedDate: harvestEndedDate || null,
+          harvestYield: harvestYield ? parseFloat(harvestYield) : null,
+          harvestYieldUnit: harvestYield ? harvestYieldUnit : null,
+          notes: notes || null,
+        }),
+      });
+
+      if (!saveRes.ok) throw new Error("Failed to save placement data before archiving");
+
+      // Then archive
+      const res = await fetch(`/api/placements/${placementId}/archive`, {
+        method: "POST",
+      });
+
+      if (!res.ok) throw new Error("Failed to archive");
+
+      onSave();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to archive placement");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (!isOpen) return null;
 
   return (
@@ -639,7 +685,7 @@ export default function PlacementTrackingModal({
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-wrap gap-2 pt-2">
                 <button
                   onClick={handleSave}
                   disabled={saving}
@@ -662,6 +708,22 @@ export default function PlacementTrackingModal({
                   Delete
                 </button>
               </div>
+
+              {/* Archive button - shown for completed harvests */}
+              {harvestEndedDate && (
+                <div className="pt-2 border-t border-slate-200">
+                  <button
+                    onClick={handleArchive}
+                    disabled={saving}
+                    className={`${ui.btn} w-full bg-purple-600 hover:bg-purple-700 text-white`}
+                  >
+                    Archive to History
+                  </button>
+                  <p className="text-xs text-slate-500 mt-1 text-center">
+                    Save this planting to your crop rotation history and clear the spot for next season
+                  </p>
+                </div>
+              )}
             </div>
           </>
         ) : null}

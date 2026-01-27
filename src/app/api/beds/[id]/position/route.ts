@@ -124,6 +124,9 @@ export async function POST(req: Request, ctx: Ctx) {
     return NextResponse.json(updated);
   } catch (error) {
     console.error("Error updating bed position:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to update position" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to update position" }, { status: 500 });
   }
 }

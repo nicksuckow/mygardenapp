@@ -107,13 +107,6 @@ export async function searchVerdantlyPlants(
   });
   const filterUrl = `${VERDANTLY_API_BASE}/v1/plants/varieties/filter?${filterParams.toString()}`;
 
-  console.log("Verdantly API requests:", {
-    nameUrl,
-    filterUrl,
-    page,
-    query,
-  });
-
   // Make both requests in parallel
   const [nameResponse, filterResponse] = await Promise.all([
     fetch(nameUrl, {
@@ -157,13 +150,6 @@ export async function searchVerdantlyPlants(
   const filterTotal = filterData.meta?.totalCount || 0;
   const combinedTotal = nameTotal + filterTotal;
 
-  console.log("=== Verdantly API Response ===");
-  console.log("Name search results:", nameData.data?.length || 0);
-  console.log("Subtype filter results:", filterData.data?.length || 0);
-  console.log("Unique combined results:", uniquePlants.length);
-  console.log("Combined total count:", combinedTotal);
-  console.log("==============================");
-
   return {
     data: uniquePlants,
     meta: {
@@ -195,8 +181,6 @@ export async function lookupHardinessZone(zipCode: string): Promise<VerdantlyZon
 
   const url = `${VERDANTLY_API_BASE}/v1/hardiness-zones/zipcode/${zipCode}`;
 
-  console.log("Verdantly zone lookup:", { url, zipCode });
-
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -217,7 +201,6 @@ export async function lookupHardinessZone(zipCode: string): Promise<VerdantlyZon
   }
 
   const data = await response.json();
-  console.log("Verdantly zone response:", data);
 
   return data;
 }

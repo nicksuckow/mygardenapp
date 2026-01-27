@@ -27,7 +27,10 @@ export async function GET() {
     return NextResponse.json(settings);
   } catch (error) {
     console.error("GET /api/settings error:", error);
-    return NextResponse.json({ error: "Unauthorized or failed to fetch settings" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to fetch settings" }, { status: 500 });
   }
 }
 
@@ -56,6 +59,9 @@ export async function POST(req: Request) {
     if (error instanceof Error && error.message.includes("not a valid date")) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    return NextResponse.json({ error: "Unauthorized or failed to save settings" }, { status: 401 });
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
   }
 }

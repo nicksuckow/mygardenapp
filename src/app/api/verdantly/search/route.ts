@@ -25,20 +25,9 @@ export async function GET(req: Request) {
 
     const response = await searchVerdantlyPlants(query, page);
 
-    console.log("Search API received response structure:", {
-      isArray: Array.isArray(response),
-      hasData: !!response.data,
-      dataLength: response.data?.length,
-      hasMeta: !!response.meta,
-      hasMetadata: !!response.metadata,
-      meta: response.meta,
-      metadata: response.metadata,
-    });
-
     // Handle different possible response structures
     if (Array.isArray(response)) {
       // If response is just an array of plants
-      console.log("Response is array format, length:", response.length);
       return NextResponse.json({
         results: response,
         total: response.length,
@@ -59,24 +48,13 @@ export async function GET(req: Request) {
       const currentPage = metadata?.page || metadata?.currentPage || metadata?.current_page || page;
       const perPage = metadata?.perPage || metadata?.per_page || metadata?.pageSize || metadata?.page_size || response.data.length;
 
-      const responseData = {
+      return NextResponse.json({
         results: response.data,
         total: totalCount,
         page: currentPage,
         pages: totalPages,
         perPage: perPage,
-      };
-
-      console.log("Returning data structure:", {
-        resultsCount: responseData.results.length,
-        total: responseData.total,
-        page: responseData.page,
-        pages: responseData.pages,
-        perPage: responseData.perPage,
-        calculatedPages: Math.ceil(responseData.total / responseData.perPage),
       });
-
-      return NextResponse.json(responseData);
     }
 
     // Fallback for any other structure

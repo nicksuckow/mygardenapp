@@ -133,11 +133,15 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
       // If user has seeds, update the plant to track that
       if (hasSeeds && data.id) {
-        await fetch(`/api/plants/${data.id}`, {
+        const seedsRes = await fetch(`/api/plants/${data.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ hasSeeds: true }),
         });
+        if (!seedsRes.ok) {
+          // Plant was imported but seed tracking failed - not critical, continue
+          console.warn("Failed to update hasSeeds for imported plant");
+        }
       }
 
       // Success - reset form and refresh plants list

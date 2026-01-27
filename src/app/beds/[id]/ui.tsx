@@ -101,7 +101,7 @@ function PlantCard({
       </div>
       <div className="min-w-0">
         <p className="font-medium text-sm truncate">{plant.name}</p>
-        <p className="text-xs text-slate-500">{plant.spacingInches}" spacing</p>
+        <p className="text-xs text-slate-500">{plant.spacingInches}&quot; spacing</p>
       </div>
     </div>
   );
@@ -258,6 +258,14 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [hasAutoFit, setHasAutoFit] = useState(false);
 
+  // Undo state for deleted placements
+  const [deletedPlacement, setDeletedPlacement] = useState<{
+    placement: Placement;
+    timer: NodeJS.Timeout;
+    expiresAt: number;
+  } | null>(null);
+  const UNDO_TIMEOUT = 10000; // 10 seconds to undo
+
   // Plant search state
   const [plantSearch, setPlantSearch] = useState("");
   const [isPlantDropdownOpen, setIsPlantDropdownOpen] = useState(false);
@@ -266,6 +274,29 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
 
   // Companion planting alert state
   const [companionAlert, setCompanionAlert] = useState<CompanionAlert | null>(null);
+
+  // Crop rotation history state
+  const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<{
+    id: number;
+    plantName: string;
+    plantType: string | null;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    seasonYear: number;
+    seasonName: string;
+    harvestYield: number | null;
+    harvestYieldUnit: string | null;
+  }[]>([]);
+  const [historyYears, setHistoryYears] = useState<number[]>([]);
+  const [selectedHistoryYear, setSelectedHistoryYear] = useState<number | null>(null);
+
+  // Bed name editing state
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   const BASE_PIXELS_PER_INCH = 4;
   const PIXELS_PER_INCH = BASE_PIXELS_PER_INCH * zoom;
@@ -333,14 +364,30 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     setPlants(parsed.data ?? []);
   }, []);
 
+  const loadHistory = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/beds/${bedId}/history`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data.history || []);
+        setHistoryYears(data.years || []);
+        if (data.years?.length > 0 && !selectedHistoryYear) {
+          setSelectedHistoryYear(data.years[0]);
+        }
+      }
+    } catch {
+      // History is optional, don't show error
+    }
+  }, [bedId, selectedHistoryYear]);
+
   const refresh = useCallback(async () => {
     setMessage("");
     try {
-      await Promise.all([loadBed(), loadPlants()]);
+      await Promise.all([loadBed(), loadPlants(), loadHistory()]);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "Failed to load.");
     }
-  }, [loadBed, loadPlants]);
+  }, [loadBed, loadPlants, loadHistory]);
 
   useEffect(() => {
     refresh();
@@ -685,10 +732,25 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     [loadBed]
   );
 
-  // Delete a placement
+  // Clear any existing undo timer
+  const clearUndoTimer = useCallback(() => {
+    if (deletedPlacement?.timer) {
+      clearTimeout(deletedPlacement.timer);
+    }
+    setDeletedPlacement(null);
+  }, [deletedPlacement]);
+
+  // Delete a placement (with undo support)
   const deletePlacement = useCallback(
     async (placementId: number) => {
       setMessage("");
+
+      // Find the placement to store for undo
+      const placementToDelete = placements.find((p) => p.id === placementId);
+      if (!placementToDelete) {
+        setMessage("Placement not found");
+        return;
+      }
 
       const res = await fetch(`/api/placements/${placementId}`, {
         method: "DELETE",
@@ -705,10 +767,90 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
         return;
       }
 
+      // Clear any existing undo timer
+      if (deletedPlacement?.timer) {
+        clearTimeout(deletedPlacement.timer);
+      }
+
+      // Set up new undo with timer
+      const timer = setTimeout(() => {
+        setDeletedPlacement(null);
+      }, UNDO_TIMEOUT);
+
+      setDeletedPlacement({
+        placement: placementToDelete,
+        timer,
+        expiresAt: Date.now() + UNDO_TIMEOUT,
+      });
+
       await loadBed();
     },
-    [loadBed]
+    [loadBed, placements, deletedPlacement]
   );
+
+  // Undo the last deletion
+  const undoDelete = useCallback(async () => {
+    if (!deletedPlacement) return;
+
+    const { placement } = deletedPlacement;
+    clearUndoTimer();
+
+    // Recreate the placement
+    const res = await fetch(`/api/beds/${bedId}/place`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        plantId: placement.plant.id,
+        x: placement.x,
+        y: placement.y,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      try {
+        const j = JSON.parse(text);
+        setMessage(j?.error ?? "Failed to restore plant");
+      } catch {
+        setMessage("Failed to restore plant");
+      }
+      return;
+    }
+
+    setMessage(`Restored ${placement.plant.name}`);
+    await loadBed();
+  }, [deletedPlacement, clearUndoTimer, bedId, loadBed]);
+
+  // Save bed name
+  const saveBedName = useCallback(async () => {
+    if (!editedName.trim() || editedName.trim() === bed?.name) {
+      setIsEditingName(false);
+      return;
+    }
+
+    setSavingName(true);
+    try {
+      const res = await fetch(`/api/beds/${bedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editedName.trim() }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMessage(data.error || "Failed to update bed name");
+        setSavingName(false);
+        return;
+      }
+
+      await loadBed();
+      setIsEditingName(false);
+    } catch {
+      setMessage("Failed to update bed name");
+    } finally {
+      setSavingName(false);
+    }
+  }, [editedName, bed?.name, bedId, loadBed]);
 
   // Delete all placements of a specific plant type
   const deleteAllOfPlant = useCallback(
@@ -970,9 +1112,57 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     >
       <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
         <div>
-          <h1 className="text-xl font-semibold">{bed.name}</h1>
+          {isEditingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") saveBedName();
+                  if (e.key === "Escape") setIsEditingName(false);
+                }}
+                className="text-xl font-semibold border-b-2 border-emerald-500 bg-transparent outline-none px-1"
+                autoFocus
+                disabled={savingName}
+              />
+              <button
+                onClick={saveBedName}
+                disabled={savingName}
+                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                {savingName ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={() => setIsEditingName(false)}
+                disabled={savingName}
+                className="text-sm text-slate-500 hover:text-slate-700"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <h1
+              className="text-xl font-semibold cursor-pointer hover:text-emerald-700 group flex items-center gap-2"
+              onClick={() => {
+                setEditedName(bed.name);
+                setIsEditingName(true);
+              }}
+              title="Click to edit bed name"
+            >
+              {bed.name}
+              <svg
+                className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </h1>
+          )}
           <p className="text-sm text-gray-600">
-            {bed.widthInches}" x {bed.heightInches}" — {bed.cellInches}" grid ({gridCols}x{gridRows})
+            {bed.widthInches}&quot; x {bed.heightInches}&quot; — {bed.cellInches}&quot; grid ({gridCols}x{gridRows})
             {shouldRotate && (
               <span className="ml-2 text-xs text-slate-500">(rotated for display)</span>
             )}
@@ -1053,7 +1243,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{plant.name}</p>
-                          <p className="text-xs text-slate-500">{plant.spacingInches}" spacing</p>
+                          <p className="text-xs text-slate-500">{plant.spacingInches}&quot; spacing</p>
                         </div>
                       </button>
                     ))
@@ -1197,6 +1387,73 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 <span>Complete</span>
               </div>
             </div>
+          </div>
+
+          {/* Crop Rotation History */}
+          <div className="rounded-lg border p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium">Crop Rotation History</p>
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-xs text-blue-600 hover:text-blue-800"
+              >
+                {showHistory ? "Hide" : "Show"}
+              </button>
+            </div>
+
+            {showHistory && (
+              <div className="space-y-2">
+                {historyYears.length === 0 ? (
+                  <p className="text-xs text-slate-500">
+                    No history yet. Archive completed harvests to track crop rotation.
+                  </p>
+                ) : (
+                  <>
+                    <select
+                      value={selectedHistoryYear || ""}
+                      onChange={(e) => setSelectedHistoryYear(Number(e.target.value))}
+                      className="w-full text-sm rounded border border-slate-300 px-2 py-1"
+                    >
+                      {historyYears.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {history
+                        .filter((h) => h.seasonYear === selectedHistoryYear)
+                        .map((h) => (
+                          <div
+                            key={h.id}
+                            className="text-xs p-2 rounded bg-slate-50 border border-slate-200"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">{h.plantName}</span>
+                              <span className="text-slate-500 capitalize">{h.seasonName}</span>
+                            </div>
+                            {h.plantType && (
+                              <span className="inline-block mt-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
+                                {h.plantType}
+                              </span>
+                            )}
+                            {h.harvestYield && (
+                              <p className="text-slate-600 mt-1">
+                                Yield: {h.harvestYield} {h.harvestYieldUnit}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            <p className="text-xs text-slate-500 mt-2">
+              Tip: Rotate plant families to prevent soil depletion and disease.
+            </p>
           </div>
         </div>
 
@@ -1529,6 +1786,35 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 Got it
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Undo delete toast */}
+      {deletedPlacement && (
+        <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-right-4 duration-300">
+          <div className="bg-slate-800 text-white rounded-lg shadow-xl px-4 py-3 flex items-center gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium">
+                Removed {deletedPlacement.placement.plant.name}
+              </p>
+              <p className="text-xs text-slate-300">
+                Click undo to restore
+              </p>
+            </div>
+            <button
+              onClick={undoDelete}
+              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded transition-colors"
+            >
+              Undo
+            </button>
+            <button
+              onClick={clearUndoTimer}
+              className="text-slate-400 hover:text-white text-lg leading-none ml-1"
+              title="Dismiss"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
