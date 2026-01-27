@@ -29,7 +29,7 @@ export default async function RootLayout({
       <body className={ui.page}>
         <SessionProvider session={session}>
           <div className="min-h-screen">
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white md:bg-white/95 md:backdrop-blur md:supports-[backdrop-filter]:bg-white/80">
               <nav className="mx-auto flex items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4">
                 <Link className="font-semibold text-slate-900 text-sm sm:text-base" href="/">
                   Garden Planner

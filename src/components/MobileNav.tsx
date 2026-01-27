@@ -47,7 +47,7 @@ export default function MobileNav() {
 
       {/* Mobile menu panel */}
       <div
-        className={`fixed top-0 right-0 z-50 h-full w-64 bg-white shadow-xl transform transition-transform duration-200 ease-in-out md:hidden ${
+        className={`fixed top-0 right-0 z-50 h-full w-64 bg-white shadow-xl border-l border-slate-200 transform transition-transform duration-200 ease-in-out md:hidden ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
