@@ -98,9 +98,8 @@ export default function PlantsPage() {
   // ✅ NEW
   const [plantingDepthInches, setPlantingDepthInches] = useState<number | "">("");
 
-  // Seed inventory checkbox
+  // Seed tracking checkbox
   const [hasSeeds, setHasSeeds] = useState(false);
-  const [seedQuantity, setSeedQuantity] = useState(1);
 
   const [message, setMessage] = useState("");
 
@@ -180,21 +179,6 @@ export default function PlantsPage() {
         return;
       }
 
-      // If user has seeds, create a seed inventory entry
-      if (hasSeeds && parsed.data?.id) {
-        const seedUrl = new URL("/api/seeds", window.location.origin);
-        await fetch(seedUrl.toString(), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: name,
-            plantId: parsed.data.id,
-            quantity: seedQuantity,
-            status: "available",
-          }),
-        });
-      }
-
       // reset
       setName("");
       setSpacingInches(12);
@@ -205,10 +189,9 @@ export default function PlantsPage() {
       setDirectSowWeeks("");
       setPlantingDepthInches("");
       setHasSeeds(false);
-      setSeedQuantity(1);
 
       await load();
-      setMessage(hasSeeds ? "Added plant and seeds!" : "Added!");
+      setMessage("Added!");
     } catch (e) {
       setMessage("Add failed (network error).");
     }
@@ -524,22 +507,10 @@ export default function PlantsPage() {
               className="mt-1 rounded border-amber-300"
             />
             <div className="flex-1">
-              <span className="text-sm font-medium text-amber-900">I have seeds for this plant</span>
+              <span className="text-sm font-medium text-amber-900">I already have seeds for this plant</span>
               <p className="text-xs text-amber-700 mt-0.5">
-                Automatically add to your seed inventory when you add this plant
+                Track this in your seed inventory
               </p>
-              {hasSeeds && (
-                <div className="mt-2 flex items-center gap-2">
-                  <label className="text-xs text-amber-800">Packets:</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={seedQuantity}
-                    onChange={(e) => setSeedQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-16 rounded border border-amber-300 px-2 py-1 text-sm"
-                  />
-                </div>
-              )}
             </div>
           </label>
         </div>
