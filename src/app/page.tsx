@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ui } from "@/lib/uiStyles";
+import WeatherWidget from "@/components/WeatherWidget";
 
 export default function HomePage() {
   return (
@@ -41,10 +42,16 @@ export default function HomePage() {
               <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/schedule">
                 View schedule
               </Link>
+              <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/stats">
+                Statistics
+              </Link>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Weather */}
+      <WeatherWidget />
 
       {/* Main actions */}
       <div className="grid gap-4 md:grid-cols-3">

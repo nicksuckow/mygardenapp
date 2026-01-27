@@ -300,6 +300,8 @@ model BedPlacement {
   // Harvest tracking
   harvestStartedDate      DateTime? // when harvesting actually started
   harvestEndedDate        DateTime? // when harvesting finished
+  harvestYield            Float?    // total harvest amount
+  harvestYieldUnit        String?   // unit: "lbs", "oz", "count", "bunches", etc.
 
   bed   Bed   @relation(fields: [bedId], references: [id], onDelete: Cascade)
   plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)

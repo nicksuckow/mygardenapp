@@ -6,6 +6,7 @@ import { ui } from "@/lib/uiStyles";
 import { inchesToFeetInches } from "@/lib/dimensions";
 import PlantInfoModal from "@/components/PlantInfoModal";
 import { type FullPlantData } from "@/components/PlantInfoPanel";
+import WeatherWidget from "@/components/WeatherWidget";
 
 type Walkway = {
   id: number;
@@ -725,16 +726,19 @@ export default function GardenPage() {
             <h1 className="text-lg font-bold text-teal-700">Garden Layout</h1>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Link className={`${ui.btn} ${ui.btnPrimary} text-sm py-1.5`} href="/garden/edit">
-            Edit Garden
-          </Link>
-          <Link className={`${ui.btn} ${ui.btnSecondary} text-sm py-1.5`} href="/beds">
-            Beds
-          </Link>
-          <Link className={`${ui.btn} ${ui.btnSecondary} text-sm py-1.5`} href="/schedule">
-            Schedule
-          </Link>
+        <div className="flex items-center gap-3">
+          <WeatherWidget compact />
+          <div className="flex gap-2">
+            <Link className={`${ui.btn} ${ui.btnPrimary} text-sm py-1.5`} href="/garden/edit">
+              Edit Garden
+            </Link>
+            <Link className={`${ui.btn} ${ui.btnSecondary} text-sm py-1.5`} href="/beds">
+              Beds
+            </Link>
+            <Link className={`${ui.btn} ${ui.btnSecondary} text-sm py-1.5`} href="/schedule">
+              Schedule
+            </Link>
+          </div>
         </div>
       </div>
 

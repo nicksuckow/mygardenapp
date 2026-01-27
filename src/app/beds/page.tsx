@@ -120,9 +120,11 @@ export default function BedsPage() {
         </div>
       </div>
 
-      <div className={`${ui.card} ${ui.cardPad} space-y-4 sm:max-w-2xl`}>
-        <div>
-          <h2 className="text-base font-semibold">Create a new bed</h2>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        {/* Create bed form */}
+        <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
+          <div>
+            <h2 className="text-base font-semibold">Create a new bed</h2>
           <p className="text-sm text-slate-600">Define the physical dimensions and grid spacing for plant placement</p>
         </div>
 
@@ -248,8 +250,9 @@ export default function BedsPage() {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Your beds</h2>
+        {/* Your beds */}
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold">Your beds</h2>
 
         {beds.length === 0 ? (
           <p className={ui.sub}>No beds yet. Create one above to get started.</p>
@@ -290,6 +293,7 @@ export default function BedsPage() {
             })}
           </div>
         )}
+        </div>
       </div>
     </div>
   );

@@ -115,6 +115,8 @@ export async function PATCH(
       directSowedDate,
       harvestStartedDate,
       harvestEndedDate,
+      harvestYield,
+      harvestYieldUnit,
       notes,
       x,
       y,
@@ -127,6 +129,8 @@ export async function PATCH(
       directSowedDate?: Date | null;
       harvestStartedDate?: Date | null;
       harvestEndedDate?: Date | null;
+      harvestYield?: number | null;
+      harvestYieldUnit?: string | null;
       notes?: string | null;
       x?: number;
       y?: number;
@@ -146,6 +150,12 @@ export async function PATCH(
     }
     if (harvestEndedDate !== undefined) {
       updates.harvestEndedDate = harvestEndedDate ? new Date(harvestEndedDate) : null;
+    }
+    if (harvestYield !== undefined) {
+      updates.harvestYield = harvestYield !== null && harvestYield !== "" ? Number(harvestYield) : null;
+    }
+    if (harvestYieldUnit !== undefined) {
+      updates.harvestYieldUnit = harvestYieldUnit || null;
     }
     if (notes !== undefined) {
       updates.notes = notes;

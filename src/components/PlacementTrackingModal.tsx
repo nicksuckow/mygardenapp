@@ -11,6 +11,8 @@ type PlacementData = {
   directSowedDate: string | null;
   harvestStartedDate: string | null;
   harvestEndedDate: string | null;
+  harvestYield: number | null;
+  harvestYieldUnit: string | null;
   notes: string | null;
   plant: {
     name: string;
@@ -83,6 +85,8 @@ export default function PlacementTrackingModal({
   const [directSowedDate, setDirectSowedDate] = useState<string>("");
   const [harvestStartedDate, setHarvestStartedDate] = useState<string>("");
   const [harvestEndedDate, setHarvestEndedDate] = useState<string>("");
+  const [harvestYield, setHarvestYield] = useState<string>("");
+  const [harvestYieldUnit, setHarvestYieldUnit] = useState<string>("lbs");
   const [notes, setNotes] = useState<string>("");
 
   useEffect(() => {
@@ -97,6 +101,8 @@ export default function PlacementTrackingModal({
       setDirectSowedDate("");
       setHarvestStartedDate("");
       setHarvestEndedDate("");
+      setHarvestYield("");
+      setHarvestYieldUnit("lbs");
       setNotes("");
     }
   }, [isOpen, placementId]);
@@ -116,6 +122,8 @@ export default function PlacementTrackingModal({
       setDirectSowedDate(data.directSowedDate ? data.directSowedDate.split("T")[0] : "");
       setHarvestStartedDate(data.harvestStartedDate ? data.harvestStartedDate.split("T")[0] : "");
       setHarvestEndedDate(data.harvestEndedDate ? data.harvestEndedDate.split("T")[0] : "");
+      setHarvestYield(data.harvestYield ? String(data.harvestYield) : "");
+      setHarvestYieldUnit(data.harvestYieldUnit || "lbs");
       setNotes(data.notes || "");
     } catch (err) {
       console.error(err);
@@ -140,6 +148,8 @@ export default function PlacementTrackingModal({
           directSowedDate: directSowedDate || null,
           harvestStartedDate: harvestStartedDate || null,
           harvestEndedDate: harvestEndedDate || null,
+          harvestYield: harvestYield ? parseFloat(harvestYield) : null,
+          harvestYieldUnit: harvestYield ? harvestYieldUnit : null,
           notes: notes || null,
         }),
       });
@@ -576,6 +586,44 @@ export default function PlacementTrackingModal({
                     />
                   )}
                 </div>
+
+                {/* Yield tracking */}
+                {(harvestStartedDate || harvestEndedDate) && (
+                  <div className="pt-2 border-t border-slate-200">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Total Harvest Yield
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={harvestYield}
+                        onChange={(e) => setHarvestYield(e.target.value)}
+                        placeholder="Amount"
+                        className="w-24 text-sm rounded border border-slate-300 px-2 py-1"
+                      />
+                      <select
+                        value={harvestYieldUnit}
+                        onChange={(e) => setHarvestYieldUnit(e.target.value)}
+                        className="text-sm rounded border border-slate-300 px-2 py-1"
+                      >
+                        <option value="lbs">lbs</option>
+                        <option value="oz">oz</option>
+                        <option value="kg">kg</option>
+                        <option value="g">grams</option>
+                        <option value="count">count</option>
+                        <option value="bunches">bunches</option>
+                        <option value="heads">heads</option>
+                        <option value="pints">pints</option>
+                        <option value="quarts">quarts</option>
+                      </select>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Track your cumulative harvest from this planting
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Notes */}

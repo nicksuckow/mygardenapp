@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 
 const navLinks = [
   { href: "/settings", label: "Location Data" },
-  { href: "/plants", label: "Plants" },
   { href: "/seeds", label: "Seeds" },
+  { href: "/plants", label: "Plants" },
   { href: "/beds", label: "Beds" },
-  { href: "/schedule", label: "Schedule" },
   { href: "/garden", label: "Garden View" },
+  { href: "/schedule", label: "Schedule" },
+  { href: "/stats", label: "Statistics" },
 ];
 
 export default function MobileNav() {

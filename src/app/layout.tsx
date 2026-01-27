@@ -47,15 +47,15 @@ export default async function RootLayout({
                       </Link>
                       <Link
                         className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
-                        href="/plants"
-                      >
-                        Plants
-                      </Link>
-                      <Link
-                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
                         href="/seeds"
                       >
                         Seeds
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/plants"
+                      >
+                        Plants
                       </Link>
                       <Link
                         className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
@@ -65,12 +65,21 @@ export default async function RootLayout({
                       </Link>
                       <Link
                         className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/garden"
+                      >
+                        Garden View
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
                         href="/schedule"
                       >
                         Schedule
                       </Link>
-                      <Link className="text-sm hover:underline" href="/garden">
-                        Garden View
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/stats"
+                      >
+                        Statistics
                       </Link>
                     </div>
                   </>
