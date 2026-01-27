@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PlacementTrackingModal from "@/components/PlacementTrackingModal";
-import { getCompanionSuggestions } from "@/lib/companionPlanting";
+import { getCompanionSuggestions, checkCompatibility, findPlantCompanions } from "@/lib/companionPlanting";
+
+// Companion alert type
+type CompanionAlert = {
+  plantName: string;
+  goodPairs: { plant: string; reason: string }[];
+  badPairs: { plant: string; reason: string }[];
+};
 
 type Plant = {
   id: number;
@@ -256,6 +263,9 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
   const [isPlantDropdownOpen, setIsPlantDropdownOpen] = useState(false);
   const [selectedPlantForDrag, setSelectedPlantForDrag] = useState<Plant | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Companion planting alert state
+  const [companionAlert, setCompanionAlert] = useState<CompanionAlert | null>(null);
 
   const BASE_PIXELS_PER_INCH = 4;
   const PIXELS_PER_INCH = BASE_PIXELS_PER_INCH * zoom;
@@ -598,9 +608,50 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
         setTimeout(() => setRecentlyPlaced(null), 500);
       }
 
+      // Check for companion planting relationships
+      const placedPlant = plants.find(p => p.id === plantId);
+      if (placedPlant) {
+        const existingPlantNames = new Set(placements.map(p => p.plant.name));
+        // Only check if there are other plants and this isn't a duplicate
+        if (existingPlantNames.size > 0) {
+          const goodPairs: { plant: string; reason: string }[] = [];
+          const badPairs: { plant: string; reason: string }[] = [];
+
+          existingPlantNames.forEach(existingName => {
+            if (existingName !== placedPlant.name) {
+              const result = checkCompatibility(placedPlant.name, existingName);
+              if (result.type === "good") {
+                goodPairs.push({ plant: existingName, reason: result.reason });
+              } else if (result.type === "bad") {
+                badPairs.push({ plant: existingName, reason: result.reason });
+              }
+            }
+          });
+
+          // Show alert if there are any companion relationships
+          if (goodPairs.length > 0 || badPairs.length > 0) {
+            setCompanionAlert({
+              plantName: placedPlant.name,
+              goodPairs,
+              badPairs,
+            });
+          }
+        } else {
+          // First plant - check if it has companion data to inform user
+          const companionInfo = findPlantCompanions(placedPlant.name);
+          if (companionInfo) {
+            setCompanionAlert({
+              plantName: placedPlant.name,
+              goodPairs: companionInfo.goodCompanions.slice(0, 3).map(c => ({ plant: c.name, reason: c.reason })),
+              badPairs: companionInfo.badCompanions.slice(0, 3).map(c => ({ plant: c.name, reason: c.reason })),
+            });
+          }
+        }
+      }
+
       return data;
     },
-    [bedId, loadBed]
+    [bedId, loadBed, plants, placements]
   );
 
   // Move existing placement to new position
@@ -1419,6 +1470,68 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
           refresh();
         }}
       />
+
+      {/* Companion planting alert */}
+      {companionAlert && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <div className="bg-white rounded-lg shadow-xl border overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+            <div className="flex items-center justify-between px-4 py-2 bg-slate-100 border-b">
+              <span className="font-medium text-sm">
+                Companion Info for {companionAlert.plantName}
+              </span>
+              <button
+                onClick={() => setCompanionAlert(null)}
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4 space-y-3 max-h-64 overflow-y-auto">
+              {companionAlert.badPairs.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-rose-700 flex items-center gap-1">
+                    <span>⚠️</span> Avoid planting near:
+                  </p>
+                  <ul className="text-xs text-rose-600 space-y-1 pl-5">
+                    {companionAlert.badPairs.map((pair, idx) => (
+                      <li key={idx}>
+                        <span className="font-medium">{pair.plant}</span>
+                        <span className="text-rose-500"> — {pair.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {companionAlert.goodPairs.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                    <span>✓</span> Good companions:
+                  </p>
+                  <ul className="text-xs text-emerald-600 space-y-1 pl-5">
+                    {companionAlert.goodPairs.map((pair, idx) => (
+                      <li key={idx}>
+                        <span className="font-medium">{pair.plant}</span>
+                        <span className="text-emerald-500"> — {pair.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {companionAlert.goodPairs.length === 0 && companionAlert.badPairs.length === 0 && (
+                <p className="text-xs text-slate-500">No known companion relationships.</p>
+              )}
+            </div>
+            <div className="px-4 py-2 bg-slate-50 border-t">
+              <button
+                onClick={() => setCompanionAlert(null)}
+                className="w-full text-xs text-slate-600 hover:text-slate-800 font-medium"
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

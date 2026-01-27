@@ -19,6 +19,25 @@ export function normalizePlantName(name: string): string {
   return name.toLowerCase().trim().replace(/s$/, ""); // Remove trailing 's' for plurals
 }
 
+// Check if a plant name matches a base name (fuzzy matching)
+// e.g., "Abraham Lincoln Tomato" should match "tomato"
+function fuzzyMatchPlantName(plantName: string, baseName: string): boolean {
+  const normalizedPlant = normalizePlantName(plantName);
+  const normalizedBase = normalizePlantName(baseName);
+
+  // Exact match
+  if (normalizedPlant === normalizedBase) return true;
+
+  // Plant name contains the base name (e.g., "cherry tomato" contains "tomato")
+  if (normalizedPlant.includes(normalizedBase)) return true;
+
+  // Check individual words in the plant name
+  const plantWords = normalizedPlant.split(/\s+/);
+  if (plantWords.some(word => word === normalizedBase)) return true;
+
+  return false;
+}
+
 // Common companion planting relationships
 export const companionData: PlantCompanions[] = [
   {
@@ -335,15 +354,23 @@ export const companionData: PlantCompanions[] = [
   },
 ];
 
-// Find companion info for a plant
+// Find companion info for a plant (with fuzzy matching)
 export function findPlantCompanions(plantName: string): PlantCompanions | undefined {
-  const normalized = normalizePlantName(plantName);
+  // First try exact match
+  const exactMatch = companionData.find(
+    (p) => normalizePlantName(p.name) === normalizePlantName(plantName) ||
+           p.aliases.some((a) => normalizePlantName(a) === normalizePlantName(plantName))
+  );
+  if (exactMatch) return exactMatch;
+
+  // Then try fuzzy matching (e.g., "Abraham Lincoln Tomato" -> "tomato")
   return companionData.find(
-    (p) => normalizePlantName(p.name) === normalized || p.aliases.some((a) => normalizePlantName(a) === normalized)
+    (p) => fuzzyMatchPlantName(plantName, p.name) ||
+           p.aliases.some((a) => fuzzyMatchPlantName(plantName, a))
   );
 }
 
-// Check if two plants are compatible
+// Check if two plants are compatible (with fuzzy matching)
 export function checkCompatibility(
   plant1Name: string,
   plant2Name: string
@@ -351,37 +378,34 @@ export function checkCompatibility(
   const plant1 = findPlantCompanions(plant1Name);
   const plant2 = findPlantCompanions(plant2Name);
 
-  const norm1 = normalizePlantName(plant1Name);
-  const norm2 = normalizePlantName(plant2Name);
-
-  // Check if plant1 has plant2 as a companion
+  // Check if plant1 has plant2 as a companion (using fuzzy matching)
   if (plant1) {
     const goodMatch = plant1.goodCompanions.find(
-      (c) => normalizePlantName(c.name) === norm2
+      (c) => fuzzyMatchPlantName(plant2Name, c.name)
     );
     if (goodMatch) {
       return { type: "good", reason: goodMatch.reason };
     }
 
     const badMatch = plant1.badCompanions.find(
-      (c) => normalizePlantName(c.name) === norm2
+      (c) => fuzzyMatchPlantName(plant2Name, c.name)
     );
     if (badMatch) {
       return { type: "bad", reason: badMatch.reason };
     }
   }
 
-  // Check if plant2 has plant1 as a companion
+  // Check if plant2 has plant1 as a companion (using fuzzy matching)
   if (plant2) {
     const goodMatch = plant2.goodCompanions.find(
-      (c) => normalizePlantName(c.name) === norm1
+      (c) => fuzzyMatchPlantName(plant1Name, c.name)
     );
     if (goodMatch) {
       return { type: "good", reason: goodMatch.reason };
     }
 
     const badMatch = plant2.badCompanions.find(
-      (c) => normalizePlantName(c.name) === norm1
+      (c) => fuzzyMatchPlantName(plant1Name, c.name)
     );
     if (badMatch) {
       return { type: "bad", reason: badMatch.reason };
