@@ -90,16 +90,19 @@ export async function searchVerdantlyPlants(
     throw new Error("RapidAPI key not configured for Verdantly. Add RAPIDAPI_KEY to your .env file");
   }
 
+  // Trim whitespace from query
+  const trimmedQuery = query.trim();
+
   // Search by name first
   const nameParams = new URLSearchParams({
-    q: query,
+    q: trimmedQuery,
     page: page.toString(),
   });
   const nameUrl = `${VERDANTLY_API_BASE}/v1/plants/varieties/name?${nameParams.toString()}`;
 
   // Also filter by subtype to catch varieties
   const filterParams = new URLSearchParams({
-    subtype: query,
+    subtype: trimmedQuery,
     page: page.toString(),
   });
   const filterUrl = `${VERDANTLY_API_BASE}/v1/plants/varieties/filter?${filterParams.toString()}`;

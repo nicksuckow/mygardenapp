@@ -12,10 +12,11 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const query = searchParams.get("q") || "";
+    const rawQuery = searchParams.get("q") || "";
+    const query = rawQuery.trim(); // Remove leading/trailing whitespace
     const page = parseInt(searchParams.get("page") || "1");
 
-    if (!query || query.trim().length < 2) {
+    if (!query || query.length < 2) {
       return NextResponse.json(
         { error: "Search query must be at least 2 characters" },
         { status: 400 }

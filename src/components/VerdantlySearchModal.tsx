@@ -69,7 +69,8 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
   async function handleSearch(e?: React.FormEvent, page: number = 1) {
     e?.preventDefault();
-    if (!query.trim() || query.trim().length < 2) {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery || trimmedQuery.length < 2) {
       setError("Please enter at least 2 characters");
       return;
     }
@@ -82,7 +83,7 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
     try {
       const params = new URLSearchParams({
-        q: query,
+        q: trimmedQuery,
         page: page.toString(),
       });
 
