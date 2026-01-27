@@ -356,6 +356,7 @@ export default function PlantsPage() {
             </div>
           </div>
 
+{/* Recalculate button - hidden for now, uncomment to re-enable
           <button
             className={`${ui.btn} ${ui.btnSecondary} text-xs`}
             onClick={recalculateTiming}
@@ -364,6 +365,7 @@ export default function PlantsPage() {
           >
             {recalculating ? "Updating..." : "🔄 Recalculate Timing"}
           </button>
+*/}
         </div>
       </div>
 
