@@ -37,6 +37,8 @@ type Placement = {
   harvestEndedDate?: string | null;
 };
 
+type TaskType = "seeds" | "transplant" | "directSow" | "harvestStart" | "harvestEnd";
+
 type EventRow = {
   date: string;
   bedId: number;
@@ -44,9 +46,54 @@ type EventRow = {
   plantName: string;
   count: number;
   task: string;
+  taskType: TaskType;
   placementId?: number;
   status?: "planned" | "completed";
   isActual?: boolean;
+};
+
+// Task configuration with emojis and colors for each stage
+const TASK_CONFIG: Record<TaskType, { emoji: string; label: string; completedLabel: string; bgClass: string; textClass: string; borderClass: string }> = {
+  seeds: {
+    emoji: "🌱",
+    label: "Start seeds indoors",
+    completedLabel: "Seeds started",
+    bgClass: "bg-sky-100",
+    textClass: "text-sky-700",
+    borderClass: "border-sky-300",
+  },
+  transplant: {
+    emoji: "🏡",
+    label: "Transplant outdoors",
+    completedLabel: "Transplanted",
+    bgClass: "bg-emerald-100",
+    textClass: "text-emerald-700",
+    borderClass: "border-emerald-300",
+  },
+  directSow: {
+    emoji: "🌾",
+    label: "Direct sow",
+    completedLabel: "Direct sowed",
+    bgClass: "bg-amber-100",
+    textClass: "text-amber-700",
+    borderClass: "border-amber-300",
+  },
+  harvestStart: {
+    emoji: "🥬",
+    label: "Begin harvest",
+    completedLabel: "Harvesting",
+    bgClass: "bg-orange-100",
+    textClass: "text-orange-700",
+    borderClass: "border-orange-300",
+  },
+  harvestEnd: {
+    emoji: "✅",
+    label: "Harvest complete",
+    completedLabel: "Harvest done",
+    bgClass: "bg-purple-100",
+    textClass: "text-purple-700",
+    borderClass: "border-purple-300",
+  },
 };
 
 function addDays(d: Date, days: number) {
@@ -70,6 +117,28 @@ export default function SchedulePage() {
   const [filterBedId, setFilterBedId] = useState<number | "all">("all");
   const [filterStatus, setFilterStatus] = useState<"all" | "planned" | "completed">("all");
   const [viewMode, setViewMode] = useState<"table" | "calendar" | "week" | "grid">("table");
+
+  // Month selector for grid view
+  const [selectedMonth, setSelectedMonth] = useState<{ year: number; month: number } | null>(null);
+
+  // Plant detail modal
+  const [selectedEvent, setSelectedEvent] = useState<EventRow | null>(null);
+
+  // Day detail modal (for viewing all events on a day)
+  const [selectedDay, setSelectedDay] = useState<{ date: Date; events: EventRow[] } | null>(null);
+
+  // Print mode for day modal
+  const [printingDayModal, setPrintingDayModal] = useState(false);
+
+  // Handle printing day modal
+  const handlePrintDayModal = () => {
+    setPrintingDayModal(true);
+    // Small delay to let state update before printing
+    setTimeout(() => {
+      window.print();
+      setPrintingDayModal(false);
+    }, 100);
+  };
 
   useEffect(() => {
     (async () => {
@@ -180,7 +249,8 @@ export default function SchedulePage() {
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "✓ Seeds started indoors",
+            taskType: "seeds",
+            task: `${TASK_CONFIG.seeds.emoji} ${TASK_CONFIG.seeds.completedLabel}`,
             status: "completed",
             isActual: true,
           });
@@ -191,7 +261,8 @@ export default function SchedulePage() {
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
-            task: "Start seeds indoors",
+            taskType: "seeds",
+            task: `${TASK_CONFIG.seeds.emoji} ${TASK_CONFIG.seeds.label}`,
             status: "planned",
           });
         }
@@ -205,7 +276,8 @@ export default function SchedulePage() {
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "✓ Transplanted outdoors",
+            taskType: "transplant",
+            task: `${TASK_CONFIG.transplant.emoji} ${TASK_CONFIG.transplant.completedLabel}`,
             status: "completed",
             isActual: true,
           });
@@ -216,7 +288,8 @@ export default function SchedulePage() {
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
-            task: "Transplant outdoors",
+            taskType: "transplant",
+            task: `${TASK_CONFIG.transplant.emoji} ${TASK_CONFIG.transplant.label}`,
             status: "planned",
           });
         }
@@ -230,7 +303,8 @@ export default function SchedulePage() {
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "✓ Direct sowed",
+            taskType: "directSow",
+            task: `${TASK_CONFIG.directSow.emoji} ${TASK_CONFIG.directSow.completedLabel}`,
             status: "completed",
             isActual: true,
           });
@@ -241,7 +315,8 @@ export default function SchedulePage() {
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
-            task: "Direct sow",
+            taskType: "directSow",
+            task: `${TASK_CONFIG.directSow.emoji} ${TASK_CONFIG.directSow.label}`,
             status: "planned",
           });
         }
@@ -258,7 +333,8 @@ export default function SchedulePage() {
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "✓ Harvest started",
+            taskType: "harvestStart",
+            task: `${TASK_CONFIG.harvestStart.emoji} ${TASK_CONFIG.harvestStart.completedLabel}`,
             status: "completed",
             isActual: true,
           });
@@ -269,7 +345,8 @@ export default function SchedulePage() {
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
-            task: "Estimated harvest (start)",
+            taskType: "harvestStart",
+            task: `${TASK_CONFIG.harvestStart.emoji} ${TASK_CONFIG.harvestStart.label}`,
             status: "planned",
           });
         }
@@ -283,7 +360,8 @@ export default function SchedulePage() {
             plantName: plant.name,
             count,
             placementId: placement.id,
-            task: "✓ Harvest ended",
+            taskType: "harvestEnd",
+            task: `${TASK_CONFIG.harvestEnd.emoji} ${TASK_CONFIG.harvestEnd.completedLabel}`,
             status: "completed",
             isActual: true,
           });
@@ -294,7 +372,8 @@ export default function SchedulePage() {
             bedName: bedEntry.bedName,
             plantName: plant.name,
             count,
-            task: "Estimated harvest (end)",
+            taskType: "harvestEnd",
+            task: `${TASK_CONFIG.harvestEnd.emoji} ${TASK_CONFIG.harvestEnd.label}`,
             status: "planned",
           });
         }
@@ -404,59 +483,104 @@ export default function SchedulePage() {
     return weeks;
   }, [filteredEvents]);
 
-  // Grid view - create a month calendar grid
-  const calendarGrid = useMemo(() => {
+  // Available months for grid view navigation
+  const availableMonths = useMemo(() => {
     if (filteredEvents.length === 0) return [];
 
-    // Find the month range we need to display
     const dates = filteredEvents.map((e) => new Date(e.date));
     const minDate = new Date(Math.min(...dates.map((d) => d.getTime())));
     const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
 
-    const months: {
-      year: number;
-      month: number;
-      monthName: string;
-      days: { date: Date; events: EventRow[]; isCurrentMonth: boolean }[];
-    }[] = [];
-
+    const months: { year: number; month: number; label: string }[] = [];
     const current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     const endMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
 
     while (current <= endMonth) {
-      const year = current.getFullYear();
-      const month = current.getMonth();
-      const monthName = current.toLocaleDateString("en-US", { year: "numeric", month: "long" });
-
-      // Find first day to display (Sunday of the week containing the 1st)
-      const firstOfMonth = new Date(year, month, 1);
-      const lastOfMonth = new Date(year, month + 1, 0);
-      const startDay = new Date(firstOfMonth);
-      startDay.setDate(startDay.getDate() - startDay.getDay());
-
-      const days: { date: Date; events: EventRow[]; isCurrentMonth: boolean }[] = [];
-
-      // Generate 6 weeks of days (42 days)
-      for (let i = 0; i < 42; i++) {
-        const day = new Date(startDay);
-        day.setDate(day.getDate() + i);
-
-        const dateStr = fmt(day);
-        const dayEvents = filteredEvents.filter((e) => e.date === dateStr);
-
-        days.push({
-          date: day,
-          events: dayEvents,
-          isCurrentMonth: day.getMonth() === month,
-        });
-      }
-
-      months.push({ year, month, monthName, days });
+      months.push({
+        year: current.getFullYear(),
+        month: current.getMonth(),
+        label: current.toLocaleDateString("en-US", { year: "numeric", month: "long" }),
+      });
       current.setMonth(current.getMonth() + 1);
     }
 
     return months;
   }, [filteredEvents]);
+
+  // Set default selected month when available months change
+  useEffect(() => {
+    if (availableMonths.length > 0 && !selectedMonth) {
+      // Default to current month if it's in the range, otherwise first month
+      const now = new Date();
+      const currentMonthIdx = availableMonths.findIndex(
+        (m) => m.year === now.getFullYear() && m.month === now.getMonth()
+      );
+      if (currentMonthIdx >= 0) {
+        setSelectedMonth({ year: availableMonths[currentMonthIdx].year, month: availableMonths[currentMonthIdx].month });
+      } else {
+        setSelectedMonth({ year: availableMonths[0].year, month: availableMonths[0].month });
+      }
+    }
+  }, [availableMonths, selectedMonth]);
+
+  // Grid view - create a month calendar grid for the selected month
+  const calendarGrid = useMemo(() => {
+    if (filteredEvents.length === 0 || !selectedMonth) return [];
+
+    const year = selectedMonth.year;
+    const month = selectedMonth.month;
+    const monthName = new Date(year, month, 1).toLocaleDateString("en-US", { year: "numeric", month: "long" });
+
+    // Find first day to display (Sunday of the week containing the 1st)
+    const firstOfMonth = new Date(year, month, 1);
+    const startDay = new Date(firstOfMonth);
+    startDay.setDate(startDay.getDate() - startDay.getDay());
+
+    const days: { date: Date; events: EventRow[]; isCurrentMonth: boolean }[] = [];
+
+    // Generate 6 weeks of days (42 days)
+    for (let i = 0; i < 42; i++) {
+      const day = new Date(startDay);
+      day.setDate(day.getDate() + i);
+
+      const dateStr = fmt(day);
+      const dayEvents = filteredEvents.filter((e) => e.date === dateStr);
+
+      days.push({
+        date: day,
+        events: dayEvents,
+        isCurrentMonth: day.getMonth() === month,
+      });
+    }
+
+    return [{ year, month, monthName, days }];
+  }, [filteredEvents, selectedMonth]);
+
+  // Get all events for a specific plant (for detail modal)
+  const getPlantEvents = (plantName: string, bedName: string) => {
+    return events.filter((e) => e.plantName === plantName && e.bedName === bedName);
+  };
+
+  // Navigate to previous/next month
+  const goToPrevMonth = () => {
+    if (!selectedMonth || availableMonths.length === 0) return;
+    const currentIdx = availableMonths.findIndex(
+      (m) => m.year === selectedMonth.year && m.month === selectedMonth.month
+    );
+    if (currentIdx > 0) {
+      setSelectedMonth({ year: availableMonths[currentIdx - 1].year, month: availableMonths[currentIdx - 1].month });
+    }
+  };
+
+  const goToNextMonth = () => {
+    if (!selectedMonth || availableMonths.length === 0) return;
+    const currentIdx = availableMonths.findIndex(
+      (m) => m.year === selectedMonth.year && m.month === selectedMonth.month
+    );
+    if (currentIdx < availableMonths.length - 1) {
+      setSelectedMonth({ year: availableMonths[currentIdx + 1].year, month: availableMonths[currentIdx + 1].month });
+    }
+  };
 
   // CSV export function
   function exportToCSV() {
@@ -476,18 +600,21 @@ export default function SchedulePage() {
     window.URL.revokeObjectURL(url);
   }
 
-  // Helper to get task color class
-  function getTaskColorClass(task: string): string {
-    if (task.includes("Start seeds")) return "bg-blue-100 text-blue-700 border-blue-200";
-    if (task.includes("Transplant")) return "bg-green-100 text-green-700 border-green-200";
-    if (task.includes("Direct sow")) return "bg-yellow-100 text-yellow-700 border-yellow-200";
-    if (task.includes("Harvest")) return "bg-orange-100 text-orange-700 border-orange-200";
-    if (task.includes("complete")) return "bg-purple-100 text-purple-700 border-purple-200";
-    return "bg-slate-100 text-slate-700 border-slate-200";
+  // Helper to get task color class from taskType
+  function getTaskColorClass(taskType: TaskType): string {
+    const config = TASK_CONFIG[taskType];
+    return `${config.bgClass} ${config.textClass} ${config.borderClass}`;
+  }
+
+  // Print function for monthly grid view
+  function handlePrint() {
+    window.print();
   }
 
   return (
     <div className="space-y-6">
+      {/* Main content - hidden when printing day modal */}
+      <div className={printingDayModal ? "print-hide-for-modal" : ""}>
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-100 p-6">
         {/* Decorative calendar icon */}
         <div className="absolute top-0 right-0 opacity-10">
@@ -552,52 +679,75 @@ export default function SchedulePage() {
 
           {/* View mode and export row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div className="flex rounded-lg border border-slate-200 bg-white overflow-x-auto">
+            <div className="flex rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-sm overflow-x-auto">
               <button
-                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "table"
-                    ? "bg-emerald-600 text-white"
-                    : "text-slate-700 hover:bg-slate-50"
-                } rounded-l-lg`}
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
                 onClick={() => setViewMode("table")}
               >
                 Table
               </button>
               <button
-                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "week"
-                    ? "bg-emerald-600 text-white"
-                    : "text-slate-700 hover:bg-slate-50"
-                } border-l border-slate-200`}
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
                 onClick={() => setViewMode("week")}
               >
                 Week
               </button>
               <button
-                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "grid"
-                    ? "bg-emerald-600 text-white"
-                    : "text-slate-700 hover:bg-slate-50"
-                } border-l border-slate-200`}
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
                 onClick={() => setViewMode("grid")}
               >
                 Grid
               </button>
               <button
-                className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition whitespace-nowrap ${
+                className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "calendar"
-                    ? "bg-emerald-600 text-white"
-                    : "text-slate-700 hover:bg-slate-50"
-                } rounded-r-lg border-l border-slate-200`}
+                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                }`}
                 onClick={() => setViewMode("calendar")}
               >
                 List
               </button>
             </div>
 
-            <button className={`${ui.btn} ${ui.btnSecondary} whitespace-nowrap`} onClick={exportToCSV}>
-              Export CSV
-            </button>
+            <div className="flex gap-2">
+              <button className={`${ui.btn} ${ui.btnSecondary} whitespace-nowrap`} onClick={handlePrint}>
+                🖨️ Print
+              </button>
+              <button className={`${ui.btn} ${ui.btnSecondary} whitespace-nowrap`} onClick={exportToCSV}>
+                Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Color Legend */}
+      <div className={`${ui.card} ${ui.cardPad} no-print`}>
+        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+          <span className="text-sm font-medium text-slate-700">Legend:</span>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            {(Object.keys(TASK_CONFIG) as TaskType[]).map((taskType) => (
+              <div
+                key={taskType}
+                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getTaskColorClass(taskType)}`}
+              >
+                <span>{TASK_CONFIG[taskType].emoji}</span>
+                <span className="hidden sm:inline">{TASK_CONFIG[taskType].label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -734,14 +884,15 @@ export default function SchedulePage() {
               <h3 className="text-base font-semibold mb-3 text-slate-800">{month}</h3>
               <div className="space-y-2">
                 {monthEvents.map((event, idx) => (
-                  <div
+                  <button
                     key={idx}
-                    className="flex flex-wrap items-start gap-3 text-sm p-2 rounded hover:bg-slate-50"
+                    onClick={() => setSelectedEvent(event)}
+                    className="w-full text-left flex flex-wrap items-start gap-3 text-sm p-2 rounded hover:bg-slate-100 hover:ring-2 hover:ring-slate-200 transition-all cursor-pointer"
                   >
                     <span className="font-mono text-slate-600 min-w-[80px]">{event.date}</span>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${getTaskColorClass(
-                        event.task
+                        event.taskType
                       )}`}
                     >
                       {event.task}
@@ -750,7 +901,7 @@ export default function SchedulePage() {
                       {event.plantName} ({event.count})
                     </span>
                     <span className="text-slate-500 text-xs">in {event.bedName}</span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -787,16 +938,22 @@ export default function SchedulePage() {
                       </div>
                       <div className="space-y-1">
                         {dayEvents.slice(0, 3).map((event, eIdx) => (
-                          <div
+                          <button
                             key={eIdx}
-                            className={`text-xs px-1.5 py-0.5 rounded truncate ${getTaskColorClass(event.task)}`}
+                            onClick={() => setSelectedEvent(event)}
+                            className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate hover:ring-2 hover:ring-offset-1 hover:ring-slate-400 cursor-pointer ${getTaskColorClass(event.taskType)}`}
                             title={`${event.task} - ${event.plantName}`}
                           >
-                            {event.plantName}
-                          </div>
+                            {TASK_CONFIG[event.taskType].emoji} {event.plantName}
+                          </button>
                         ))}
                         {dayEvents.length > 3 && (
-                          <div className="text-xs text-slate-500">+{dayEvents.length - 3} more</div>
+                          <button
+                            onClick={() => setSelectedDay({ date: dayDate, events: dayEvents })}
+                            className="w-full text-xs text-slate-600 py-0.5 rounded hover:bg-slate-200 hover:text-slate-800 transition-colors cursor-pointer font-medium"
+                          >
+                            +{dayEvents.length - 3} more
+                          </button>
                         )}
                       </div>
                     </div>
@@ -808,9 +965,72 @@ export default function SchedulePage() {
         </div>
       ) : viewMode === "grid" ? (
         /* Grid View (Monthly Calendar) */
-        <div className="space-y-6">
+        <div className="space-y-6 print-calendar">
+          {/* Print-only header and legend */}
+          <div className="hidden print:block mb-4">
+            <h2 className="print-title">Garden Planting Schedule</h2>
+            <div className="print-legend">
+              <div className="print-legend-item">
+                <span className={`px-2 py-0.5 rounded ${TASK_CONFIG.seeds.bgClass}`}>🌱</span>
+                <span>Start seeds indoors</span>
+              </div>
+              <div className="print-legend-item">
+                <span className={`px-2 py-0.5 rounded ${TASK_CONFIG.transplant.bgClass}`}>🏡</span>
+                <span>Transplant outdoors</span>
+              </div>
+              <div className="print-legend-item">
+                <span className={`px-2 py-0.5 rounded ${TASK_CONFIG.directSow.bgClass}`}>🌾</span>
+                <span>Direct sow</span>
+              </div>
+              <div className="print-legend-item">
+                <span className={`px-2 py-0.5 rounded ${TASK_CONFIG.harvestStart.bgClass}`}>🥬</span>
+                <span>Begin harvest</span>
+              </div>
+              <div className="print-legend-item">
+                <span className={`px-2 py-0.5 rounded ${TASK_CONFIG.harvestEnd.bgClass}`}>✅</span>
+                <span>Harvest complete</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Month Navigation (screen only) */}
+          <div className="flex items-center justify-between no-print">
+            <button
+              onClick={goToPrevMonth}
+              disabled={!selectedMonth || availableMonths.findIndex((m) => m.year === selectedMonth.year && m.month === selectedMonth.month) === 0}
+              className={`${ui.btn} ${ui.btnSecondary} disabled:opacity-40`}
+            >
+              ← Prev
+            </button>
+
+            <div className="flex items-center gap-3">
+              <select
+                value={selectedMonth ? `${selectedMonth.year}-${selectedMonth.month}` : ""}
+                onChange={(e) => {
+                  const [year, month] = e.target.value.split("-").map(Number);
+                  setSelectedMonth({ year, month });
+                }}
+                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium bg-white shadow-sm"
+              >
+                {availableMonths.map((m) => (
+                  <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <button
+              onClick={goToNextMonth}
+              disabled={!selectedMonth || availableMonths.findIndex((m) => m.year === selectedMonth.year && m.month === selectedMonth.month) === availableMonths.length - 1}
+              className={`${ui.btn} ${ui.btnSecondary} disabled:opacity-40`}
+            >
+              Next →
+            </button>
+          </div>
+
           {calendarGrid.map((month, mIdx) => (
-            <div key={mIdx} className={`${ui.card} ${ui.cardPad}`}>
+            <div key={mIdx} className={`${ui.card} ${ui.cardPad} print-card`}>
               <h3 className="text-lg font-semibold mb-4 text-slate-800">{month.monthName}</h3>
               <div className="grid grid-cols-7 gap-1">
                 {/* Day headers */}
@@ -828,7 +1048,7 @@ export default function SchedulePage() {
                   return (
                     <div
                       key={dIdx}
-                      className={`min-h-[60px] rounded border p-1 ${
+                      className={`min-h-[80px] sm:min-h-[100px] rounded border p-1 ${
                         !day.isCurrentMonth
                           ? "bg-slate-50 border-slate-100"
                           : isToday
@@ -846,17 +1066,25 @@ export default function SchedulePage() {
                         {day.date.getDate()}
                       </div>
                       <div className="space-y-0.5">
-                        {day.events.slice(0, 2).map((event, eIdx) => (
-                          <div
+                        {day.events.slice(0, 3).map((event, eIdx) => (
+                          <button
                             key={eIdx}
-                            className={`text-xs px-1 py-0.5 rounded truncate ${getTaskColorClass(event.task)}`}
+                            onClick={() => setSelectedEvent(event)}
+                            className={`w-full text-left text-xs px-1 py-0.5 rounded hover:ring-2 hover:ring-offset-1 hover:ring-slate-400 transition-all cursor-pointer ${getTaskColorClass(event.taskType)}`}
                             title={`${event.task} - ${event.plantName} (${event.bedName})`}
                           >
-                            {event.plantName.slice(0, 8)}
-                          </div>
+                            <span className="block truncate">
+                              {TASK_CONFIG[event.taskType].emoji} {event.plantName}
+                            </span>
+                          </button>
                         ))}
-                        {day.events.length > 2 && (
-                          <div className="text-xs text-slate-500 text-center">+{day.events.length - 2}</div>
+                        {day.events.length > 3 && (
+                          <button
+                            onClick={() => setSelectedDay({ date: day.date, events: day.events })}
+                            className="w-full text-xs text-slate-600 text-center py-0.5 rounded hover:bg-slate-200 hover:text-slate-800 transition-colors cursor-pointer font-medium"
+                          >
+                            +{day.events.length - 3} more
+                          </button>
                         )}
                       </div>
                     </div>
@@ -884,7 +1112,8 @@ export default function SchedulePage() {
                 {filteredEvents.map((e, idx) => (
                   <tr
                     key={idx}
-                    className={`border-b last:border-b-0 hover:bg-slate-50 ${
+                    onClick={() => setSelectedEvent(e)}
+                    className={`border-b last:border-b-0 hover:bg-slate-100 cursor-pointer transition-colors ${
                       e.status === "completed" ? "bg-green-50/30" : ""
                     }`}
                   >
@@ -909,6 +1138,178 @@ export default function SchedulePage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      </div>{/* End main content wrapper */}
+
+      {/* Plant Detail Modal */}
+      {selectedEvent && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedEvent(null)}
+        >
+          <div
+            className={`${ui.card} w-full max-w-md max-h-[80vh] overflow-y-auto`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 border-b border-slate-200">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">{selectedEvent.plantName}</h2>
+                  <p className="text-sm text-slate-600 mt-1">in {selectedEvent.bedName}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedEvent(null)}
+                  className="text-slate-400 hover:text-slate-600 p-1"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4">
+              {/* Current Event */}
+              <div className={`p-3 rounded-lg border ${getTaskColorClass(selectedEvent.taskType)}`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{TASK_CONFIG[selectedEvent.taskType].emoji}</span>
+                  <div>
+                    <p className="font-medium">{TASK_CONFIG[selectedEvent.taskType].label}</p>
+                    <p className="text-sm">{selectedEvent.date}</p>
+                  </div>
+                </div>
+                {selectedEvent.status === "completed" && (
+                  <span className="inline-block mt-2 text-xs font-medium bg-white/50 px-2 py-0.5 rounded">
+                    ✓ Completed
+                  </span>
+                )}
+              </div>
+
+              {/* All Events for this Plant */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Full Schedule</h3>
+                <div className="space-y-2">
+                  {getPlantEvents(selectedEvent.plantName, selectedEvent.bedName).map((event, idx) => {
+                    const isCurrentEvent = event.date === selectedEvent.date && event.taskType === selectedEvent.taskType;
+                    return (
+                      <div
+                        key={idx}
+                        className={`flex items-center gap-3 p-2 rounded-lg text-sm ${
+                          isCurrentEvent ? "bg-slate-100 ring-2 ring-slate-300" : "hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="text-base">{TASK_CONFIG[event.taskType].emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className={`font-medium ${event.status === "completed" ? "text-green-700" : "text-slate-800"}`}>
+                            {TASK_CONFIG[event.taskType].label}
+                          </p>
+                          <p className="text-xs text-slate-500">{event.date}</p>
+                        </div>
+                        {event.status === "completed" && (
+                          <span className="text-green-600 text-xs">✓</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Plant Count */}
+              <div className="pt-3 border-t border-slate-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-600">Plants in this bed:</span>
+                  <span className="font-semibold text-slate-900">{selectedEvent.count}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50">
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className={`${ui.btn} ${ui.btnSecondary} w-full`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Day Detail Modal - shows all events for a selected day */}
+      {selectedDay && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 print-day-modal-backdrop"
+          onClick={() => setSelectedDay(null)}
+        >
+          <div
+            className={`${ui.card} w-full max-w-md max-h-[80vh] overflow-y-auto print-day-modal`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 border-b border-slate-200">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    {selectedDay.date.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </h2>
+                  <p className="text-sm text-slate-600 mt-1">
+                    {selectedDay.events.length} scheduled {selectedDay.events.length === 1 ? "task" : "tasks"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  className="text-slate-400 hover:text-slate-600 p-1"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 space-y-2">
+              {selectedDay.events.map((event, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSelectedDay(null);
+                    setSelectedEvent(event);
+                  }}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all hover:ring-2 hover:ring-offset-1 hover:ring-slate-400 cursor-pointer ${getTaskColorClass(event.taskType)}`}
+                >
+                  <span className="text-xl">{TASK_CONFIG[event.taskType].emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{event.plantName}</p>
+                    <p className="text-xs opacity-80">{TASK_CONFIG[event.taskType].label}</p>
+                    <p className="text-xs opacity-70">in {event.bedName}</p>
+                  </div>
+                  {event.status === "completed" && (
+                    <span className="text-xs font-medium bg-white/50 px-2 py-0.5 rounded">✓ Done</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex gap-2 no-print">
+              <button
+                onClick={handlePrintDayModal}
+                className={`${ui.btn} ${ui.btnSecondary} flex-1`}
+              >
+                🖨️ Print
+              </button>
+              <button
+                onClick={() => setSelectedDay(null)}
+                className={`${ui.btn} ${ui.btnSecondary} flex-1`}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

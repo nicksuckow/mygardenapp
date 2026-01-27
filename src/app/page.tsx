@@ -36,7 +36,7 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <Link className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-2.5 text-sm font-medium text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200" href="/beds">
+              <Link className={`${ui.btn} ${ui.btnPrimary}`} href="/beds">
                 Open beds →
               </Link>
               <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/schedule">

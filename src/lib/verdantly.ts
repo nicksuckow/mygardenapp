@@ -227,23 +227,83 @@ function parseWeeksFromFrost(text: string | undefined, type: "before" | "after" 
   if (!text) return null;
 
   const lower = text.toLowerCase();
-  const match = lower.match(/(\d+)(?:\s*-\s*\d+)?\s*weeks?/);
-  if (!match) return null;
 
-  const weeks = parseInt(match[1], 10);
+  // Try to match "X weeks" or "X-Y weeks" pattern
+  const weeksMatch = lower.match(/(\d+)(?:\s*-\s*\d+)?\s*weeks?/);
 
-  if (type === "before") {
-    // startIndoors is weeks BEFORE frost, stored as positive
-    return weeks;
-  } else if (type === "after") {
-    // transplant is weeks AFTER frost, stored as positive
-    return weeks;
-  } else {
-    // directSow: negative if before frost, positive if after
-    if (lower.includes("before")) return -weeks;
-    if (lower.includes("after")) return weeks;
-    return weeks; // default to positive if unclear
+  if (weeksMatch) {
+    const weeks = parseInt(weeksMatch[1], 10);
+
+    if (type === "before") {
+      // startIndoors is weeks BEFORE frost, stored as positive
+      return weeks;
+    } else if (type === "after") {
+      // transplant is weeks AFTER frost, stored as positive
+      return weeks;
+    } else {
+      // directSow: negative if before frost, positive if after
+      if (lower.includes("before")) return -weeks;
+      if (lower.includes("after")) return weeks;
+      return weeks; // default to positive if unclear
+    }
   }
+
+  // No explicit weeks found - check for frost-relative phrases
+  if (type === "after") {
+    // For transplant: "after last frost", "once frost has passed", "when frost danger has passed"
+    if (
+      lower.includes("after last frost") ||
+      lower.includes("after frost") ||
+      lower.includes("once frost has passed") ||
+      lower.includes("when frost danger") ||
+      lower.includes("frost free") ||
+      lower.includes("frost-free") ||
+      lower.includes("no danger of frost")
+    ) {
+      // Default to 1 week after frost for safety
+      return 1;
+    }
+  }
+
+  if (type === "relative") {
+    // For direct sow
+    if (lower.includes("after") && (lower.includes("frost") || lower.includes("warm"))) {
+      return 1; // 1 week after frost
+    }
+    if (lower.includes("before") && lower.includes("frost")) {
+      return -2; // 2 weeks before frost (conservative)
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Parse days to maturity from various text formats
+ * e.g., "65-80 days", "70 days to harvest", "matures in 60-75 days"
+ */
+function parseDaysToMaturity(text: string | undefined): { min: number | null; max: number | null } {
+  if (!text) return { min: null, max: null };
+
+  const lower = text.toLowerCase();
+
+  // Match patterns like "65-80 days", "60 to 75 days", "70 days"
+  const rangeMatch = lower.match(/(\d+)\s*(?:-|to)\s*(\d+)\s*days?/);
+  if (rangeMatch) {
+    return {
+      min: parseInt(rangeMatch[1], 10),
+      max: parseInt(rangeMatch[2], 10),
+    };
+  }
+
+  // Single number: "70 days"
+  const singleMatch = lower.match(/(\d+)\s*days?/);
+  if (singleMatch) {
+    const days = parseInt(singleMatch[1], 10);
+    return { min: days, max: days + 14 }; // Add 2 weeks for harvest window
+  }
+
+  return { min: null, max: null };
 }
 
 /**
@@ -334,16 +394,33 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
   // Parse planting instructions into week fields
   const plantingInstr = ci?.plantingInstructions;
   const startIndoorsWeeksBeforeFrost = parseWeeksFromFrost(plantingInstr?.startIndoors, "before");
-  const transplantWeeksAfterFrost = parseWeeksFromFrost(plantingInstr?.transplantOutdoors, "after");
+  let transplantWeeksAfterFrost = parseWeeksFromFrost(plantingInstr?.transplantOutdoors, "after");
   const directSowWeeksRelativeToFrost = parseWeeksFromFrost(plantingInstr?.directSow, "relative");
+
+  // If we have startIndoors but no explicit transplant timing, assume transplant happens
+  // around 1-2 weeks after last frost (common for seedlings started indoors)
+  if (startIndoorsWeeksBeforeFrost !== null && transplantWeeksAfterFrost === null) {
+    transplantWeeksAfterFrost = 1; // Default: transplant 1 week after last frost
+  }
+
+  // Try to parse days to maturity from harvesting instructions or description
+  let daysToMaturity = parseDaysToMaturity(ci?.harvestingInstructions);
+
+  // If not found, try the description or notes
+  if (daysToMaturity.min === null) {
+    daysToMaturity = parseDaysToMaturity(verdantly.description);
+  }
+  if (daysToMaturity.min === null) {
+    daysToMaturity = parseDaysToMaturity(notes || "");
+  }
 
   return {
     name: verdantly.name,
     variety: verdantly.subtype || null,
     spacingInches: spacingInches || 12,
     plantingDepthInches: null, // Not provided by Verdantly API
-    daysToMaturityMin: null, // Would need to calculate from planting/harvest dates
-    daysToMaturityMax: null,
+    daysToMaturityMin: daysToMaturity.min,
+    daysToMaturityMax: daysToMaturity.max,
     startIndoorsWeeksBeforeFrost,
     transplantWeeksAfterFrost,
     directSowWeeksRelativeToFrost,

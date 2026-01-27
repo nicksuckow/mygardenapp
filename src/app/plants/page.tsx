@@ -109,6 +109,9 @@ export default function PlantsPage() {
   // Verdantly search modal
   const [showVerdantlyModal, setShowVerdantlyModal] = useState(false);
 
+  // Recalculate timing state
+  const [recalculating, setRecalculating] = useState(false);
+
   async function load() {
     try {
       setMessage("");
@@ -138,6 +141,32 @@ export default function PlantsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function recalculateTiming() {
+    try {
+      setRecalculating(true);
+      setMessage("");
+
+      const url = new URL("/api/plants/recalculate", window.location.origin);
+      const res = await fetch(url.toString(), { method: "POST" });
+      const parsed = await safeJsonFromResponse(res);
+
+      if (!parsed.ok) {
+        setMessage(`Recalculate failed (${parsed.status})`);
+        return;
+      }
+
+      const result = parsed.data as { message: string; updated: number; details: { name: string; changes: string[] }[] };
+      setMessage(result.message);
+
+      // Reload plants to show updated data
+      await load();
+    } catch (e) {
+      setMessage("Recalculate failed (network error).");
+    } finally {
+      setRecalculating(false);
+    }
+  }
 
   async function addPlant() {
     try {
@@ -310,20 +339,31 @@ export default function PlantsPage() {
           </svg>
         </div>
 
-        <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-green-400 to-emerald-500 text-white p-2.5 rounded-xl shadow-md">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
-            </svg>
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0 bg-gradient-to-br from-green-400 to-emerald-500 text-white p-2.5 rounded-xl shadow-md">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                🌿 Plants
+              </h1>
+              <p className="text-emerald-800 text-sm mt-1">
+                Add plants with timing rules (weeks relative to last frost).
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              🌿 Plants
-            </h1>
-            <p className="text-emerald-800 text-sm mt-1">
-              Add plants with timing rules (weeks relative to last frost).
-            </p>
-          </div>
+
+          <button
+            className={`${ui.btn} ${ui.btnSecondary} text-xs`}
+            onClick={recalculateTiming}
+            disabled={recalculating}
+            title="Re-parse timing data from plant instructions"
+          >
+            {recalculating ? "Updating..." : "🔄 Recalculate Timing"}
+          </button>
         </div>
       </div>
 

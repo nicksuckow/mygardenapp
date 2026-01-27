@@ -41,3 +41,115 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Print styles for schedule page */
+@media print {
+  /* Hide non-essential elements */
+  nav,
+  header,
+  .no-print,
+  button,
+  [role="navigation"],
+  .mobile-nav {
+    display: none !important;
+  }
+
+  /* Reset page margins and make full width */
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Make cards print-friendly */
+  .print-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Calendar grid print optimization */
+  .print-calendar {
+    width: 100% !important;
+    font-size: 10pt;
+  }
+
+  .print-calendar .grid {
+    display: grid !important;
+    grid-template-columns: repeat(7, 1fr) !important;
+  }
+
+  /* Ensure colors print (background colors) */
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  /* Legend for printed schedules */
+  .print-legend {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    font-size: 9pt;
+  }
+
+  .print-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  /* Page title for printing */
+  .print-title {
+    display: block !important;
+    font-size: 18pt;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Compact spacing for print */
+  .space-y-6 {
+    gap: 0.5rem;
+  }
+
+  /* Hide decorative elements */
+  .absolute.opacity-10,
+  .gradient-decoration {
+    display: none !important;
+  }
+
+  /* Day modal print styles - make modal content printable */
+  .print-day-modal-backdrop {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .print-day-modal {
+    position: static !important;
+    background: white !important;
+    padding: 0 !important;
+    max-height: none !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    margin: 0 !important;
+  }
+
+  /* Show modal event items as printable blocks */
+  .print-day-modal .p-5.space-y-2 button {
+    display: flex !important;
+    cursor: default !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Hide page content when modal is being printed */
+  .print-hide-for-modal {
+    display: none !important;
+  }
+}
