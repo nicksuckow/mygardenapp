@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ui } from "@/lib/uiStyles";
 import { inchesToFeetInches } from "@/lib/dimensions";
 import PlantInfoModal from "@/components/PlantInfoModal";
@@ -61,10 +61,8 @@ type PlanPlacement = {
   plant: FullPlantData;
 };
 
-// Header height reserved for dots offset (still a small top margin)
 const BED_HEADER_PX = 22;
 
-// Helper function to get status string from placement dates
 function getPlacementStatus(placement: PlanPlacement): string | null {
   if (placement.harvestEndedDate) return "completed";
   if (placement.harvestStartedDate) return "harvesting";
@@ -73,77 +71,43 @@ function getPlacementStatus(placement: PlanPlacement): string | null {
   return "planned";
 }
 
-// Helper function to get status color for dots based on spring tracking
 function getStatusDotColor(placement: PlanPlacement): string {
-  // Priority: latest stage completed
-  if (placement.harvestEndedDate) {
-    return "bg-purple-500"; // purple - harvest complete
-  }
-  if (placement.harvestStartedDate) {
-    return "bg-orange-500"; // orange - harvesting
-  }
-  if (placement.transplantedDate || placement.directSowedDate) {
-    return "bg-green-500"; // green - growing in ground
-  }
-  if (placement.seedsStartedDate) {
-    return "bg-blue-500"; // blue - seeds started indoors
-  }
-  return "bg-slate-400"; // gray - planned only
-}
-
-function toInt(v: any, fallback: number) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
+  if (placement.harvestEndedDate) return "bg-purple-500";
+  if (placement.harvestStartedDate) return "bg-orange-500";
+  if (placement.transplantedDate || placement.directSowedDate) return "bg-green-500";
+  if (placement.seedsStartedDate) return "bg-blue-500";
+  return "bg-slate-400";
 }
 
 function bedSizeInGardenCells(bed: Bed, gardenCellInches: number) {
   const wIn = bed.gardenRotated ? bed.heightInches : bed.widthInches;
   const hIn = bed.gardenRotated ? bed.widthInches : bed.heightInches;
-
   return {
     w: Math.max(1, Math.ceil(wIn / gardenCellInches)),
     h: Math.max(1, Math.ceil(hIn / gardenCellInches)),
   };
 }
 
-// Convert placement x/y (in inches) into % position INSIDE bed rectangle
 function dotPosPct(bed: Bed, p: PlanPlacement) {
-  // x, y are now in inches, not grid cells
-  const w = p.w ?? 12; // footprint width in inches
-  const h = p.h ?? 12; // footprint height in inches
-
-  // Calculate center of plant in inches
+  const w = p.w ?? 12;
+  const h = p.h ?? 12;
   let cx = p.x + w / 2;
   let cy = p.y + h / 2;
-
   let bedWidth = bed.widthInches;
   let bedHeight = bed.heightInches;
 
-  // If bed is rotated in garden view, rotate dot positions too (90° clockwise)
   if (bed.gardenRotated) {
-    // Rotate coordinates: (x,y) -> (y, width-x)
     const newCx = cy;
     const newCy = bedWidth - cx;
-
     cx = newCx;
     cy = newCy;
-
-    // Swap dimensions when rotated
     bedWidth = bed.heightInches;
     bedHeight = bed.widthInches;
   }
 
-  // Convert to percentage of bed dimensions
-  const leftPct = (cx / bedWidth) * 100;
-  const topPct = (cy / bedHeight) * 100;
-
-  // Clamp to avoid weird values
-  const safeLeft = Math.max(0, Math.min(leftPct, 100));
-  const safeTop = Math.max(0, Math.min(topPct, 100));
-
   return {
-    left: `${safeLeft}%`,
-    top: `${safeTop}%`,
+    left: `${Math.max(0, Math.min((cx / bedWidth) * 100, 100))}%`,
+    top: `${Math.max(0, Math.min((cy / bedHeight) * 100, 100))}%`,
   };
 }
 
@@ -151,73 +115,34 @@ export default function GardenPage() {
   const [garden, setGarden] = useState<Garden | null>(null);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [placements, setPlacements] = useState<PlanPlacement[]>([]);
-  const [message, setMessage] = useState("");
 
-  // setup inputs - width in feet and inches
-  const [gWidthFeet, setGWidthFeet] = useState(20);
-  const [gWidthInches, setGWidthInches] = useState(0);
-
-  // setup inputs - height in feet and inches
-  const [gHeightFeet, setGHeightFeet] = useState(20);
-  const [gHeightInches, setGHeightInches] = useState(0);
-
-  // setup inputs - cell size in feet and inches
-  const [gCellFeet, setGCellFeet] = useState(1);
-  const [gCellInches, setGCellInches] = useState(0);
-
-  // Calculate total inches
-  const gWidth = gWidthFeet * 12 + gWidthInches;
-  const gHeight = gHeightFeet * 12 + gHeightInches;
-  const gCell = gCellFeet * 12 + gCellInches;
-
-  const gardenGridCols = Math.max(1, Math.floor(gWidth / gCell));
-  const gardenGridRows = Math.max(1, Math.floor(gHeight / gCell));
-
-  // selection state
-  const [selectedBedId, setSelectedBedId] = useState<number | null>(null);
-
-  // drag state
-  const CELL_PX = 40; // Increased from 28 to 40 for better visibility
+  const CELL_PX = 40;
   const gridRef = useRef<HTMLDivElement | null>(null);
-  const [dragBedId, setDragBedId] = useState<number | null>(null);
-  const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null);
-
-  // placement mode state
-  const [placementMode, setPlacementMode] = useState<'bed' | 'walkway' | 'gate'>('bed');
-  const [walkwayDraft, setWalkwayDraft] = useState<{
-    start: { x: number; y: number } | null;
-    end: { x: number; y: number } | null;
-    isDragging: boolean;
-  }>({
-    start: null,
-    end: null,
-    isDragging: false,
-  });
-
-  // ✅ dot tooltip state
-  const [dotTip, setDotTip] = useState<{
-    bedId: number;
-    placementId: number;
-    label: string;
-    x: number; // px within bed block
-    y: number; // px within bed block
-  } | null>(null);
-
-  // plant info modal state
-  const [selectedPlacement, setSelectedPlacement] = useState<PlanPlacement | null>(null);
-  const [showPlantInfoModal, setShowPlantInfoModal] = useState(false);
-
-  // zoom and pan state
   const [zoom, setZoom] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  // rotation state (0, 90, 180, 270)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [hasAutoFit, setHasAutoFit] = useState(false);
+
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [showLegend, setShowLegend] = useState(true);
+
+  const [dotTip, setDotTip] = useState<{
+    bedId: number;
+    placementId: number;
+    label: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const [selectedPlacement, setSelectedPlacement] = useState<PlanPlacement | null>(null);
+  const [showPlantInfoModal, setShowPlantInfoModal] = useState(false);
 
   async function load() {
-    setMessage("");
     const [gRes, bRes, pRes] = await Promise.all([
       fetch("/api/garden", { cache: "no-store" }),
       fetch("/api/beds", { cache: "no-store" }),
@@ -226,38 +151,34 @@ export default function GardenPage() {
 
     const gText = await gRes.text();
     const gJson = gText ? (JSON.parse(gText) as Garden | null) : null;
-
     const bJson = (await bRes.json()) as Bed[];
     const pJson = (await pRes.json()) as PlanPlacement[];
 
     setGarden(gJson);
     setBeds(Array.isArray(bJson) ? bJson : []);
     setPlacements(Array.isArray(pJson) ? pJson : []);
-
-    if (gJson) {
-      // Convert inches to feet and inches
-      setGWidthFeet(Math.floor(gJson.widthInches / 12));
-      setGWidthInches(gJson.widthInches % 12);
-      setGHeightFeet(Math.floor(gJson.heightInches / 12));
-      setGHeightInches(gJson.heightInches % 12);
-      setGCellFeet(Math.floor(gJson.cellInches / 12));
-      setGCellInches(gJson.cellInches % 12);
-    }
-
-    setSelectedBedId((prev) => {
-      if (prev != null && Array.isArray(bJson) && bJson.some((b) => b.id === prev)) return prev;
-      return Array.isArray(bJson) && bJson[0] ? bJson[0].id : null;
-    });
   }
 
   useEffect(() => {
     load();
   }, []);
 
-  const selectedBed = useMemo(
-    () => beds.find((b) => b.id === selectedBedId) ?? null,
-    [beds, selectedBedId]
-  );
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      setContainerSize({
+        width: container.clientWidth,
+        height: container.clientHeight,
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   const cols = useMemo(() => {
     if (!garden) return 0;
@@ -268,6 +189,31 @@ export default function GardenPage() {
     if (!garden) return 0;
     return Math.max(1, Math.floor(garden.heightInches / garden.cellInches));
   }, [garden]);
+
+  const optimalZoom = useMemo(() => {
+    if (!garden || containerSize.width === 0 || containerSize.height === 0) return 1;
+    const gridPixelWidth = cols * CELL_PX;
+    const gridPixelHeight = rows * CELL_PX;
+    const padding = 32;
+    const availableWidth = containerSize.width - padding;
+    const availableHeight = containerSize.height - padding;
+    const zoomToFitWidth = availableWidth / gridPixelWidth;
+    const zoomToFitHeight = availableHeight / gridPixelHeight;
+    return Math.max(0.1, Math.min(zoomToFitWidth, zoomToFitHeight, 10));
+  }, [garden, cols, rows, containerSize]);
+
+  useEffect(() => {
+    if (!garden || containerSize.width === 0 || containerSize.height === 0) return;
+    if (!hasAutoFit) {
+      setZoom(optimalZoom);
+      setHasAutoFit(true);
+    }
+  }, [garden, containerSize, optimalZoom, hasAutoFit]);
+
+  // Re-fit when entering/exiting full screen
+  useEffect(() => {
+    setHasAutoFit(false);
+  }, [isFullScreen]);
 
   const placedBeds = useMemo(
     () => beds.filter((b) => b.gardenX != null && b.gardenY != null),
@@ -296,195 +242,12 @@ export default function GardenPage() {
     return map;
   }, [placements]);
 
-  async function saveGarden() {
-    setMessage("");
-    const res = await fetch("/api/garden", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ widthInches: gWidth, heightInches: gHeight, cellInches: gCell }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      try {
-        setMessage(JSON.parse(text)?.error ?? "Failed to save garden.");
-      } catch {
-        setMessage("Failed to save garden.");
-      }
-      return;
-    }
-
-    await load();
-    setMessage("Garden saved.");
-  }
-
-  async function setBedPosition(bedId: number, x: number, y: number) {
-    setMessage("");
-
-    if (!garden) {
-      setMessage("Set up your garden dimensions first.");
-      return;
-    }
-
-    const res = await fetch(`/api/beds/${bedId}/position`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gardenX: x, gardenY: y }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      try {
-        setMessage(JSON.parse(text)?.error ?? `Place failed (${res.status})`);
-      } catch {
-        setMessage(`Place failed (${res.status})`);
-      }
-      return;
-    }
-
-    await load();
-  }
-
-  async function rotateBed(bedId: number, nextRotated: boolean) {
-    setMessage("");
-    const res = await fetch(`/api/beds/${bedId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gardenRotated: nextRotated }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      try {
-        setMessage(JSON.parse(text)?.error ?? `Rotate failed (${res.status})`);
-      } catch {
-        setMessage(`Rotate failed (${res.status})`);
-      }
-      return;
-    }
-
-    await load();
-  }
-
-  async function removeBedFromGarden(bedId: number) {
-    console.log('Removing bed from garden:', bedId);
-    setMessage("");
-    try {
-      const res = await fetch(`/api/beds/${bedId}/position`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gardenX: null, gardenY: null }),
-      });
-
-      console.log('Remove bed response:', res.status);
-      const text = await res.text();
-      console.log('Remove bed response text:', text);
-
-      if (!res.ok) {
-        try {
-          const errorMsg = JSON.parse(text)?.error ?? `Remove failed (${res.status})`;
-          console.error('Remove bed failed:', errorMsg);
-          setMessage(errorMsg);
-        } catch {
-          console.error('Remove bed failed with non-JSON response:', text);
-          setMessage(`Remove failed (${res.status}): ${text}`);
-        }
-        return;
-      }
-
-      setMessage("Bed removed from garden");
-      await load();
-    } catch (error) {
-      console.error('Remove bed error:', error);
-      setMessage(`Error removing bed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  async function addWalkway(x: number, y: number, width: number, height: number) {
-    setMessage("");
-    const res = await fetch("/api/walkways", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x, y, width, height }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      try {
-        setMessage(JSON.parse(text)?.error ?? `Add walkway failed (${res.status})`);
-      } catch {
-        setMessage(`Add walkway failed (${res.status})`);
-      }
-      return;
-    }
-
-    await load();
-  }
-
-  async function deleteWalkway(id: number) {
-    setMessage("");
-    const res = await fetch(`/api/walkways/${id}`, {
-      method: "DELETE",
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      setMessage(`Delete walkway failed (${res.status}): ${text}`);
-      return;
-    }
-
-    await load();
-  }
-
-  async function addGate(x: number, y: number, side: string) {
-    setMessage("");
-    const res = await fetch("/api/gates", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ x, y, side, width: 1 }),
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      try {
-        setMessage(JSON.parse(text)?.error ?? `Add gate failed (${res.status})`);
-      } catch {
-        setMessage(`Add gate failed (${res.status})`);
-      }
-      return;
-    }
-
-    await load();
-  }
-
-  async function deleteGate(id: number) {
-    setMessage("");
-    const res = await fetch(`/api/gates/${id}`, {
-      method: "DELETE",
-    });
-
-    const text = await res.text();
-    if (!res.ok) {
-      setMessage(`Delete gate failed (${res.status}): ${text}`);
-      return;
-    }
-
-    await load();
-  }
-
-  // Zoom handlers
-  const handleZoomIn = () => {
-    setZoom(z => Math.min(z * 1.5, 10));
-  };
-
-  const handleZoomOut = () => {
-    setZoom(z => Math.max(z / 1.5, 0.5));
-  };
-
-  const handleZoomReset = () => {
-    setZoom(1);
+  const handleZoomIn = () => setZoom(z => Math.min(z * 1.3, 10));
+  const handleZoomOut = () => setZoom(z => Math.max(z / 1.3, 0.1));
+  const handleZoomReset = useCallback(() => {
+    setZoom(optimalZoom);
     setPanOffset({ x: 0, y: 0 });
-  };
+  }, [optimalZoom]);
 
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.ctrlKey || e.metaKey) {
@@ -493,12 +256,11 @@ export default function GardenPage() {
       if (delta > 0) {
         setZoom(z => Math.min(z * 1.1, 10));
       } else {
-        setZoom(z => Math.max(z / 1.1, 0.5));
+        setZoom(z => Math.max(z / 1.1, 0.1));
       }
     }
   };
 
-  // Pan handlers
   const handlePanStart = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.shiftKey || e.button === 1 || (e.ctrlKey && !e.metaKey)) {
       e.preventDefault();
@@ -516,879 +278,453 @@ export default function GardenPage() {
     }
   };
 
-  const handlePanEnd = () => {
-    setIsPanning(false);
-  };
+  const handlePanEnd = () => setIsPanning(false);
 
-  // Rotation handlers
   const handleRotate = () => {
-    setRotation(r => {
-      const next = (r + 90) % 360;
-      return next as 0 | 90 | 180 | 270;
-    });
+    setRotation(r => ((r + 90) % 360) as 0 | 90 | 180 | 270);
   };
 
-  // Convert mouse/pointer position to grid cell
-  function pointerToCell(clientX: number, clientY: number) {
-    const el = gridRef.current;
-    if (!el) return null;
-
-    const rect = el.getBoundingClientRect();
-
-    // Get position relative to the grid container
-    let px = clientX - rect.left;
-    let py = clientY - rect.top;
-
-    // Reverse the transformations: translate, scale, rotate
-    // First, account for pan offset (reverse translate)
-    px -= panOffset.x;
-    py -= panOffset.y;
-
-    // Then account for zoom (reverse scale)
-    px /= zoom;
-    py /= zoom;
-
-    // Finally, account for rotation (rotate back around center)
-    if (rotation !== 0) {
-      const centerX = (cols * CELL_PX) / 2;
-      const centerY = (rows * CELL_PX) / 2;
-
-      // Translate to origin (center)
-      const relX = px - centerX;
-      const relY = py - centerY;
-
-      // Rotate by -rotation degrees
-      const angleRad = (-rotation * Math.PI) / 180;
-      const cosA = Math.cos(angleRad);
-      const sinA = Math.sin(angleRad);
-
-      const rotatedX = relX * cosA - relY * sinA;
-      const rotatedY = relX * sinA + relY * cosA;
-
-      // Translate back from origin
-      px = rotatedX + centerX;
-      py = rotatedY + centerY;
-    }
-
-    const x = Math.floor(px / CELL_PX);
-    const y = Math.floor(py / CELL_PX);
-
-    if (x < 0 || y < 0 || x >= cols || y >= rows) return null;
-    return { x, y };
-  }
-
-  // Start dragging a bed
-  function startDrag(bedId: number) {
-    setDragBedId(bedId);
-    setSelectedBedId(bedId);
-    setDragPreview(null);
-  }
-
-  // While dragging
-  function onGridPointerMove(e: React.PointerEvent) {
-    if (!dragBedId) return;
-    const cell = pointerToCell(e.clientX, e.clientY);
-    setDragPreview(cell);
-  }
-
-  // Drop
-  async function onGridPointerUp(e: React.PointerEvent) {
-    if (!dragBedId) return;
-    const cell = pointerToCell(e.clientX, e.clientY);
-    setDragBedId(null);
-    setDragPreview(null);
-
-    if (!cell) return;
-    await setBedPosition(dragBedId, cell.x, cell.y);
-  }
-
-  // Grid cell pointer down - start walkway drag or place bed/gate
-  function onGridCellPointerDown(x: number, y: number) {
-    if (placementMode === 'walkway') {
-      setWalkwayDraft({ start: { x, y }, end: { x, y }, isDragging: true });
-      setMessage("Drag to size walkway, release to place");
-    }
-  }
-
-  // Grid cell pointer enter - update walkway end position while dragging
-  function onGridCellPointerEnter(x: number, y: number) {
-    if (placementMode === 'walkway' && walkwayDraft.isDragging && walkwayDraft.start) {
-      setWalkwayDraft(prev => ({ ...prev, end: { x, y } }));
-    }
-  }
-
-  // Grid cell pointer up - finalize walkway or place bed/gate
-  function onGridCellPointerUp(x: number, y: number) {
-    if (placementMode === 'bed') {
-      if (!selectedBed) {
-        setMessage("Pick a bed first.");
-        return;
+  // Escape key exits full screen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullScreen) {
+        setIsFullScreen(false);
       }
-      setBedPosition(selectedBed.id, x, y);
-    } else if (placementMode === 'walkway') {
-      if (walkwayDraft.isDragging && walkwayDraft.start) {
-        // Finalize walkway
-        const startX = Math.min(walkwayDraft.start.x, x);
-        const startY = Math.min(walkwayDraft.start.y, y);
-        const endX = Math.max(walkwayDraft.start.x, x);
-        const endY = Math.max(walkwayDraft.start.y, y);
-        const width = endX - startX + 1;
-        const height = endY - startY + 1;
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isFullScreen]);
 
-        addWalkway(startX, startY, width, height);
-        setWalkwayDraft({ start: null, end: null, isDragging: false });
-        setMessage("");
-      }
-    } else if (placementMode === 'gate') {
-      // Determine which edge this is closest to
-      if (!garden) return;
-      const distToTop = y;
-      const distToBottom = rows - 1 - y;
-      const distToLeft = x;
-      const distToRight = cols - 1 - x;
-
-      const minDist = Math.min(distToTop, distToBottom, distToLeft, distToRight);
-      let side = 'bottom';
-      if (minDist === distToTop) side = 'top';
-      else if (minDist === distToRight) side = 'right';
-      else if (minDist === distToLeft) side = 'left';
-
-      addGate(x, y, side);
-    }
-  }
-
-  const previewBed = useMemo(() => {
-    if (!garden || !dragBedId) return null;
-    const bed = beds.find((b) => b.id === dragBedId) ?? null;
-    if (!bed) return null;
-    const size = bedSizeInGardenCells(bed, garden.cellInches);
-    return { bed, size };
-  }, [garden, dragBedId, beds]);
-
-  return (
-    <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-teal-50 via-cyan-50 to-sky-50 border border-teal-100 p-6">
-        {/* Decorative garden layout */}
-        <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-teal-600" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z" />
-          </svg>
-        </div>
-
-        <div className="relative">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 bg-gradient-to-br from-teal-400 to-cyan-500 text-white p-2.5 rounded-xl shadow-md">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                  🏡 Garden Layout
-                </h1>
-                <p className="text-teal-900 text-sm mt-1">
-                  Place beds on the garden grid. Drag beds to move them. Rotate a bed if it fits better.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/beds">
-                Manage beds
-              </Link>
-              <Link className={`${ui.btn} ${ui.btnSecondary}`} href="/schedule">
-                Schedule
-              </Link>
-            </div>
-          </div>
-
-          {message ? (
-            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-              {message}
-            </div>
-          ) : null}
+  if (!garden) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-4 p-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-slate-700 mb-2">No Garden Set Up</h1>
+          <p className="text-slate-500 mb-4">Create your garden layout to get started.</p>
+          <Link className={`${ui.btn} ${ui.btnPrimary}`} href="/garden/edit">
+            Set Up Garden →
+          </Link>
         </div>
       </div>
+    );
+  }
 
-      {/* Setup */}
-      <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
-        <div>
-          <p className="text-base font-semibold">Garden dimensions</p>
-          <p className="text-sm text-slate-600">Define your overall garden space where beds will be placed</p>
-        </div>
+  const gardenCanvas = (
+    <div
+      ref={containerRef}
+      className="w-full h-full overflow-hidden relative"
+      style={{
+        borderRadius: isFullScreen ? "0" : "12px",
+        background: "linear-gradient(145deg, #8B7355 0%, #6B5344 50%, #5D4632 100%)",
+        padding: "8px",
+        boxShadow: isFullScreen ? "none" : "0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1)",
+        cursor: isPanning ? 'grabbing' : 'default'
+      }}
+      onWheel={handleWheel}
+    >
+      {/* Inner grass/ground area */}
+      <div
+        className="w-full h-full overflow-hidden rounded-lg relative flex items-center justify-center"
+        style={{ boxShadow: "inset 0 4px 12px rgba(0,0,0,0.3)" }}
+      >
+        <div
+          ref={gridRef}
+          className="relative touch-none select-none"
+          style={{
+            width: cols * CELL_PX * zoom,
+            height: rows * CELL_PX * zoom,
+            transform: `translate(${panOffset.x}px, ${panOffset.y}px) rotate(${rotation}deg)`,
+            transformOrigin: 'center center',
+            transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+            background: `
+              radial-gradient(circle at 20% 30%, #4a6741 0%, transparent 50%),
+              radial-gradient(circle at 80% 70%, #3d5a35 0%, transparent 50%),
+              radial-gradient(circle at 50% 50%, #527a48 0%, transparent 70%),
+              linear-gradient(180deg, #4a6741 0%, #3d5a35 50%, #456b3c 100%)
+            `,
+          }}
+          onPointerMove={handlePanMove}
+          onPointerUp={handlePanEnd}
+          onPointerDown={handlePanStart}
+          onPointerLeave={handlePanEnd}
+        >
+          {/* Grid lines */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: `${CELL_PX * zoom}px ${CELL_PX * zoom}px`,
+            }}
+          />
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="grid gap-1.5">
-            <span className="text-sm font-medium">Width</span>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  type="number"
-                  value={gWidthFeet}
-                  onChange={(e) => setGWidthFeet(Math.max(0, Number(e.target.value)))}
-                  min={0}
-                  placeholder="Feet"
-                />
-              </div>
-              <div className="flex-1">
-                <input
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  type="number"
-                  value={gWidthInches}
-                  onChange={(e) => setGWidthInches(Math.max(0, Math.min(11, Number(e.target.value))))}
-                  min={0}
-                  max={11}
-                  placeholder="Inches"
-                />
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">Total: {inchesToFeetInches(gWidth)}</span>
-          </div>
-
-          <div className="grid gap-1.5">
-            <span className="text-sm font-medium">Height</span>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  type="number"
-                  value={gHeightFeet}
-                  onChange={(e) => setGHeightFeet(Math.max(0, Number(e.target.value)))}
-                  min={0}
-                  placeholder="Feet"
-                />
-              </div>
-              <div className="flex-1">
-                <input
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  type="number"
-                  value={gHeightInches}
-                  onChange={(e) => setGHeightInches(Math.max(0, Math.min(11, Number(e.target.value))))}
-                  min={0}
-                  max={11}
-                  placeholder="Inches"
-                />
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">Total: {inchesToFeetInches(gHeight)}</span>
-          </div>
-
-          <div className="grid gap-1.5">
-            <span className="text-sm font-medium">Grid cell size</span>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <input
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  type="number"
-                  value={gCellFeet}
-                  onChange={(e) => setGCellFeet(Math.max(0, Number(e.target.value)))}
-                  min={0}
-                  placeholder="Feet"
-                />
-              </div>
-              <div className="flex-1">
-                <input
-                  className="w-full rounded border px-3 py-2 text-sm"
-                  type="number"
-                  value={gCellInches}
-                  onChange={(e) => setGCellInches(Math.max(0, Math.min(11, Number(e.target.value))))}
-                  min={0}
-                  max={11}
-                  step={0.5}
-                  placeholder="Inches"
-                />
-              </div>
-            </div>
-            <span className="text-xs text-slate-500">Total: {inchesToFeetInches(gCell)}</span>
-          </div>
-        </div>
-
-        {gardenGridCols > 0 && gardenGridRows > 0 ? (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-            <p className="text-sm font-medium text-blue-900">Grid Preview</p>
-            <p className="text-sm text-blue-700">
-              Garden grid: <span className="font-semibold">{gardenGridCols} × {gardenGridRows}</span> cells
-              ({gardenGridCols * gardenGridRows} cells total for bed placement)
-            </p>
-          </div>
-        ) : null}
-
-        <button className={`${ui.btn} ${ui.btnPrimary} w-fit`} onClick={saveGarden}>
-          Save garden
-        </button>
-      </div>
-
-      {/* Garden Layout Tools */}
-      <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
-          <div>
-            <p className="text-base font-semibold">Garden Layout Tools</p>
-            <p className="text-xs text-slate-600 mt-0.5">Place beds, walkways, and gates</p>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Placement Mode</p>
-            <div className="flex gap-2">
-              <button
-                className={`flex-1 px-3 py-2 text-sm rounded border ${
-                  placementMode === 'bed'
-                    ? 'bg-emerald-100 border-emerald-500 text-emerald-900'
-                    : 'bg-white border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setPlacementMode('bed');
-                  setWalkwayDraft({ start: null, end: null, isDragging: false });
-                }}
-              >
-                Beds
-              </button>
-              <button
-                className={`flex-1 px-3 py-2 text-sm rounded border ${
-                  placementMode === 'walkway'
-                    ? 'bg-amber-100 border-amber-500 text-amber-900'
-                    : 'bg-white border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setPlacementMode('walkway');
-                  setWalkwayDraft({ start: null, end: null, isDragging: false });
-                }}
-              >
-                Walkways
-              </button>
-              <button
-                className={`flex-1 px-3 py-2 text-sm rounded border ${
-                  placementMode === 'gate'
-                    ? 'bg-blue-100 border-blue-500 text-blue-900'
-                    : 'bg-white border-gray-300 hover:bg-gray-50'
-                }`}
-                onClick={() => {
-                  setPlacementMode('gate');
-                  setWalkwayDraft({ start: null, end: null, isDragging: false });
-                }}
-              >
-                Gates
-              </button>
-            </div>
-            {placementMode === 'walkway' && (
-              <p className="text-xs text-amber-700">Click and drag on the grid to create walkways</p>
-            )}
-          </div>
-
-          {beds.length === 0 ? (
-            <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm text-slate-700">No beds created yet.</p>
-              <Link className={`${ui.btn} ${ui.btnPrimary} w-full text-center`} href="/beds">
-                Create your first bed →
-              </Link>
-            </div>
-          ) : (
-            <>
-              <label className="grid gap-1.5">
-                <span className="text-sm font-medium">Selected bed to place</span>
-                <select
-                  className="rounded border px-3 py-2 text-sm"
-                  value={selectedBedId ?? ""}
-                  onChange={(e) => setSelectedBedId(toInt(e.target.value, 0) || null)}
-                >
-                  {beds.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-xs text-slate-500">Choose which bed to place or move</span>
-              </label>
-
-              {selectedBed && garden ? (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">{selectedBed.name}</div>
-                      <div className="text-xs text-emerald-700 space-y-0.5 mt-1">
-                        <p>Size: {inchesToFeetInches(selectedBed.widthInches)} × {inchesToFeetInches(selectedBed.heightInches)}</p>
-                        <p>Status: {selectedBed.gardenRotated ? "Rotated 90°" : "Normal orientation"}</p>
-                        <p>Plants: {(plantCountByBed.get(selectedBed.id) ?? 0)} placed</p>
-                      </div>
-                    </div>
-
-                    <button
-                      className={`${ui.btn} ${ui.btnSecondary} py-1.5 px-3 text-xs`}
-                      onClick={() => rotateBed(selectedBed.id, !selectedBed.gardenRotated)}
-                      title="Rotate bed 90 degrees (swap width/height)"
-                    >
-                      ↻ Rotate
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Placed beds ({placedBeds.length})</p>
-                {placedBeds.length === 0 ? (
-                  <p className="text-sm text-slate-600">Click a grid cell below to place the selected bed.</p>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {placedBeds.map((b) => (
-                      <div
-                        key={b.id}
-                        className={[
-                          "rounded-lg border transition-colors",
-                          selectedBedId === b.id
-                            ? "border-emerald-400 bg-emerald-50 shadow-sm"
-                            : "border-slate-200 bg-white",
-                        ].join(" ")}
-                      >
-                        <button
-                          className="w-full px-3 py-2.5 text-left text-sm hover:bg-slate-50/50"
-                          onClick={() => setSelectedBedId(b.id)}
-                          title="Click to select this bed"
-                        >
-                          <div className="flex items-baseline justify-between gap-2">
-                            <span className="font-medium">{b.name}</span>
-                            <span className="text-xs text-slate-600">
-                              {(plantCountByBed.get(b.id) ?? 0)} plants
-                            </span>
-                          </div>
-                          <div className="mt-1 text-xs text-slate-600">
-                            Position: ({b.gardenX}, {b.gardenY}) • {b.gardenRotated ? "rotated" : "normal"}
-                          </div>
-                        </button>
-                        <div className="border-t px-3 py-2">
-                          <button
-                            className="text-xs text-red-600 hover:text-red-700 hover:underline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeBedFromGarden(b.id);
-                            }}
-                            title="Remove this bed from the garden layout"
-                          >
-                            Remove from garden
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Garden canvas */}
-        <div className={`${ui.card} ${ui.cardPad}`}>
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <p className="text-base font-semibold">Garden Layout</p>
-              {garden ? (
-                <p className="text-xs text-slate-600">
-                  {cols} × {rows} grid ({inchesToFeetInches(garden.widthInches)} × {inchesToFeetInches(garden.heightInches)} @ {inchesToFeetInches(garden.cellInches)} cells)
-                </p>
-              ) : null}
-            </div>
-
-            {garden ? (
-              <div className="flex gap-2 items-center">
-                <div className="flex gap-1 items-center border rounded-lg p-1">
-                  <button
-                    className="px-2 py-1 text-sm hover:bg-gray-100 rounded"
-                    onClick={handleZoomOut}
-                    title="Zoom out"
-                  >
-                    −
-                  </button>
-                  <span className="px-2 text-xs text-slate-600 min-w-[3rem] text-center">
-                    {Math.round(zoom * 100)}%
-                  </span>
-                  <button
-                    className="px-2 py-1 text-sm hover:bg-gray-100 rounded"
-                    onClick={handleZoomIn}
-                    title="Zoom in"
-                  >
-                    +
-                  </button>
-                  <button
-                    className="px-2 py-1 text-xs hover:bg-gray-100 rounded border-l"
-                    onClick={handleZoomReset}
-                    title="Reset zoom and pan"
-                  >
-                    Reset
-                  </button>
-                </div>
-                <button
-                  className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-100"
-                  onClick={handleRotate}
-                  title={`Rotate garden view (currently ${rotation}°)`}
-                >
-                  ↻ Rotate
-                </button>
-              </div>
-            ) : null}
-          </div>
-
-          {!garden ? (
-            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-6 text-center">
-              <p className="text-sm text-slate-700">Set garden dimensions above and click "Save garden" to get started.</p>
-            </div>
-          ) : (
-            <div
-              className="mt-3 overflow-auto rounded-xl border bg-white p-3"
-              style={{
-                maxHeight: 'calc(100vh - 400px)', // Dynamic height based on viewport
-                minHeight: '500px',
-                cursor: isPanning ? 'grabbing' : 'default'
-              }}
-              onWheel={handleWheel}
-            >
+          {/* Walkways */}
+          <div
+            className="absolute inset-0 grid pointer-events-none"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, ${CELL_PX * zoom}px)`,
+              gridTemplateRows: `repeat(${rows}, ${CELL_PX * zoom}px)`,
+            }}
+          >
+            {(garden?.walkways ?? []).map((w) => (
               <div
-                ref={gridRef}
-                className="relative touch-none select-none"
+                key={w.id}
+                className="h-full bg-amber-200/60 border border-amber-400"
                 style={{
-                  width: cols * CELL_PX,
-                  height: rows * CELL_PX,
-                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
-                  transition: isPanning ? 'none' : 'transform 0.1s ease-out'
+                  gridColumnStart: w.x + 1,
+                  gridRowStart: w.y + 1,
+                  gridColumnEnd: w.x + 1 + w.width,
+                  gridRowEnd: w.y + 1 + w.height,
                 }}
-                onPointerMove={(e) => {
-                  handlePanMove(e);
-                  onGridPointerMove(e);
+                title={w.name || "Walkway"}
+              />
+            ))}
+          </div>
+
+          {/* Gates */}
+          <div
+            className="absolute inset-0 grid pointer-events-none"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, ${CELL_PX * zoom}px)`,
+              gridTemplateRows: `repeat(${rows}, ${CELL_PX * zoom}px)`,
+            }}
+          >
+            {(garden?.gates ?? []).map((g) => (
+              <div
+                key={g.id}
+                className="h-full flex items-center justify-center bg-blue-200/60 border-2 border-blue-500"
+                style={{
+                  gridColumnStart: g.x + 1,
+                  gridRowStart: g.y + 1,
+                  gridColumnEnd: g.x + 1 + g.width,
+                  gridRowEnd: g.y + 2,
                 }}
-                onPointerUp={(e) => {
-                  handlePanEnd();
-                  onGridPointerUp(e);
-                }}
-                onPointerDown={handlePanStart}
+                title={g.name || `Gate (${g.side})`}
               >
-                {/* grid buttons (click-to-place) */}
-                <div
-                  className="grid"
+                <span className="text-xs font-bold text-blue-700">GATE</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Beds */}
+          <div
+            className="absolute inset-0 grid pointer-events-none"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, ${CELL_PX * zoom}px)`,
+              gridTemplateRows: `repeat(${rows}, ${CELL_PX * zoom}px)`,
+            }}
+          >
+            {placedBeds.map((b) => {
+              const x = b.gardenX ?? 0;
+              const y = b.gardenY ?? 0;
+              const size = bedSizeInGardenCells(b, garden.cellInches);
+              const plantCount = plantCountByBed.get(b.id) ?? 0;
+              const bedPlacements = placementsByBed.get(b.id) ?? [];
+              const showTip = dotTip && dotTip.bedId === b.id
+                ? { left: dotTip.x, top: dotTip.y, label: dotTip.label }
+                : null;
+
+              return (
+                <Link
+                  key={b.id}
+                  href={`/beds/${b.id}`}
+                  className="relative h-full rounded-lg pointer-events-auto overflow-hidden cursor-pointer group"
                   style={{
-                    gridTemplateColumns: `repeat(${cols}, ${CELL_PX}px)`,
-                    gridTemplateRows: `repeat(${rows}, ${CELL_PX}px)`,
+                    gridColumnStart: x + 1,
+                    gridRowStart: y + 1,
+                    gridColumnEnd: x + 1 + size.w,
+                    gridRowEnd: y + 1 + size.h,
+                    background: "linear-gradient(145deg, #8B7355 0%, #6B5344 50%, #5D4632 100%)",
+                    padding: "3px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)",
                   }}
+                  title={`${b.name} - Click to edit`}
+                  onPointerLeave={() => setDotTip((t) => (t?.bedId === b.id ? null : t))}
                 >
-                  {Array.from({ length: rows }).map((_, y) =>
-                    Array.from({ length: cols }).map((__, x) => (
-                      <button
-                        key={`${x},${y}`}
-                        className="h-7 w-7 border border-slate-100 hover:bg-slate-50"
-                        title={
-                          placementMode === 'walkway'
-                            ? "Click and drag to create walkway"
-                            : placementMode === 'gate'
-                            ? "Click to place gate"
-                            : selectedBed
-                            ? `Place/move "${selectedBed.name}" here`
-                            : "Select a bed"
-                        }
-                        onPointerDown={() => onGridCellPointerDown(x, y)}
-                        onPointerEnter={() => onGridCellPointerEnter(x, y)}
-                        onPointerUp={() => onGridCellPointerUp(x, y)}
-                      />
-                    ))
-                  )}
-                </div>
-
-                {/* overlay: walkways */}
-                <div
-                  className="absolute inset-0 grid pointer-events-none"
-                  style={{
-                    gridTemplateColumns: `repeat(${cols}, ${CELL_PX}px)`,
-                    gridTemplateRows: `repeat(${rows}, ${CELL_PX}px)`,
-                  }}
-                >
-                  {(garden?.walkways ?? []).map((w) => (
-                    <div
-                      key={w.id}
-                      className="relative h-full bg-amber-200/60 border border-amber-400 pointer-events-auto"
-                      style={{
-                        gridColumnStart: w.x + 1,
-                        gridRowStart: w.y + 1,
-                        gridColumnEnd: w.x + 1 + w.width,
-                        gridRowEnd: w.y + 1 + w.height,
-                      }}
-                      title={w.name || "Walkway"}
-                    >
-                      <button
-                        className="absolute top-0.5 right-0.5 bg-white rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600"
-                        onClick={() => deleteWalkway(w.id)}
-                        title="Delete walkway"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* Walkway draft preview */}
-                  {placementMode === 'walkway' && walkwayDraft.start && walkwayDraft.end && (
-                    <div
-                      className="h-full bg-amber-300/40 border-2 border-dashed border-amber-500"
-                      style={{
-                        gridColumnStart: Math.min(walkwayDraft.start.x, walkwayDraft.end.x) + 1,
-                        gridRowStart: Math.min(walkwayDraft.start.y, walkwayDraft.end.y) + 1,
-                        gridColumnEnd: Math.max(walkwayDraft.start.x, walkwayDraft.end.x) + 2,
-                        gridRowEnd: Math.max(walkwayDraft.start.y, walkwayDraft.end.y) + 2,
-                      }}
-                    />
-                  )}
-                </div>
-
-                {/* overlay: gates */}
-                <div
-                  className="absolute inset-0 grid pointer-events-none"
-                  style={{
-                    gridTemplateColumns: `repeat(${cols}, ${CELL_PX}px)`,
-                    gridTemplateRows: `repeat(${rows}, ${CELL_PX}px)`,
-                  }}
-                >
-                  {(garden?.gates ?? []).map((g) => (
-                    <div
-                      key={g.id}
-                      className="relative h-full flex items-center justify-center bg-blue-200/60 border-2 border-blue-500 pointer-events-auto"
-                      style={{
-                        gridColumnStart: g.x + 1,
-                        gridRowStart: g.y + 1,
-                        gridColumnEnd: g.x + 1 + g.width,
-                        gridRowEnd: g.y + 2,
-                      }}
-                      title={g.name || `Gate (${g.side})`}
-                    >
-                      <span className="text-xs font-bold text-blue-700">GATE</span>
-                      <button
-                        className="absolute top-0.5 right-0.5 bg-white rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600"
-                        onClick={() => deleteGate(g.id)}
-                        title="Delete gate"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* overlay: placed beds */}
-                <div
-                  className="absolute inset-0 grid pointer-events-none"
-                  style={{
-                    gridTemplateColumns: `repeat(${cols}, ${CELL_PX}px)`,
-                    gridTemplateRows: `repeat(${rows}, ${CELL_PX}px)`,
-                  }}
-                >
-                  {placedBeds.map((b) => {
-                    const x = b.gardenX ?? 0;
-                    const y = b.gardenY ?? 0;
-                    const size = bedSizeInGardenCells(b, garden.cellInches);
-                    const isSelected = b.id === selectedBedId;
-                    const plantCount = plantCountByBed.get(b.id) ?? 0;
-                    const bedPlacements = placementsByBed.get(b.id) ?? [];
-
-                    const showTip =
-                      dotTip && dotTip.bedId === b.id
-                        ? {
-                            left: dotTip.x,
-                            top: dotTip.y,
-                            label: dotTip.label,
-                            placementId: dotTip.placementId,
-                          }
-                        : null;
-
-                    return (
-                      <div
-                        key={b.id}
-                        className={[
-                          "relative h-full rounded-lg border shadow-sm p-1 cursor-grab active:cursor-grabbing pointer-events-auto overflow-hidden",
-                          isSelected
-                            ? "border-emerald-500 bg-emerald-100"
-                            : "border-slate-300 bg-slate-100",
-                        ].join(" ")}
-                        style={{
-                          gridColumnStart: x + 1,
-                          gridRowStart: y + 1,
-                          gridColumnEnd: x + 1 + size.w,
-                          gridRowEnd: y + 1 + size.h,
-                        }}
-                        title="Drag to move. Click to select."
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-                          startDrag(b.id);
-                        }}
-                        onClick={() => setSelectedBedId(b.id)}
-                        onPointerLeave={() => setDotTip((t) => (t?.bedId === b.id ? null : t))}
-                      >
-                        {/* Dots (hoverable) */}
-                        <div
-                          className="absolute inset-x-0 z-10"
-                          style={{ top: BED_HEADER_PX + 1, bottom: 0 }}
-                        >
-                          {bedPlacements.map((p) => {
-                            const pos = dotPosPct(b, p);
-                            const dotColor = getStatusDotColor(p);
-                            return (
-                              <button
-                                key={p.id}
-                                type="button"
-                                className={`absolute h-2 w-2 rounded-full ${dotColor} opacity-80 hover:scale-110`}
-                                style={{
-                                  left: pos.left,
-                                  top: pos.top,
-                                  transform: "translate(-50%, -50%)",
-                                }}
-                                onPointerEnter={(ev) => {
-                                  ev.stopPropagation();
-                                  const rect = (
-                                    ev.currentTarget.offsetParent as HTMLElement | null
-                                  )?.getBoundingClientRect();
-                                  const dotRect = ev.currentTarget.getBoundingClientRect();
-                                  if (!rect) return;
-
-                                  // tooltip position relative to the bed block
-                                  const xPx = dotRect.left - rect.left + dotRect.width / 2;
-                                  const yPx = dotRect.top - rect.top;
-
-                                  setDotTip({
-                                    bedId: b.id,
-                                    placementId: p.id,
-                                    label: p.plant.name,
-                                    x: xPx,
-                                    y: yPx,
-                                  });
-                                }}
-                                onPointerLeave={(ev) => {
-                                  ev.stopPropagation();
-                                  setDotTip((t) =>
-                                    t && t.bedId === b.id && t.placementId === p.id ? null : t
-                                  );
-                                }}
-                                onClick={(ev) => {
-                                  // don't select bed / start drag when clicking dots
-                                  ev.preventDefault();
-                                  ev.stopPropagation();
-                                  // Show plant info modal
-                                  setSelectedPlacement(p);
-                                  setShowPlantInfoModal(true);
-                                }}
-                                title={p.plant.name} // fallback native tooltip
-                              />
-                            );
-                          })}
-
-                          {/* Custom tooltip */}
-                          {showTip ? (
-                            <div
-                              className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-800 shadow"
-                              style={{
-                                left: showTip.left,
-                                top: showTip.top,
-                              }}
-                            >
-                              {showTip.label}
-                            </div>
-                          ) : null}
-                        </div>
-
-                        {/* Compact label (top-right) */}
-                        <div className="absolute right-1 top-1 z-20 inline-flex items-center gap-1 rounded-md bg-white px-1 py-0.5 shadow-sm">
+                  <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/20 transition-colors rounded-lg z-10 pointer-events-none" />
+                  <div
+                    className="w-full h-full rounded overflow-hidden relative"
+                    style={{
+                      background: `
+                        radial-gradient(circle at 30% 40%, #5D4E37 0%, transparent 40%),
+                        radial-gradient(circle at 70% 60%, #4A3F2E 0%, transparent 40%),
+                        linear-gradient(180deg, #5A4A3A 0%, #4D3F32 100%)
+                      `,
+                      boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)",
+                    }}
+                  >
+                    <div className="absolute inset-x-0 z-20" style={{ top: BED_HEADER_PX + 1, bottom: 0 }}>
+                      {bedPlacements.map((p) => {
+                        const pos = dotPosPct(b, p);
+                        const dotColor = getStatusDotColor(p);
+                        return (
                           <button
-                            className="rounded border bg-white px-1.5 py-0.5 text-[10px] text-slate-700 hover:bg-slate-50"
-                            onPointerDown={(ev) => {
-                              ev.preventDefault();
+                            key={p.id}
+                            type="button"
+                            className={`absolute h-2.5 w-2.5 rounded-full ${dotColor} opacity-90 hover:scale-125 transition-transform`}
+                            style={{ left: pos.left, top: pos.top, transform: "translate(-50%, -50%)" }}
+                            onPointerEnter={(ev) => {
                               ev.stopPropagation();
+                              const rect = (ev.currentTarget.offsetParent as HTMLElement | null)?.getBoundingClientRect();
+                              const dotRect = ev.currentTarget.getBoundingClientRect();
+                              if (!rect) return;
+                              setDotTip({
+                                bedId: b.id,
+                                placementId: p.id,
+                                label: p.plant.name,
+                                x: dotRect.left - rect.left + dotRect.width / 2,
+                                y: dotRect.top - rect.top,
+                              });
+                            }}
+                            onPointerLeave={(ev) => {
+                              ev.stopPropagation();
+                              setDotTip((t) => t && t.bedId === b.id && t.placementId === p.id ? null : t);
                             }}
                             onClick={(ev) => {
                               ev.preventDefault();
                               ev.stopPropagation();
-                              rotateBed(b.id, !b.gardenRotated);
+                              setSelectedPlacement(p);
+                              setShowPlantInfoModal(true);
                             }}
-                            title="Rotate"
-                          >
-                            ↻
-                          </button>
-
-                          <div className="min-w-0">
-                            <div className="max-w-[140px] truncate text-[10px] font-semibold leading-tight text-slate-900">
-                              {b.name}
-                            </div>
-                            <div className="text-[9px] text-slate-700 leading-tight">
-                              {plantCount} • {b.gardenRotated ? "rotated" : "normal"}
-                            </div>
-                          </div>
+                            title={p.plant.name}
+                          />
+                        );
+                      })}
+                      {showTip && (
+                        <div
+                          className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-800 shadow"
+                          style={{ left: showTip.left, top: showTip.top }}
+                        >
+                          {showTip.label}
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute right-1 top-1 z-20 inline-flex items-center gap-1 rounded-md bg-white/90 px-1.5 py-0.5 shadow-sm">
+                      <div className="min-w-0">
+                        <div className="max-w-[120px] truncate text-[10px] font-semibold leading-tight text-slate-900">
+                          {b.name}
+                        </div>
+                        <div className="text-[9px] text-slate-600 leading-tight">
+                          {plantCount} plants
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
-                {/* drag preview outline */}
-                {dragBedId && previewBed && dragPreview ? (
-                  <div
-                    className="absolute rounded-lg border-2 border-emerald-400 bg-emerald-100/40 pointer-events-none"
-                    style={{
-                      left: dragPreview.x * CELL_PX,
-                      top: dragPreview.y * CELL_PX,
-                      width: previewBed.size.w * CELL_PX,
-                      height: previewBed.size.h * CELL_PX,
-                    }}
-                  />
-                ) : null}
-              </div>
-
-              <div className="mt-3 space-y-1.5">
-                <p className="text-xs font-medium text-slate-700">How to use:</p>
-                <ul className="text-xs text-slate-600 space-y-0.5 list-disc pl-4">
-                  <li><strong>Beds:</strong> Click grid cell to place, or drag bed blocks to reposition</li>
-                  <li><strong>Walkways:</strong> Click and drag on grid to create rectangular walkways</li>
-                  <li><strong>Gates:</strong> Click grid cell to place gate (auto-detects nearest edge)</li>
-                  <li><strong>Zoom:</strong> Use +/− buttons, or Ctrl+Scroll wheel to zoom in/out</li>
-                  <li><strong>Pan:</strong> Shift+Drag, Middle-click+Drag, or Ctrl+Drag to pan the view</li>
-                  <li><strong>Rotate View:</strong> Click "Rotate" button to rotate entire garden layout</li>
-                  <li>Hover over colored dots to see which plants are placed in beds</li>
-                </ul>
-              </div>
-
-              <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                <p className="text-xs font-medium text-slate-700 mb-2">Plant Status Colors:</p>
-                <div className="grid grid-cols-2 gap-1 text-xs text-slate-600">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                    <span>Planned</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span>Seeds Started</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                    <span>In Ground</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                    <span>Harvesting</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                    <span>Harvested</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span>Removed</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Overlay Controls - Top Right */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
+        {/* Full screen toggle */}
+        <button
+          onClick={() => setIsFullScreen(!isFullScreen)}
+          className="bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-slate-700 hover:text-slate-900 transition-colors"
+          title={isFullScreen ? "Exit full screen (Esc)" : "Full screen"}
+        >
+          {isFullScreen ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+            </svg>
           )}
+        </button>
+
+        {/* Zoom controls */}
+        <div className="bg-white/90 shadow-lg rounded-lg overflow-hidden">
+          <button
+            onClick={handleZoomIn}
+            className="block w-full p-2 hover:bg-slate-100 text-slate-700 border-b border-slate-200"
+            title="Zoom in"
+          >
+            <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+            </svg>
+          </button>
+          <button
+            onClick={handleZoomReset}
+            className="block w-full px-2 py-1 hover:bg-slate-100 text-xs text-slate-600 border-b border-slate-200"
+            title="Fit to screen"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="block w-full p-2 hover:bg-slate-100 text-slate-700"
+            title="Zoom out"
+          >
+            <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 12H6" />
+            </svg>
+          </button>
         </div>
 
-      {/* Plant Info Modal */}
+        {/* Rotate */}
+        <button
+          onClick={handleRotate}
+          className="bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-slate-700 hover:text-slate-900 transition-colors"
+          title={`Rotate (${rotation}°)`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Legend - Bottom Left */}
+      {showLegend && (
+        <div className="absolute bottom-4 left-4 z-20 bg-white/95 shadow-lg rounded-lg px-3 py-2 max-w-[200px]">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-slate-700">Plant Status</p>
+            <button
+              onClick={() => setShowLegend(false)}
+              className="text-slate-400 hover:text-slate-600 -mr-1"
+              title="Hide legend"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-600">
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-slate-400" />
+              <span>Planned</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>Started</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>Growing</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <span>Harvesting</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-purple-500" />
+              <span>Complete</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show legend button when hidden */}
+      {!showLegend && (
+        <button
+          onClick={() => setShowLegend(true)}
+          className="absolute bottom-4 left-4 z-20 bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-slate-700"
+          title="Show legend"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+          </svg>
+        </button>
+      )}
+
+      {/* Info overlay - Bottom Right */}
+      <div className="absolute bottom-4 right-4 z-20 text-right">
+        <p className="text-[11px] text-white/70 drop-shadow">
+          {inchesToFeetInches(garden.widthInches)} × {inchesToFeetInches(garden.heightInches)} • {placedBeds.length} beds • {placements.length} plants
+        </p>
+        <p className="text-[10px] text-white/50 drop-shadow">
+          Click bed to edit • Shift+drag to pan • Ctrl+scroll to zoom
+        </p>
+      </div>
+    </div>
+  );
+
+  // Full screen mode
+  if (isFullScreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black">
+        {/* Exit button overlay */}
+        <div className="absolute top-4 left-4 z-30 flex gap-2">
+          <button
+            onClick={() => setIsFullScreen(false)}
+            className="bg-white/90 hover:bg-white shadow-lg rounded-lg px-3 py-2 text-sm text-slate-700 flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Exit Full Screen
+          </button>
+          <Link
+            href="/garden/edit"
+            className="bg-emerald-500 hover:bg-emerald-600 shadow-lg rounded-lg px-3 py-2 text-sm text-white flex items-center gap-2"
+          >
+            Edit Garden
+          </Link>
+        </div>
+        {gardenCanvas}
+        <PlantInfoModal
+          isOpen={showPlantInfoModal}
+          plant={selectedPlacement?.plant || null}
+          bedName={selectedPlacement?.bed.name}
+          placementInfo={
+            selectedPlacement
+              ? { count: selectedPlacement.count, status: getPlacementStatus(selectedPlacement) }
+              : undefined
+          }
+          onClose={() => {
+            setShowPlantInfoModal(false);
+            setSelectedPlacement(null);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Normal mode with compact header
+  return (
+    <div className="h-full flex flex-col">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between gap-4 p-3 bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-teal-100">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-teal-400 to-cyan-500 text-white p-2 rounded-lg shadow-sm">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-teal-700">Garden Layout</h1>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Link className={`${ui.btn} ${ui.btnPrimary} text-sm py-1.5`} href="/garden/edit">
+            Edit Garden
+          </Link>
+          <Link className={`${ui.btn} ${ui.btnSecondary} text-sm py-1.5`} href="/beds">
+            Beds
+          </Link>
+          <Link className={`${ui.btn} ${ui.btnSecondary} text-sm py-1.5`} href="/schedule">
+            Schedule
+          </Link>
+        </div>
+      </div>
+
+      {/* Garden Canvas - fills remaining space */}
+      <div className="flex-1 min-h-0 p-2">
+        {gardenCanvas}
+      </div>
+
       <PlantInfoModal
         isOpen={showPlantInfoModal}
         plant={selectedPlacement?.plant || null}
         bedName={selectedPlacement?.bed.name}
         placementInfo={
           selectedPlacement
-            ? {
-                count: selectedPlacement.count,
-                status: getPlacementStatus(selectedPlacement),
-              }
+            ? { count: selectedPlacement.count, status: getPlacementStatus(selectedPlacement) }
             : undefined
         }
         onClose={() => {
