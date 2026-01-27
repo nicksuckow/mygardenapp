@@ -127,7 +127,8 @@ function MiniMap({
   onNavigate: (x: number, y: number) => void;
   shouldRotate: boolean;
 }) {
-  const MINI_MAP_WIDTH = 120;
+  // Larger mini-map for better touch usability
+  const MINI_MAP_WIDTH = 140;
 
   // Use display dimensions (swapped if rotated)
   const displayWidth = shouldRotate ? bed.heightInches : bed.widthInches;
@@ -150,16 +151,27 @@ function MiniMap({
   const viewportX = (-panOffset.x / (canvasSize.width * zoom)) * MINI_MAP_WIDTH;
   const viewportY = (-panOffset.y / (canvasSize.height * zoom)) * miniMapHeight;
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
+  const navigateToPoint = (clientX: number, clientY: number, rect: DOMRect) => {
+    const clickX = clientX - rect.left;
+    const clickY = clientY - rect.top;
 
     // Convert to pan offset
     const targetX = -(clickX / MINI_MAP_WIDTH) * canvasSize.width * zoom + containerSize.width / 2;
     const targetY = -(clickY / miniMapHeight) * canvasSize.height * zoom + containerSize.height / 2;
 
     onNavigate(targetX, targetY);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    navigateToPoint(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect());
+  };
+
+  const handleTouch = (e: React.TouchEvent<HTMLDivElement>) => {
+    e.preventDefault(); // Prevent scroll
+    const touch = e.touches[0];
+    if (touch) {
+      navigateToPoint(touch.clientX, touch.clientY, e.currentTarget.getBoundingClientRect());
+    }
   };
 
   // Only show mini-map when zoomed in enough
@@ -175,6 +187,8 @@ function MiniMap({
         padding: "3px",
       }}
       onClick={handleClick}
+      onTouchStart={handleTouch}
+      onTouchMove={handleTouch}
     >
       {/* Inner soil area */}
       <div
@@ -1035,6 +1049,27 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     setPanOffset({ x, y });
   }, []);
 
+  // Center the view on a specific placement
+  const centerOnPlacement = useCallback(
+    (placement: Placement) => {
+      if (containerSize.width === 0 || containerSize.height === 0) return;
+
+      const size = placement.w ?? placement.plant.spacingInches;
+      const displayPos = toDisplayCoords(placement.x, placement.y);
+
+      // Calculate the center of the plant in pixels
+      const plantCenterX = (displayPos.x + size / 2) * PIXELS_PER_INCH;
+      const plantCenterY = (displayPos.y + size / 2) * PIXELS_PER_INCH;
+
+      // Calculate pan offset to center the plant
+      const targetX = containerSize.width / 2 - plantCenterX;
+      const targetY = containerSize.height / 2 - plantCenterY;
+
+      setPanOffset({ x: targetX, y: targetY });
+    },
+    [containerSize, toDisplayCoords, PIXELS_PER_INCH]
+  );
+
   // Zoom handlers
   const handleZoomIn = useCallback(() => setZoom((z) => Math.min(z * 1.5, 10)), []);
   const handleZoomOut = useCallback(() => setZoom((z) => Math.max(z / 1.5, 0.5)), []);
@@ -1186,7 +1221,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               </Link>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Search input */}
               <div className="relative">
                 <input
@@ -1199,7 +1234,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     setIsPlantDropdownOpen(true);
                   }}
                   onFocus={() => setIsPlantDropdownOpen(true)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                 />
                 {plantSearch && (
                   <button
@@ -1207,7 +1242,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       setPlantSearch("");
                       setIsPlantDropdownOpen(false);
                     }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 active:text-gray-800"
                   >
                     ×
                   </button>
@@ -1224,9 +1259,9 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
 
               {/* Dropdown results */}
               {isPlantDropdownOpen && plantSearch && (
-                <div className="relative z-20 border rounded-lg bg-white shadow-lg max-h-48 overflow-y-auto">
+                <div className="relative z-20 border rounded-lg bg-white shadow-lg max-h-64 overflow-y-auto">
                   {filteredPlants.length === 0 ? (
-                    <p className="p-3 text-sm text-gray-500">No plants found</p>
+                    <p className="p-4 text-base text-gray-500">No plants found</p>
                   ) : (
                     filteredPlants.map((plant) => (
                       <button
@@ -1236,14 +1271,14 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                           setPlantSearch("");
                           setIsPlantDropdownOpen(false);
                         }}
-                        className="w-full flex items-center gap-2 p-2 hover:bg-slate-50 text-left border-b last:border-b-0"
+                        className="w-full flex items-center gap-3 p-3 min-h-[52px] hover:bg-slate-50 active:bg-slate-100 text-left border-b last:border-b-0 transition-colors"
                       >
-                        <div className="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-500 flex items-center justify-center text-emerald-700 text-xs flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 text-sm flex-shrink-0">
                           {plant.name.charAt(0)}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{plant.name}</p>
-                          <p className="text-xs text-slate-500">{plant.spacingInches}&quot; spacing</p>
+                          <p className="text-base font-medium truncate">{plant.name}</p>
+                          <p className="text-sm text-slate-500">{plant.spacingInches}&quot; spacing</p>
                         </div>
                       </button>
                     ))
@@ -1253,8 +1288,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
 
               {/* Selected plant to drag */}
               {selectedPlantForDrag && (
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Drag to place:</p>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">Drag to place:</p>
                   <div className="relative">
                     <PlantCard
                       plant={selectedPlantForDrag}
@@ -1265,7 +1300,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     />
                     <button
                       onClick={() => setSelectedPlantForDrag(null)}
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gray-400 text-white flex items-center justify-center text-xs font-bold shadow hover:bg-gray-500"
+                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center text-sm font-bold shadow hover:bg-gray-500 active:bg-gray-600 active:scale-95 transition-all"
                       title="Clear selection"
                     >
                       ×
@@ -1275,7 +1310,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               )}
 
               {!selectedPlantForDrag && !isPlantDropdownOpen && (
-                <p className="text-xs text-gray-500">
+                <p className="text-sm text-gray-500">
                   Search and select a plant to drag onto the bed
                 </p>
               )}
@@ -1469,26 +1504,26 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               )}
             </p>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-600">{zoom.toFixed(1)}x</span>
-              <div className="flex gap-1">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">{zoom.toFixed(1)}x</span>
+              <div className="flex gap-2">
                 <button
                   onClick={handleZoomOut}
-                  className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 active:bg-gray-100"
+                  className="w-10 h-10 text-lg border rounded-lg hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all flex items-center justify-center"
                   title="Zoom out"
                 >
                   −
                 </button>
                 <button
                   onClick={handleZoomReset}
-                  className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 active:bg-gray-100"
+                  className="px-4 h-10 text-sm border rounded-lg hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all"
                   title="Fit to screen"
                 >
                   Fit
                 </button>
                 <button
                   onClick={handleZoomIn}
-                  className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 active:bg-gray-100"
+                  className="w-10 h-10 text-lg border rounded-lg hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all flex items-center justify-center"
                   title="Zoom in"
                 >
                   +
@@ -1647,6 +1682,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!isBeingDragged) {
+                          centerOnPlacement(p);
                           setSelectedPlacementId(p.id);
                         }
                       }}
@@ -1662,13 +1698,15 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                         {p.plant.name}
                       </span>
                     </button>
-                    {/* Delete button */}
+                    {/* Delete button - visible on mobile, hover-show on desktop */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deletePlacement(p.id);
+                        if (confirm(`Remove ${p.plant.name} from this bed?`)) {
+                          deletePlacement(p.id);
+                        }
                       }}
-                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold shadow-md opacity-0 group-hover:opacity-100 hover:bg-red-600 transition-opacity z-10"
+                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm font-bold shadow-md opacity-70 md:opacity-0 md:group-hover:opacity-100 hover:bg-red-600 active:bg-red-700 active:scale-95 transition-all z-10"
                       title={`Remove ${p.plant.name}`}
                     >
                       ×

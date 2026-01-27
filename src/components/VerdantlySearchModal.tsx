@@ -185,14 +185,14 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
         {/* Search Form */}
         <div className="border-b border-slate-200 p-4">
-          <form onSubmit={handleSearch} className="space-y-3">
+          <form onSubmit={handleSearch} className="space-y-4">
             <div>
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by common or scientific name (e.g., tomato, lettuce, carrot)..."
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                placeholder="Search plants (e.g., tomato, lettuce)..."
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-base focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 autoFocus
               />
             </div>
@@ -206,21 +206,21 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
                 {searching ? "Searching..." : "Search"}
               </button>
 
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={hasSeeds}
                   onChange={(e) => setHasSeeds(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
-                <span className="text-slate-700">I have seeds for this plant</span>
+                <span className="text-base text-slate-700">I have seeds for this plant</span>
               </label>
             </div>
           </form>
 
           {total > 0 && (
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <div className="text-xs text-slate-600">
+            <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
+              <div className="text-sm text-slate-600">
                 <p>
                   Found {total} result{total !== 1 ? "s" : ""} • Page {currentPage} of {totalPages}
                 </p>
@@ -231,14 +231,14 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1 || searching}
-                    className={`${ui.btn} ${ui.btnSecondary} py-1 px-2 text-xs`}
+                    className={`${ui.btnSm} ${ui.btnSecondary}`}
                   >
                     Previous
                   </button>
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages || searching}
-                    className={`${ui.btn} ${ui.btnSecondary} py-1 px-2 text-xs`}
+                    className={`${ui.btnSm} ${ui.btnSecondary}`}
                   >
                     Next
                   </button>
@@ -262,11 +262,11 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {results.map((plant) => (
               <div
                 key={plant.id}
-                className="flex items-center gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50"
+                className="flex items-start gap-3 rounded-lg border border-slate-200 p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -361,21 +361,21 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
           {/* Bottom pagination */}
           {total > 0 && totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-3 border-t border-slate-200 pt-3">
+            <div className="mt-4 flex items-center justify-center gap-3 border-t border-slate-200 pt-4">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || searching}
-                className={`${ui.btn} ${ui.btnSecondary} py-1 px-3 text-sm`}
+                className={`${ui.btn} ${ui.btnSecondary}`}
               >
                 ← Previous
               </button>
-              <span className="text-sm text-slate-600">
+              <span className="text-base text-slate-600">
                 Page {currentPage} of {totalPages}
               </span>
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages || searching}
-                className={`${ui.btn} ${ui.btnSecondary} py-1 px-3 text-sm`}
+                className={`${ui.btn} ${ui.btnSecondary}`}
               >
                 Next →
               </button>

@@ -495,11 +495,11 @@ export default function PlacementTrackingModal({
               )}
 
               {/* Spring planting tasks */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Spring Planting Tasks</h3>
 
                 <div>
-                  <label className="flex items-center gap-2 mb-1">
+                  <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!seedsStartedDate}
@@ -510,22 +510,22 @@ export default function PlacementTrackingModal({
                           setSeedsStartedDate("");
                         }
                       }}
-                      className="rounded"
+                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className="text-sm">Seeds Started Indoors</span>
+                    <span className="text-base">Seeds Started Indoors</span>
                   </label>
                   {seedsStartedDate && (
                     <input
                       type="date"
                       value={seedsStartedDate}
                       onChange={(e) => setSeedsStartedDate(e.target.value)}
-                      className="ml-6 text-sm rounded border border-slate-300 px-2 py-1"
+                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 mb-1">
+                  <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!transplantedDate}
@@ -536,22 +536,22 @@ export default function PlacementTrackingModal({
                           setTransplantedDate("");
                         }
                       }}
-                      className="rounded"
+                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className="text-sm">Transplanted Outdoors</span>
+                    <span className="text-base">Transplanted Outdoors</span>
                   </label>
                   {transplantedDate && (
                     <input
                       type="date"
                       value={transplantedDate}
                       onChange={(e) => setTransplantedDate(e.target.value)}
-                      className="ml-6 text-sm rounded border border-slate-300 px-2 py-1"
+                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 mb-1">
+                  <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!directSowedDate}
@@ -562,27 +562,27 @@ export default function PlacementTrackingModal({
                           setDirectSowedDate("");
                         }
                       }}
-                      className="rounded"
+                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className="text-sm">Direct Sowed</span>
+                    <span className="text-base">Direct Sowed</span>
                   </label>
                   {directSowedDate && (
                     <input
                       type="date"
                       value={directSowedDate}
                       onChange={(e) => setDirectSowedDate(e.target.value)}
-                      className="ml-6 text-sm rounded border border-slate-300 px-2 py-1"
+                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
               </div>
 
               {/* Harvest tracking */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Harvest Tracking</h3>
 
                 <div>
-                  <label className="flex items-center gap-2 mb-1">
+                  <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!harvestStartedDate}
@@ -593,22 +593,22 @@ export default function PlacementTrackingModal({
                           setHarvestStartedDate("");
                         }
                       }}
-                      className="rounded"
+                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className="text-sm">Harvest Started</span>
+                    <span className="text-base">Harvest Started</span>
                   </label>
                   {harvestStartedDate && (
                     <input
                       type="date"
                       value={harvestStartedDate}
                       onChange={(e) => setHarvestStartedDate(e.target.value)}
-                      className="ml-6 text-sm rounded border border-slate-300 px-2 py-1"
+                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
 
                 <div>
-                  <label className="flex items-center gap-2 mb-1">
+                  <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={!!harvestEndedDate}
@@ -619,27 +619,27 @@ export default function PlacementTrackingModal({
                           setHarvestEndedDate("");
                         }
                       }}
-                      className="rounded"
+                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                     />
-                    <span className="text-sm">Harvest Ended</span>
+                    <span className="text-base">Harvest Ended</span>
                   </label>
                   {harvestEndedDate && (
                     <input
                       type="date"
                       value={harvestEndedDate}
                       onChange={(e) => setHarvestEndedDate(e.target.value)}
-                      className="ml-6 text-sm rounded border border-slate-300 px-2 py-1"
+                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
 
                 {/* Yield tracking */}
                 {(harvestStartedDate || harvestEndedDate) && (
-                  <div className="pt-2 border-t border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <div className="pt-3 border-t border-slate-200">
+                    <label className="block text-base font-medium text-slate-700 mb-2">
                       Total Harvest Yield
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <input
                         type="number"
                         step="0.1"
@@ -647,12 +647,12 @@ export default function PlacementTrackingModal({
                         value={harvestYield}
                         onChange={(e) => setHarvestYield(e.target.value)}
                         placeholder="Amount"
-                        className="w-24 text-sm rounded border border-slate-300 px-2 py-1"
+                        className="w-28 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
                       />
                       <select
                         value={harvestYieldUnit}
                         onChange={(e) => setHarvestYieldUnit(e.target.value)}
-                        className="text-sm rounded border border-slate-300 px-2 py-1"
+                        className="text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
                       >
                         <option value="lbs">lbs</option>
                         <option value="oz">oz</option>
@@ -674,18 +674,18 @@ export default function PlacementTrackingModal({
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+                <label className="block text-base font-medium text-slate-700 mb-2">Notes</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add notes about this planting..."
-                  className="w-full text-sm rounded border border-slate-300 px-3 py-2"
-                  rows={3}
+                  className="w-full text-base rounded-lg border border-slate-300 px-3 py-3"
+                  rows={4}
                 />
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-2">
+              {/* Actions - stack on mobile, row on larger screens */}
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
                 <button
                   onClick={handleSave}
                   disabled={saving}
@@ -696,14 +696,14 @@ export default function PlacementTrackingModal({
                 <button
                   onClick={onClose}
                   disabled={saving}
-                  className={`${ui.btn} ${ui.btnSecondary}`}
+                  className={`${ui.btn} ${ui.btnSecondary} flex-1 sm:flex-none`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={saving}
-                  className={`${ui.btn} ${ui.btnDanger}`}
+                  className={`${ui.btn} ${ui.btnDanger} flex-1 sm:flex-none`}
                 >
                   Delete
                 </button>
@@ -711,15 +711,15 @@ export default function PlacementTrackingModal({
 
               {/* Archive button - shown for completed harvests */}
               {harvestEndedDate && (
-                <div className="pt-2 border-t border-slate-200">
+                <div className="pt-3 border-t border-slate-200">
                   <button
                     onClick={handleArchive}
                     disabled={saving}
-                    className={`${ui.btn} w-full bg-purple-600 hover:bg-purple-700 text-white`}
+                    className={`${ui.btn} w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white`}
                   >
                     Archive to History
                   </button>
-                  <p className="text-xs text-slate-500 mt-1 text-center">
+                  <p className="text-xs text-slate-500 mt-2 text-center">
                     Save this planting to your crop rotation history and clear the spot for next season
                   </p>
                 </div>

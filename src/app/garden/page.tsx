@@ -250,6 +250,28 @@ export default function GardenPage() {
     setPanOffset({ x: 0, y: 0 });
   }, [optimalZoom]);
 
+  // Center the view on a specific bed
+  const centerOnBed = useCallback(
+    (bed: Bed) => {
+      if (!garden || containerSize.width === 0 || containerSize.height === 0) return;
+
+      const x = bed.gardenX ?? 0;
+      const y = bed.gardenY ?? 0;
+      const size = bedSizeInGardenCells(bed, garden.cellInches);
+
+      // Calculate the center of the bed in pixels
+      const bedCenterX = (x + size.w / 2) * CELL_PX * zoom;
+      const bedCenterY = (y + size.h / 2) * CELL_PX * zoom;
+
+      // Calculate pan offset to center the bed
+      const targetX = containerSize.width / 2 - bedCenterX;
+      const targetY = containerSize.height / 2 - bedCenterY;
+
+      setPanOffset({ x: targetX, y: targetY });
+    },
+    [garden, containerSize, zoom, CELL_PX]
+  );
+
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
@@ -511,6 +533,7 @@ export default function GardenPage() {
                             onClick={(ev) => {
                               ev.preventDefault();
                               ev.stopPropagation();
+                              centerOnBed(b);
                               setSelectedPlacement(p);
                               setShowPlantInfoModal(true);
                             }}
