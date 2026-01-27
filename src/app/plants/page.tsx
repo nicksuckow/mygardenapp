@@ -112,6 +112,11 @@ export default function PlantsPage() {
   // Recalculate timing state
   const [recalculating, setRecalculating] = useState(false);
 
+  // Auto-capitalize each word as user types
+  function toTitleCase(text: string): string {
+    return text.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
   async function load() {
     try {
       setMessage("");
@@ -422,7 +427,7 @@ export default function PlantsPage() {
               <input
                 className="rounded border px-3 py-2 text-sm"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(toTitleCase(e.target.value))}
                 placeholder="e.g., Tomato, Lettuce"
               />
             </label>
