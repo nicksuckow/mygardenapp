@@ -112,10 +112,41 @@ export default function PlantsPage() {
   // Recalculate timing state
   const [recalculating, setRecalculating] = useState(false);
 
+  // Search and sort for plant list
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "spacing" | "dtm" | "recent">("name");
+  const [viewMode, setViewMode] = useState<"cards" | "list">("list");
+
   // Auto-capitalize each word as user types
   function toTitleCase(text: string): string {
     return text.replace(/\b\w/g, (char) => char.toUpperCase());
   }
+
+  // Filter and sort plants
+  const filteredPlants = plants
+    .filter((p) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.variety && p.variety.toLowerCase().includes(q)) ||
+        (p.scientificName && p.scientificName.toLowerCase().includes(q))
+      );
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "spacing":
+          return (a.spacingInches ?? 0) - (b.spacingInches ?? 0);
+        case "dtm":
+          return (a.daysToMaturityMin ?? 999) - (b.daysToMaturityMin ?? 999);
+        case "recent":
+          return b.id - a.id; // Higher ID = more recently added
+        default:
+          return 0;
+      }
+    });
 
   async function load() {
     try {
@@ -576,14 +607,251 @@ export default function PlantsPage() {
       </div>
 
       {/* List */}
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Your plants</h2>
+      <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Your plants</h2>
+            {plants.length > 0 && (
+              <p className="text-xs text-slate-500">
+                {filteredPlants.length === plants.length
+                  ? `${plants.length} plant${plants.length !== 1 ? "s" : ""}`
+                  : `Showing ${filteredPlants.length} of ${plants.length}`}
+              </p>
+            )}
+          </div>
+
+          {plants.length > 0 && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              {/* Search */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search plants..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-48 rounded-lg border border-slate-200 bg-white px-3 py-1.5 pl-8 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+                <svg
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Sort */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              >
+                <option value="name">Sort: A-Z</option>
+                <option value="spacing">Sort: Spacing</option>
+                <option value="dtm">Sort: Days to Maturity</option>
+                <option value="recent">Sort: Recently Added</option>
+              </select>
+
+              {/* View Toggle */}
+              <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`px-2.5 py-1 rounded-md text-sm transition-colors ${
+                    viewMode === "list"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                  title="List view"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode("cards")}
+                  className={`px-2.5 py-1 rounded-md text-sm transition-colors ${
+                    viewMode === "cards"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                  title="Card view"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {plants.length === 0 ? (
           <p className={ui.sub}>No plants yet.</p>
+        ) : filteredPlants.length === 0 ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center">
+            <p className="text-slate-600">No plants match "{searchQuery}"</p>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="mt-2 text-sm text-emerald-600 hover:text-emerald-700"
+            >
+              Clear search
+            </button>
+          </div>
+        ) : viewMode === "list" ? (
+          /* Compact List View */
+          <div className={`${ui.card} overflow-hidden`}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    <th className="px-4 py-3">Plant</th>
+                    <th className="px-4 py-3 text-center hidden sm:table-cell">Spacing</th>
+                    <th className="px-4 py-3 text-center hidden sm:table-cell">DTM</th>
+                    <th className="px-4 py-3 text-center hidden md:table-cell">Start Indoors</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredPlants.map((p) => {
+                    const isEditing = editingId === p.id;
+
+                    if (isEditing) {
+                      return (
+                        <tr key={p.id} className="bg-amber-50">
+                          <td colSpan={5} className="px-4 py-3">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="font-medium text-amber-800">Editing {p.name}</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    className={`${ui.btn} ${ui.btnPrimary} py-1 text-xs`}
+                                    onClick={() => saveEdit(p.id)}
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    className={`${ui.btn} ${ui.btnSecondary} py-1 text-xs`}
+                                    onClick={cancelEdit}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="grid gap-3 sm:grid-cols-4">
+                                <label className="grid gap-1">
+                                  <span className="text-xs font-medium">Name</span>
+                                  <input
+                                    className="rounded border px-2 py-1 text-sm"
+                                    value={draft?.name ?? ""}
+                                    onChange={(e) => setDraft((d) => (d ? { ...d, name: e.target.value } : d))}
+                                  />
+                                </label>
+                                <label className="grid gap-1">
+                                  <span className="text-xs font-medium">Spacing (in)</span>
+                                  <input
+                                    className="rounded border px-2 py-1 text-sm"
+                                    type="number"
+                                    value={draft?.spacingInches ?? 12}
+                                    onChange={(e) => setDraft((d) => d ? { ...d, spacingInches: Number(e.target.value) } : d)}
+                                  />
+                                </label>
+                                <label className="grid gap-1">
+                                  <span className="text-xs font-medium">DTM Min</span>
+                                  <input
+                                    className="rounded border px-2 py-1 text-sm"
+                                    type="number"
+                                    value={draft?.daysToMaturityMin ?? ""}
+                                    onChange={(e) => setDraft((d) => d ? { ...d, daysToMaturityMin: e.target.value === "" ? null : Number(e.target.value) } : d)}
+                                  />
+                                </label>
+                                <label className="grid gap-1">
+                                  <span className="text-xs font-medium">DTM Max</span>
+                                  <input
+                                    className="rounded border px-2 py-1 text-sm"
+                                    type="number"
+                                    value={draft?.daysToMaturityMax ?? ""}
+                                    onChange={(e) => setDraft((d) => d ? { ...d, daysToMaturityMax: e.target.value === "" ? null : Number(e.target.value) } : d)}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="font-medium text-slate-900">{p.name}</p>
+                            {p.variety && <p className="text-xs text-slate-500">{p.variety}</p>}
+                            {/* Mobile-only stats */}
+                            <div className="sm:hidden mt-1 flex gap-2 text-xs text-slate-500">
+                              <span>{p.spacingInches}"</span>
+                              {p.daysToMaturityMin && (
+                                <span>• {p.daysToMaturityMin}{p.daysToMaturityMax ? `-${p.daysToMaturityMax}` : ""} days</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center hidden sm:table-cell">
+                          <span className="text-slate-700">{p.spacingInches}"</span>
+                        </td>
+                        <td className="px-4 py-3 text-center hidden sm:table-cell">
+                          {p.daysToMaturityMin ? (
+                            <span className="text-slate-700">
+                              {p.daysToMaturityMin}{p.daysToMaturityMax ? `–${p.daysToMaturityMax}` : ""}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center hidden md:table-cell">
+                          {p.startIndoorsWeeksBeforeFrost ? (
+                            <span className="text-slate-700">{p.startIndoorsWeeksBeforeFrost}w before</span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            <button
+                              className="px-2 py-1 text-xs text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                              onClick={() => startEdit(p)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="px-2 py-1 text-xs text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                              onClick={() => deletePlant(p.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
+          /* Card View */
           <div className="grid gap-3 sm:grid-cols-2">
-            {plants.map((p) => {
+            {filteredPlants.map((p) => {
               const isEditing = editingId === p.id;
 
               return (
