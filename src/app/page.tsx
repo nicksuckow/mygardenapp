@@ -27,7 +27,7 @@ export default function HomePage() {
 
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  🌱 Garden Planner
+                  Sowplan
                 </h1>
                 <p className="mt-2 text-emerald-800">
                   Plan your beds, spacing, and planting dates — based on what you actually plant.

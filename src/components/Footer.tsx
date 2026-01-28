@@ -16,7 +16,7 @@ export default function Footer() {
               Terms
             </Link>
           </div>
-          <p>&copy; {new Date().getFullYear()} Garden Planner</p>
+          <p>&copy; {new Date().getFullYear()} Unfiltered Investments LLC</p>
         </div>
       </div>
     </footer>

@@ -10,9 +10,9 @@ import OnboardingProvider from "@/components/OnboardingProvider";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 import type { Metadata } from "next";
 
-const APP_NAME = "Garden Planner";
+const APP_NAME = "Sowplan";
 const APP_DESCRIPTION =
-  "Plan your garden with personalized planting schedules based on your location. Track plants, design bed layouts, and manage your growing season.";
+  "Plan your garden with personalized planting schedules based on your location. Track what you sow, design bed layouts, and manage your growing season.";
 
 export const metadata: Metadata = {
   title: {
@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   description: APP_DESCRIPTION,
   applicationName: APP_NAME,
   keywords: [
+    "sowplan",
     "garden planner",
     "planting schedule",
     "garden layout",
@@ -31,16 +32,16 @@ export const metadata: Metadata = {
     "seed starting",
     "garden journal",
   ],
-  authors: [{ name: "Garden Planner" }],
-  creator: "Garden Planner",
-  publisher: "Garden Planner",
+  authors: [{ name: "Sowplan" }],
+  creator: "Sowplan",
+  publisher: "Sowplan",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || "https://gardenplanner.app"
+    process.env.NEXT_PUBLIC_APP_URL || "https://sowplan.com"
   ),
   alternates: {
     canonical: "/",
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Garden Planner - Plan your garden with personalized planting schedules",
+        alt: "Sowplan - Plan your garden with personalized planting schedules",
       },
     ],
   },
@@ -107,7 +108,7 @@ export default async function RootLayout({
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white md:bg-white/95 md:backdrop-blur md:supports-[backdrop-filter]:bg-white/80">
               <nav className="mx-auto flex items-center gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4">
                 <Link className="font-semibold text-slate-900 text-sm sm:text-base" href="/">
-                  Garden Planner
+                  Sowplan
                 </Link>
 
                 {session?.user && (

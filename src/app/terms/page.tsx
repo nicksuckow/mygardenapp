@@ -1,8 +1,8 @@
 import { ui } from "@/lib/uiStyles";
 
 export const metadata = {
-  title: "Terms of Service - Garden Planner",
-  description: "Terms of Service for Garden Planner application",
+  title: "Terms of Service - Sowplan",
+  description: "Terms of Service for Sowplan application",
 };
 
 export default function TermsOfServicePage() {
@@ -17,13 +17,14 @@ export default function TermsOfServicePage() {
         <div className="prose prose-slate prose-sm max-w-none">
           <h2 className="text-lg font-semibold text-slate-900 mt-6">1. Acceptance of Terms</h2>
           <p className="text-slate-700">
-            By accessing or using Garden Planner (&quot;the Service&quot;), you agree to be bound by these
-            Terms of Service. If you do not agree to these terms, please do not use the Service.
+            By accessing or using Sowplan, operated by Unfiltered Investments LLC (&quot;the Service&quot;,
+            &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), you agree to be bound by these Terms of Service. If you do
+            not agree to these terms, please do not use the Service.
           </p>
 
           <h2 className="text-lg font-semibold text-slate-900 mt-6">2. Description of Service</h2>
           <p className="text-slate-700">
-            Garden Planner is a web application that helps users plan, organize, and track their
+            Sowplan is a web application that helps users plan, organize, and track their
             gardening activities. Features include:
           </p>
           <ul className="list-disc pl-5 text-slate-700 space-y-1">

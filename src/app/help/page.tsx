@@ -168,7 +168,7 @@ export default function HelpPage() {
       <div className={`${ui.card} ${ui.cardPad}`}>
         <h1 className="text-2xl font-bold text-slate-900">Help & FAQ</h1>
         <p className="text-slate-600 mt-2">
-          Find answers to common questions about using Garden Planner.
+          Find answers to common questions about using Sowplan.
         </p>
       </div>
 

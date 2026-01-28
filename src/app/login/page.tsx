@@ -61,7 +61,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-            🌱 Garden Planner
+            Sowplan
           </h1>
           <p className="text-sm text-slate-600">Welcome back! Sign in to tend your garden</p>
         </div>

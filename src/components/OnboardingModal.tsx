@@ -10,7 +10,7 @@ interface OnboardingModalProps {
 
 const steps = [
   {
-    title: "Welcome to Garden Planner!",
+    title: "Welcome to Sowplan!",
     description:
       "Let's get your garden set up in just a few steps. We'll help you plan your planting schedule based on your location and create a visual layout of your garden beds.",
     icon: (

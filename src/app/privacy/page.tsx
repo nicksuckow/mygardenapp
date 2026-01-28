@@ -1,8 +1,8 @@
 import { ui } from "@/lib/uiStyles";
 
 export const metadata = {
-  title: "Privacy Policy - Garden Planner",
-  description: "Privacy Policy for Garden Planner application",
+  title: "Privacy Policy - Sowplan",
+  description: "Privacy Policy for Sowplan application",
 };
 
 export default function PrivacyPolicyPage() {
@@ -17,9 +17,9 @@ export default function PrivacyPolicyPage() {
         <div className="prose prose-slate prose-sm max-w-none">
           <h2 className="text-lg font-semibold text-slate-900 mt-6">1. Introduction</h2>
           <p className="text-slate-700">
-            Garden Planner ("we", "our", or "us") is committed to protecting your privacy.
-            This Privacy Policy explains how we collect, use, and safeguard your information
-            when you use our garden planning application.
+            Sowplan is operated by Unfiltered Investments LLC ("we", "our", or "us"). We are
+            committed to protecting your privacy. This Privacy Policy explains how we collect,
+            use, and safeguard your information when you use our garden planning application.
           </p>
 
           <h2 className="text-lg font-semibold text-slate-900 mt-6">2. Information We Collect</h2>
