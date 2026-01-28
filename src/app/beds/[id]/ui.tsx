@@ -708,10 +708,23 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     return false;
   });
 
+  // Companion indicator toggle - persisted to localStorage
+  const [showCompanionIndicators, setShowCompanionIndicators] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("showCompanionIndicators") === "true";
+    }
+    return false;
+  });
+
   // Persist icon toggle to localStorage
   useEffect(() => {
     localStorage.setItem("showPlantIcons", showPlantIcons.toString());
   }, [showPlantIcons]);
+
+  // Persist companion indicator toggle to localStorage
+  useEffect(() => {
+    localStorage.setItem("showCompanionIndicators", showCompanionIndicators.toString());
+  }, [showCompanionIndicators]);
 
   const BASE_PIXELS_PER_INCH = 4;
   const PIXELS_PER_INCH = BASE_PIXELS_PER_INCH * zoom;
@@ -847,6 +860,62 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     if (plantNames.length < 2) return { goodPairs: [], badPairs: [] };
     return getCompanionSuggestions(plantNames);
   }, [counts]);
+
+  // Compute companion relationships for each placement (for visual indicators)
+  // Updates in real-time when dragging plants to show how companions would change
+  const companionStatus = useMemo(() => {
+    const status = new Map<number, { hasGood: boolean; hasBad: boolean; goodWith: string[]; badWith: string[] }>();
+
+    // Build the effective placements list, considering any plant being dragged
+    let effectivePlacements = placements;
+
+    // If dragging a new plant to be placed, add a virtual placement
+    if (draggedPlant && dropPosition && !draggedPlacement) {
+      effectivePlacements = [
+        ...placements,
+        {
+          id: -1, // Virtual ID for the plant being placed
+          x: dropPosition.x,
+          y: dropPosition.y,
+          plant: draggedPlant,
+        } as Placement,
+      ];
+    }
+
+    // If moving an existing placement, update its position in calculations
+    if (draggedPlacement && dropPosition) {
+      effectivePlacements = placements.map(p =>
+        p.id === draggedPlacement.id
+          ? { ...p, x: dropPosition.x, y: dropPosition.y }
+          : p
+      );
+    }
+
+    for (const p of effectivePlacements) {
+      const goodWith: string[] = [];
+      const badWith: string[] = [];
+
+      for (const other of effectivePlacements) {
+        if (other.id === p.id) continue;
+
+        const result = checkCompatibility(p.plant.name, other.plant.name);
+        if (result.type === "good" && !goodWith.includes(other.plant.name)) {
+          goodWith.push(other.plant.name);
+        } else if (result.type === "bad" && !badWith.includes(other.plant.name)) {
+          badWith.push(other.plant.name);
+        }
+      }
+
+      status.set(p.id, {
+        hasGood: goodWith.length > 0,
+        hasBad: badWith.length > 0,
+        goodWith,
+        badWith,
+      });
+    }
+
+    return status;
+  }, [placements, draggedPlant, draggedPlacement, dropPosition]);
 
   // Fuzzy filter plants based on search query
   const filteredPlants = useMemo(() => {
@@ -1920,6 +1989,20 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 <span className="text-sm font-medium">{showPlantIcons ? "Icons On" : "Icons"}</span>
               </button>
 
+              {/* Companion indicator toggle */}
+              <button
+                onClick={() => setShowCompanionIndicators(!showCompanionIndicators)}
+                className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  showCompanionIndicators
+                    ? "bg-purple-500 border-purple-600 text-white"
+                    : "hover:bg-gray-50 active:bg-gray-100"
+                }`}
+                title={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
+              >
+                <span className="text-lg">🤝</span>
+                <span className="text-sm font-medium">{showCompanionIndicators ? "Companions" : "Companions"}</span>
+              </button>
+
               <span className="text-sm text-gray-600">{zoom.toFixed(1)}x</span>
               <div className="flex gap-2">
                 <button
@@ -2042,14 +2125,35 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               {draggedPlant && dropPosition && (() => {
                 const displayPos = toDisplayCoords(dropPosition.x, dropPosition.y);
                 const previewSize = draggedPlant.spacingInches * PIXELS_PER_INCH;
+
+                // Get companion status for the preview (virtual ID -1 for new placement, or actual ID for move)
+                const previewId = draggedPlacement?.id ?? -1;
+                const previewCompanion = companionStatus.get(previewId);
+                const ringSize = Math.max(3, Math.min(6, previewSize / 12));
+                let previewCompanionShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+                let previewCompanionClass = "";
+
+                if (showCompanionIndicators && previewCompanion) {
+                  if (previewCompanion.hasGood && previewCompanion.hasBad) {
+                    previewCompanionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 0 ${ringSize * 2}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.6)`;
+                    previewCompanionClass = "animate-pulse";
+                  } else if (previewCompanion.hasBad) {
+                    previewCompanionShadow = `0 0 0 ${ringSize}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.7)`;
+                    previewCompanionClass = "animate-pulse";
+                  } else if (previewCompanion.hasGood) {
+                    previewCompanionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(34, 197, 94, 0.7)`;
+                  }
+                }
+
                 return (
                   <div
-                    className="absolute rounded-full bg-emerald-400/70 border-3 border-emerald-300 pointer-events-none flex items-center justify-center shadow-lg shadow-emerald-900/30 transition-all duration-150"
+                    className={`absolute rounded-full bg-emerald-400/70 border-3 border-emerald-300 pointer-events-none flex items-center justify-center transition-all duration-150 ${previewCompanionClass}`}
                     style={{
                       left: displayPos.x * PIXELS_PER_INCH,
                       top: displayPos.y * PIXELS_PER_INCH,
                       width: previewSize,
                       height: previewSize,
+                      boxShadow: previewCompanionShadow,
                     }}
                   >
                     {showPlantIcons ? (() => {
@@ -2095,6 +2199,26 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 const isBeingDragged = draggedPlacement?.id === p.id;
                 const isRecentlyPlaced = recentlyPlaced === p.id;
                 const displayPos = toDisplayCoords(p.x, p.y);
+                const companion = companionStatus.get(p.id);
+
+                // Build companion indicator styles - scale ring size based on plant size
+                const ringSize = Math.max(3, Math.min(6, size / 12));
+                let companionShadow = "";
+                let companionClass = "";
+                if (showCompanionIndicators && companion) {
+                  if (companion.hasGood && companion.hasBad) {
+                    // Both good and bad - split glow
+                    companionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 0 ${ringSize * 2}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.6)`;
+                    companionClass = "animate-pulse";
+                  } else if (companion.hasBad) {
+                    // Only bad companions
+                    companionShadow = `0 0 0 ${ringSize}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.7)`;
+                    companionClass = "animate-pulse";
+                  } else if (companion.hasGood) {
+                    // Only good companions
+                    companionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(34, 197, 94, 0.7)`;
+                  }
+                }
 
                 return (
                   <div
@@ -2118,10 +2242,11 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                           : isRecentlyPlaced
                           ? "scale-110 ring-4 ring-emerald-400 ring-opacity-50"
                           : "hover:scale-105"
-                      }`}
+                      } ${companionClass}`}
                       style={{
                         borderColor: statusColor,
                         backgroundColor: bgColor,
+                        boxShadow: companionShadow || undefined,
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -2130,7 +2255,12 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                           setSelectedPlacementId(p.id);
                         }
                       }}
-                      title={`${p.plant.name} - Drag to move, click for details`}
+                      title={`${p.plant.name}${
+                        showCompanionIndicators && companion
+                          ? (companion.hasGood ? `\n✓ Good with: ${companion.goodWith.join(", ")}` : "") +
+                            (companion.hasBad ? `\n✗ Bad with: ${companion.badWith.join(", ")}` : "")
+                          : ""
+                      } - Drag to move, click for details`}
                     >
                       {showPlantIcons ? (() => {
                         const { icon, shortName, customType } = getPlantIconAndName(p.plant.name);

@@ -7,6 +7,7 @@ import { inchesToFeetInches } from "@/lib/dimensions";
 import PlantInfoModal from "@/components/PlantInfoModal";
 import { type FullPlantData } from "@/components/PlantInfoPanel";
 import { getPlantIconAndName, CustomPlantIcon } from "@/lib/plantIcons";
+import { checkCompatibility } from "@/lib/companionPlanting";
 
 type Walkway = {
   id: number;
@@ -90,6 +91,24 @@ function getStatusDotColor(placement: PlanPlacement): string {
     return "bg-blue-500"; // blue - seeds started indoors
   }
   return "bg-slate-400"; // gray - planned only
+}
+
+// Get hex border color for status (when showing icons)
+function getStatusBorderColor(placement: PlanPlacement): string {
+  if (placement.harvestEndedDate) return "#a855f7"; // purple
+  if (placement.harvestStartedDate) return "#f59e0b"; // orange
+  if (placement.transplantedDate || placement.directSowedDate) return "#10b981"; // green
+  if (placement.seedsStartedDate) return "#3b82f6"; // blue
+  return "#94a3b8"; // gray
+}
+
+// Get hex background color for status (lighter shade)
+function getStatusBgColor(placement: PlanPlacement): string {
+  if (placement.harvestEndedDate) return "#f3e8ff"; // purple-100
+  if (placement.harvestStartedDate) return "#fef3c7"; // amber-100
+  if (placement.transplantedDate || placement.directSowedDate) return "#d1fae5"; // emerald-100
+  if (placement.seedsStartedDate) return "#dbeafe"; // blue-100
+  return "#f1f5f9"; // slate-100
 }
 
 function toInt(v: any, fallback: number) {
@@ -301,6 +320,19 @@ export default function GardenPage() {
     localStorage.setItem("showPlantIcons", showPlantIcons.toString());
   }, [showPlantIcons]);
 
+  // Companion indicator toggle - persisted to localStorage
+  const [showCompanionIndicators, setShowCompanionIndicators] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("showCompanionIndicators") === "true";
+    }
+    return false;
+  });
+
+  // Persist companion indicator toggle to localStorage
+  useEffect(() => {
+    localStorage.setItem("showCompanionIndicators", showCompanionIndicators.toString());
+  }, [showCompanionIndicators]);
+
   // zoom and pan state
   const [zoom, setZoom] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -481,6 +513,37 @@ export default function GardenPage() {
     }
     return map;
   }, [placements]);
+
+  // Compute companion relationships for each placement (for visual indicators)
+  const companionStatus = useMemo(() => {
+    const status = new Map<number, { hasGood: boolean; hasBad: boolean; goodWith: string[]; badWith: string[] }>();
+
+    for (const p of placements) {
+      const goodWith: string[] = [];
+      const badWith: string[] = [];
+      // Check against other plants in the same bed
+      const bedPlacements = placementsByBed.get(p.bed.id) ?? [];
+      for (const other of bedPlacements) {
+        if (other.id === p.id) continue;
+
+        const result = checkCompatibility(p.plant.name, other.plant.name);
+        if (result.type === "good" && !goodWith.includes(other.plant.name)) {
+          goodWith.push(other.plant.name);
+        } else if (result.type === "bad" && !badWith.includes(other.plant.name)) {
+          badWith.push(other.plant.name);
+        }
+      }
+
+      status.set(p.id, {
+        hasGood: goodWith.length > 0,
+        hasBad: badWith.length > 0,
+        goodWith,
+        badWith,
+      });
+    }
+
+    return status;
+  }, [placements, placementsByBed]);
 
   async function saveGarden() {
     setMessage("");
@@ -2099,25 +2162,50 @@ export default function GardenPage() {
                                 {bedPlacements.map((p) => {
                                   const pos = dotPosPct(b, p);
                                   const dotColor = getStatusDotColor(p);
+                                  const statusBorderColor = getStatusBorderColor(p);
+                                  const statusBgColor = getStatusBgColor(p);
                                   const { icon, shortName, customType } = getPlantIconAndName(p.plant.name);
                                   // Calculate size based on plant spacing, similar to bed view
                                   const spacingInches = p.w ?? p.plant.spacingInches ?? 12;
                                   const pixelsPerInch = (CELL_PX * zoom) / garden.cellInches;
                                   const iconSize = spacingInches * pixelsPerInch;
+                                  const companion = companionStatus.get(p.id);
+
+                                  // Build companion indicator styles - scale ring size based on dot size
+                                  const dotSize = showPlantIcons ? iconSize : 8;
+                                  const ringSize = Math.max(2, Math.min(4, dotSize / 8));
+                                  let companionShadow = "";
+                                  let companionClass = "";
+                                  if (showCompanionIndicators && companion) {
+                                    if (companion.hasGood && companion.hasBad) {
+                                      companionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 0 ${ringSize * 2}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.6)`;
+                                      companionClass = "animate-pulse";
+                                    } else if (companion.hasBad) {
+                                      companionShadow = `0 0 0 ${ringSize}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.7)`;
+                                      companionClass = "animate-pulse";
+                                    } else if (companion.hasGood) {
+                                      companionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(34, 197, 94, 0.7)`;
+                                    }
+                                  }
 
                                   return (
                                     <button
                                       key={p.id}
                                       type="button"
                                       className={`absolute rounded-full opacity-90 hover:scale-110 transition-transform flex items-center justify-center ${
-                                        showPlantIcons ? "bg-white/90 shadow-sm border border-slate-200" : dotColor
-                                      }`}
+                                        showPlantIcons ? "shadow-sm border-2" : dotColor
+                                      } ${companionClass}`}
                                       style={{
                                         left: pos.left,
                                         top: pos.top,
                                         transform: "translate(-50%, -50%)",
-                                        width: showPlantIcons ? iconSize : 8,
-                                        height: showPlantIcons ? iconSize : 8,
+                                        width: dotSize,
+                                        height: dotSize,
+                                        boxShadow: companionShadow || undefined,
+                                        ...(showPlantIcons ? {
+                                          borderColor: statusBorderColor,
+                                          backgroundColor: statusBgColor,
+                                        } : {}),
                                       }}
                                       onPointerEnter={(ev) => {
                                         ev.stopPropagation();
@@ -2150,7 +2238,12 @@ export default function GardenPage() {
                                         setSelectedPlacement(p);
                                         setShowPlantInfoModal(true);
                                       }}
-                                      title={p.plant.name}
+                                      title={`${p.plant.name}${
+                                        showCompanionIndicators && companion
+                                          ? (companion.hasGood ? `\n✓ Good with: ${companion.goodWith.join(", ")}` : "") +
+                                            (companion.hasBad ? `\n✗ Bad with: ${companion.badWith.join(", ")}` : "")
+                                          : ""
+                                      }`}
                                     >
                                       {showPlantIcons && (
                                         <div className="flex flex-col items-center justify-center">
@@ -2240,7 +2333,7 @@ export default function GardenPage() {
               </div>
 
               {/* Overlay controls (top-right) */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
+              <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
                 {/* Zoom controls */}
                 <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-1 flex flex-col gap-1">
                   <button
@@ -2296,6 +2389,21 @@ export default function GardenPage() {
                 >
                   <span className="text-base leading-none block w-4 h-4 flex items-center justify-center">
                     {showPlantIcons ? "🍅" : "●"}
+                  </span>
+                </button>
+
+                {/* Companion indicator toggle */}
+                <button
+                  className={`backdrop-blur rounded-lg shadow-lg border p-2 transition-all ${
+                    showCompanionIndicators
+                      ? "bg-purple-500 border-purple-600 text-white hover:bg-purple-600"
+                      : "bg-white/95 hover:bg-slate-100"
+                  }`}
+                  onClick={() => setShowCompanionIndicators(!showCompanionIndicators)}
+                  title={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
+                >
+                  <span className="text-base leading-none block w-4 h-4 flex items-center justify-center">
+                    🤝
                   </span>
                 </button>
               </div>

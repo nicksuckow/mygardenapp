@@ -8,6 +8,7 @@ import PlantInfoModal from "@/components/PlantInfoModal";
 import { type FullPlantData } from "@/components/PlantInfoPanel";
 import WeatherWidget from "@/components/WeatherWidget";
 import { getPlantIconAndName, CustomPlantIcon } from "@/lib/plantIcons";
+import { checkCompatibility } from "@/lib/companionPlanting";
 
 type Walkway = {
   id: number;
@@ -81,6 +82,24 @@ function getStatusDotColor(placement: PlanPlacement): string {
   return "bg-slate-400";
 }
 
+// Get hex border color for status (when showing icons)
+function getStatusBorderColor(placement: PlanPlacement): string {
+  if (placement.harvestEndedDate) return "#a855f7"; // purple
+  if (placement.harvestStartedDate) return "#f59e0b"; // orange
+  if (placement.transplantedDate || placement.directSowedDate) return "#10b981"; // green
+  if (placement.seedsStartedDate) return "#3b82f6"; // blue
+  return "#94a3b8"; // gray
+}
+
+// Get hex background color for status (lighter shade)
+function getStatusBgColor(placement: PlanPlacement): string {
+  if (placement.harvestEndedDate) return "#f3e8ff"; // purple-100
+  if (placement.harvestStartedDate) return "#fef3c7"; // amber-100
+  if (placement.transplantedDate || placement.directSowedDate) return "#d1fae5"; // emerald-100
+  if (placement.seedsStartedDate) return "#dbeafe"; // blue-100
+  return "#f1f5f9"; // slate-100
+}
+
 function bedSizeInGardenCells(bed: Bed, gardenCellInches: number) {
   const wIn = bed.gardenRotated ? bed.heightInches : bed.widthInches;
   const hIn = bed.gardenRotated ? bed.widthInches : bed.heightInches;
@@ -152,10 +171,23 @@ export default function GardenPage() {
     return false;
   });
 
+  // Companion indicator toggle - persisted to localStorage
+  const [showCompanionIndicators, setShowCompanionIndicators] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("showCompanionIndicators") === "true";
+    }
+    return false;
+  });
+
   // Persist icon toggle to localStorage
   useEffect(() => {
     localStorage.setItem("showPlantIcons", showPlantIcons.toString());
   }, [showPlantIcons]);
+
+  // Persist companion indicator toggle to localStorage
+  useEffect(() => {
+    localStorage.setItem("showCompanionIndicators", showCompanionIndicators.toString());
+  }, [showCompanionIndicators]);
 
   async function load() {
     const [gRes, bRes, pRes] = await Promise.all([
@@ -256,6 +288,37 @@ export default function GardenPage() {
     }
     return map;
   }, [placements]);
+
+  // Compute companion relationships for each placement (for visual indicators)
+  const companionStatus = useMemo(() => {
+    const status = new Map<number, { hasGood: boolean; hasBad: boolean; goodWith: string[]; badWith: string[] }>();
+
+    for (const p of placements) {
+      const goodWith: string[] = [];
+      const badWith: string[] = [];
+      // Check against other plants in the same bed
+      const bedPlacements = placementsByBed.get(p.bed.id) ?? [];
+      for (const other of bedPlacements) {
+        if (other.id === p.id) continue;
+
+        const result = checkCompatibility(p.plant.name, other.plant.name);
+        if (result.type === "good" && !goodWith.includes(other.plant.name)) {
+          goodWith.push(other.plant.name);
+        } else if (result.type === "bad" && !badWith.includes(other.plant.name)) {
+          badWith.push(other.plant.name);
+        }
+      }
+
+      status.set(p.id, {
+        hasGood: goodWith.length > 0,
+        hasBad: badWith.length > 0,
+        goodWith,
+        badWith,
+      });
+    }
+
+    return status;
+  }, [placements, placementsByBed]);
 
   const handleZoomIn = () => setZoom(z => Math.min(z * 1.3, 10));
   const handleZoomOut = () => setZoom(z => Math.max(z / 1.3, 0.1));
@@ -521,25 +584,50 @@ export default function GardenPage() {
                       {bedPlacements.map((p) => {
                         const pos = dotPosPct(b, p);
                         const dotColor = getStatusDotColor(p);
+                        const statusBorderColor = getStatusBorderColor(p);
+                        const statusBgColor = getStatusBgColor(p);
                         const { icon, shortName, customType } = getPlantIconAndName(p.plant.name);
                         // Calculate size based on plant spacing, similar to bed view
                         const spacingInches = p.w ?? p.plant.spacingInches ?? 12;
                         const pixelsPerInch = (CELL_PX * zoom) / garden.cellInches;
                         const iconSize = spacingInches * pixelsPerInch;
+                        const companion = companionStatus.get(p.id);
+
+                        // Build companion indicator styles - scale ring size based on dot size
+                        const dotSize = showPlantIcons ? iconSize : 10;
+                        const ringSize = Math.max(2, Math.min(4, dotSize / 8));
+                        let companionShadow = "";
+                        let companionClass = "";
+                        if (showCompanionIndicators && companion) {
+                          if (companion.hasGood && companion.hasBad) {
+                            companionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 0 ${ringSize * 2}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.6)`;
+                            companionClass = "animate-pulse";
+                          } else if (companion.hasBad) {
+                            companionShadow = `0 0 0 ${ringSize}px #ef4444, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(239, 68, 68, 0.7)`;
+                            companionClass = "animate-pulse";
+                          } else if (companion.hasGood) {
+                            companionShadow = `0 0 0 ${ringSize}px #22c55e, 0 0 ${ringSize * 4}px ${ringSize * 2}px rgba(34, 197, 94, 0.7)`;
+                          }
+                        }
 
                         return (
                           <button
                             key={p.id}
                             type="button"
                             className={`absolute rounded-full opacity-90 hover:scale-110 transition-transform flex items-center justify-center ${
-                              showPlantIcons ? "bg-white/90 shadow-sm border border-slate-200" : dotColor
-                            }`}
+                              showPlantIcons ? "shadow-sm border-2" : dotColor
+                            } ${companionClass}`}
                             style={{
                               left: pos.left,
                               top: pos.top,
                               transform: "translate(-50%, -50%)",
-                              width: showPlantIcons ? iconSize : 10,
-                              height: showPlantIcons ? iconSize : 10,
+                              width: dotSize,
+                              height: dotSize,
+                              boxShadow: companionShadow || undefined,
+                              ...(showPlantIcons ? {
+                                borderColor: statusBorderColor,
+                                backgroundColor: statusBgColor,
+                              } : {}),
                             }}
                             onPointerEnter={(ev) => {
                               ev.stopPropagation();
@@ -565,7 +653,12 @@ export default function GardenPage() {
                               setSelectedPlacement(p);
                               setShowPlantInfoModal(true);
                             }}
-                            title={p.plant.name}
+                            title={`${p.plant.name}${
+                              showCompanionIndicators && companion
+                                ? (companion.hasGood ? `\n✓ Good with: ${companion.goodWith.join(", ")}` : "") +
+                                  (companion.hasBad ? `\n✗ Bad with: ${companion.badWith.join(", ")}` : "")
+                                : ""
+                            }`}
                           >
                             {showPlantIcons && (
                               <div className="flex flex-col items-center justify-center">
@@ -688,6 +781,21 @@ export default function GardenPage() {
         >
           <span className="text-lg leading-none w-5 h-5 flex items-center justify-center">
             {showPlantIcons ? "🍅" : "●"}
+          </span>
+        </button>
+
+        {/* Companion indicator toggle */}
+        <button
+          onClick={() => setShowCompanionIndicators(!showCompanionIndicators)}
+          className={`shadow-lg rounded-lg p-2 transition-all ${
+            showCompanionIndicators
+              ? "bg-purple-500 text-white hover:bg-purple-600"
+              : "bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900"
+          }`}
+          title={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
+        >
+          <span className="text-lg leading-none w-5 h-5 flex items-center justify-center">
+            🤝
           </span>
         </button>
       </div>
