@@ -15,6 +15,7 @@ const navLinks = [
   { href: "/journal", label: "Journal" },
   { href: "/seed-swaps", label: "Seed Swaps" },
   { href: "/stats", label: "Statistics" },
+  { href: "/account", label: "Account" },
 ];
 
 export default function MobileNav() {

@@ -909,6 +909,7 @@ export default function GardenPage() {
             onClick={handleZoomIn}
             className="block w-full p-2 hover:bg-slate-100 text-slate-700 border-b border-slate-200"
             title="Zoom in"
+            aria-label="Zoom in"
           >
             <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
@@ -918,6 +919,7 @@ export default function GardenPage() {
             onClick={handleZoomReset}
             className="block w-full px-2 py-1 hover:bg-slate-100 text-xs text-slate-600 border-b border-slate-200"
             title="Fit to screen"
+            aria-label="Fit to screen"
           >
             {Math.round(zoom * 100)}%
           </button>
@@ -925,6 +927,7 @@ export default function GardenPage() {
             onClick={handleZoomOut}
             className="block w-full p-2 hover:bg-slate-100 text-slate-700"
             title="Zoom out"
+            aria-label="Zoom out"
           >
             <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 12H6" />
@@ -937,6 +940,7 @@ export default function GardenPage() {
           onClick={handleRotate}
           className="bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-slate-700 hover:text-slate-900 transition-colors"
           title={`Rotate (${rotation}°)`}
+          aria-label="Rotate view"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />

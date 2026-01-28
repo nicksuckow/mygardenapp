@@ -1,8 +1,26 @@
 import { NextResponse } from "next/server";
 import { searchVerdantlyPlants } from "@/lib/verdantly";
+import { checkRateLimit, getClientIdentifier, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Metadata can have various field names depending on API version
+interface ApiMetadata {
+  totalCount?: number;
+  total_count?: number;
+  total?: number;
+  pages?: number;
+  totalPages?: number;
+  total_pages?: number;
+  page?: number;
+  currentPage?: number;
+  current_page?: number;
+  perPage?: number;
+  per_page?: number;
+  pageSize?: number;
+  page_size?: number;
+}
 
 /**
  * GET /api/verdantly/search
@@ -10,6 +28,13 @@ export const dynamic = "force-dynamic";
  * Query params: q (search term), page (page number)
  */
 export async function GET(req: Request) {
+  // Rate limit check for external API
+  const clientId = getClientIdentifier(req);
+  const rateLimit = checkRateLimit(clientId, "verdantly-search", RATE_LIMITS.externalApi);
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit.resetIn);
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const rawQuery = searchParams.get("q") || "";
@@ -39,8 +64,7 @@ export async function GET(req: Request) {
     // If response has a data property
     if (response.data && Array.isArray(response.data)) {
       // Verdantly API uses 'meta' not 'metadata'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const metadata = (response.meta || response.metadata) as any;
+      const metadata = (response.meta || response.metadata) as ApiMetadata | undefined;
 
       // Use the exact field names from Verdantly API
       const totalCount = metadata?.totalCount || metadata?.total_count || metadata?.total || response.data.length;

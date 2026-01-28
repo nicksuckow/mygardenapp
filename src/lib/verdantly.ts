@@ -137,16 +137,10 @@ export async function searchVerdantlyPlants(
 
   if (nameResponse.ok) {
     nameData = await nameResponse.json();
-    console.log(`[Verdantly] Name search for "${trimmedQuery}": ${nameData.data?.length || 0} results`);
-  } else {
-    console.log(`[Verdantly] Name search failed: ${nameResponse.status} ${nameResponse.statusText}`);
   }
 
   if (filterResponse.ok) {
     filterData = await filterResponse.json();
-    console.log(`[Verdantly] Filter search for "${trimmedQuery}": ${filterData.data?.length || 0} results`);
-  } else {
-    console.log(`[Verdantly] Filter search failed: ${filterResponse.status} ${filterResponse.statusText}`);
   }
 
   // Merge results and deduplicate by id

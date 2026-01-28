@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth-helpers";
 import { searchVerdantlyPlants, getVerdantlyPlantById, convertVerdantlyToPlant, type VerdantlyPlant } from "@/lib/verdantly";
+import { checkRateLimit, getClientIdentifier, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -108,6 +109,13 @@ export async function GET() {
  * Body: { plantIds?: number[], all?: boolean }
  */
 export async function POST(req: Request) {
+  // Rate limit check for external API calls
+  const clientId = getClientIdentifier(req);
+  const rateLimit = checkRateLimit(clientId, "backfill", RATE_LIMITS.externalApi);
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit.resetIn);
+  }
+
   try {
     const userId = await getCurrentUserId();
     const body = await req.json().catch(() => ({}));
@@ -154,9 +162,6 @@ export async function POST(req: Request) {
         return value === null || value === undefined;
       });
 
-      // Debug: Show what fields we're looking to fill and current values for key fields
-      console.log(`[Backfill] Plant "${plant.name}" - Missing ${missingFields.length} fields. Current values: watering="${plant.watering}", cycle="${plant.cycle}", sunlight="${plant.sunlight}"`);
-
       // Skip if no fields need backfill (don't add to results - just count)
       if (missingFields.length === 0) {
         alreadyComplete++;
@@ -168,32 +173,23 @@ export async function POST(req: Request) {
 
         // First, try direct lookup by Verdantly ID if we have one
         if (plant.verdantlyId) {
-          console.log(`[Backfill] Looking up plant by ID: ${plant.verdantlyId}`);
           bestMatch = await getVerdantlyPlantById(plant.verdantlyId);
-          if (bestMatch) {
-            console.log(`[Backfill] Found by ID: ${bestMatch.name}`);
-          }
         }
 
         // If no ID or ID lookup failed, fall back to search with fuzzy matching
         if (!bestMatch) {
-          console.log(`[Backfill] Searching for plant: "${plant.name}" (variety: "${plant.variety || 'none'}")`);
-
           // Try searching by name first
           let searchResults = await searchVerdantlyPlants(plant.name);
-          console.log(`[Backfill] Search by name "${plant.name}" returned ${searchResults.data?.length || 0} results`);
 
           // If no results and we have a variety, try searching by variety
           if ((!searchResults.data || searchResults.data.length === 0) && plant.variety) {
             searchResults = await searchVerdantlyPlants(plant.variety);
-            console.log(`[Backfill] Search by variety "${plant.variety}" returned ${searchResults.data?.length || 0} results`);
           }
 
           // Also try combined name + variety search
           if ((!searchResults.data || searchResults.data.length === 0) && plant.variety) {
             const combined = `${plant.name} ${plant.variety}`;
             searchResults = await searchVerdantlyPlants(combined);
-            console.log(`[Backfill] Search by combined "${combined}" returned ${searchResults.data?.length || 0} results`);
           }
 
           // Try just the first word of the name (e.g., "Tomato" from "Tomato - Beefsteak")
@@ -201,12 +197,10 @@ export async function POST(req: Request) {
             const firstWord = plant.name.split(/[\s\-,]+/)[0];
             if (firstWord && firstWord.length >= 3 && firstWord.toLowerCase() !== plant.name.toLowerCase()) {
               searchResults = await searchVerdantlyPlants(firstWord);
-              console.log(`[Backfill] Search by first word "${firstWord}" returned ${searchResults.data?.length || 0} results`);
             }
           }
 
           if (!searchResults.data || searchResults.data.length === 0) {
-            console.log(`[Backfill] No results found for "${plant.name}"`);
             results.push({
               id: plant.id,
               name: plant.name,
@@ -224,8 +218,6 @@ export async function POST(req: Request) {
 
           bestMatch = searchResults.data[0];
           let bestScore = 0;
-
-          console.log(`[Backfill] Scoring ${searchResults.data.length} results for "${plant.name}"`);
 
           for (const result of searchResults.data) {
             let score = 0;
@@ -273,34 +265,18 @@ export async function POST(req: Request) {
             if (score > bestScore) {
               bestScore = score;
               bestMatch = result;
-              console.log(`[Backfill] New best match: "${result.name}" (type: ${result.type}, subtype: ${result.subtype}) score: ${score}`);
             }
           }
 
-          console.log(`[Backfill] Best match for "${plant.name}": "${bestMatch?.name}" with score ${bestScore}`);
-
-          // If score is too low, still use the first result but log warning
+          // If score is too low, still use the first result
           // Verdantly results are usually relevant, so we'll accept any result
           if (bestScore === 0 && searchResults.data.length > 0) {
-            // Use first result if no scoring match (API returned something relevant)
             bestMatch = searchResults.data[0];
-            console.log(`[Backfill] Using first result as fallback: "${bestMatch.name}"`);
           }
         }
 
         // Convert Verdantly data to our format
         const verdantlyData = convertVerdantlyToPlant(bestMatch!);
-
-        // Debug: Log what Verdantly returned for key fields
-        console.log(`[Backfill] Verdantly data for "${bestMatch!.name}":`, {
-          watering: verdantlyData.watering,
-          waterZone: verdantlyData.waterZone,
-          sunlight: verdantlyData.sunlight,
-          sunlightZone: verdantlyData.sunlightZone,
-          averageHeightInches: verdantlyData.averageHeightInches,
-          cycle: verdantlyData.cycle,
-          description: verdantlyData.description ? "present" : "null",
-        });
 
         // Build update object with only missing fields
         const updates: Record<string, unknown> = {};
@@ -335,8 +311,6 @@ export async function POST(req: Request) {
           });
         } else {
           // Plant was found in Verdantly but Verdantly doesn't have the data we need
-          // Don't include in results - just count it
-          console.log(`[Backfill] Found "${bestMatch!.name}" but Verdantly has no new data for missing fields`);
           noNewData++;
         }
 

@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import { searchTreflePlants } from "@/lib/trefle";
 import { getCurrentUserId } from "@/lib/auth-helpers";
+import { checkRateLimit, getClientIdentifier, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function GET(req: Request) {
+  // Rate limit check for external API
+  const clientId = getClientIdentifier(req);
+  const rateLimit = checkRateLimit(clientId, "trefle-search", RATE_LIMITS.externalApi);
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit.resetIn);
+  }
+
   try {
     // Require authentication
     await getCurrentUserId();

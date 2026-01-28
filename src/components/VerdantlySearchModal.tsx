@@ -140,7 +140,6 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
         });
         if (!seedsRes.ok) {
           // Plant was imported but seed tracking failed - not critical, continue
-          console.warn("Failed to update hasSeeds for imported plant");
         }
       }
 

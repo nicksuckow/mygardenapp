@@ -111,7 +111,7 @@ function getStatusBgColor(placement: PlanPlacement): string {
   return "#f1f5f9"; // slate-100
 }
 
-function toInt(v: any, fallback: number) {
+function toInt(v: unknown, fallback: number) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 }
@@ -2360,6 +2360,7 @@ export default function GardenPage() {
                   className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-2 hover:bg-slate-100"
                   onClick={handleRotate}
                   title={`Rotate view (${rotation}°)`}
+                  aria-label="Rotate view"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -2371,6 +2372,7 @@ export default function GardenPage() {
                   className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-2 hover:bg-slate-100"
                   onClick={handleZoomReset}
                   title="Auto-fit to screen"
+                  aria-label="Auto-fit to screen"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -2386,6 +2388,7 @@ export default function GardenPage() {
                   }`}
                   onClick={() => setShowPlantIcons(!showPlantIcons)}
                   title={showPlantIcons ? "Show status dots" : "Show plant icons"}
+                  aria-label={showPlantIcons ? "Show status dots" : "Show plant icons"}
                 >
                   <span className="text-base leading-none block w-4 h-4 flex items-center justify-center">
                     {showPlantIcons ? "🍅" : "●"}
@@ -2401,6 +2404,7 @@ export default function GardenPage() {
                   }`}
                   onClick={() => setShowCompanionIndicators(!showCompanionIndicators)}
                   title={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
+                  aria-label={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
                 >
                   <span className="text-base leading-none block w-4 h-4 flex items-center justify-center">
                     🤝

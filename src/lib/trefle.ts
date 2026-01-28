@@ -64,7 +64,7 @@ export interface TreflePlantDetails extends TreflePlant {
   // Other properties
   main_species_id?: number | null;
   observations?: string | null;
-  sources?: any[];
+  sources?: unknown[];
 }
 
 export interface TrefleSearchResponse {

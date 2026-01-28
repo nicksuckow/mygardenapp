@@ -26,7 +26,7 @@ export default function SettingsPage() {
       try {
         const res = await fetch("/api/settings");
         const text = await res.text();
-  
+
         if (!res.ok) {
           setMessage(`Failed to load settings (error ${res.status}).`);
           setLoading(false);
@@ -97,7 +97,7 @@ export default function SettingsPage() {
     setMessage("Saved!");
   }
 
-  if (loading) return <p className="text-sm text-slate-600">Loading…</p>;
+  if (loading) return <p className="text-sm text-slate-600">Loading...</p>;
 
   return (
     <div className="space-y-6">
@@ -118,7 +118,7 @@ export default function SettingsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">
-              📍 Location Data
+              Location Data
             </h1>
             <p className="text-slate-700 text-sm mt-1">
               Frost dates drive seed starting and planting timing. Zone is optional.
