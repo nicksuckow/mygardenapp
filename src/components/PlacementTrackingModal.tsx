@@ -14,6 +14,10 @@ type PlacementData = {
   harvestYield: number | null;
   harvestYieldUnit: string | null;
   notes: string | null;
+  // Succession tracking
+  successionGroupId: string | null;
+  successionNumber: number | null;
+  expectedHarvestDate: string | null;
   plant: {
     name: string;
     variety: string | null;
@@ -34,7 +38,7 @@ type PlacementData = {
     growthForm: string | null;
     growthHabit: string | null;
     growthRate: string | null;
-    averageHeightCm: number | null;
+    averageHeightInches: number | null;
     minTemperatureC: number | null;
     maxTemperatureC: number | null;
     lightRequirement: number | null;
@@ -55,8 +59,13 @@ type PlacementData = {
     poisonousToHumans: number | null;
     poisonousToPets: number | null;
     description: string | null;
+    // Succession config
+    successionEnabled: boolean;
+    successionIntervalDays: number | null;
+    successionMaxCount: number | null;
   };
   bed: {
+    id: number;
     name: string;
   };
 };
@@ -88,6 +97,7 @@ export default function PlacementTrackingModal({
   const [harvestYield, setHarvestYield] = useState<string>("");
   const [harvestYieldUnit, setHarvestYieldUnit] = useState<string>("lbs");
   const [notes, setNotes] = useState<string>("");
+  const [creatingSuccession, setCreatingSuccession] = useState(false);
 
   useEffect(() => {
     if (isOpen && placementId) {
@@ -234,6 +244,35 @@ export default function PlacementTrackingModal({
     }
   }
 
+  async function handleCreateSuccession() {
+    if (!placementId || !placement) return;
+
+    setCreatingSuccession(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/succession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourcePlacementId: placementId,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create succession");
+      }
+
+      onSave();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to create succession");
+    } finally {
+      setCreatingSuccession(false);
+    }
+  }
+
   if (!isOpen) return null;
 
   return (
@@ -257,9 +296,57 @@ export default function PlacementTrackingModal({
             </h2>
             <p className="text-sm text-slate-600 mb-4">
               {placement.bed.name} • {placement.count} plant{placement.count > 1 ? "s" : ""}
+              {placement.successionNumber && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-violet-100 text-violet-700">
+                  Sowing #{placement.successionNumber}
+                </span>
+              )}
             </p>
 
             <div className="space-y-4">
+              {/* Succession Info */}
+              {(placement.successionGroupId || placement.plant.successionEnabled) && (
+                <div className="rounded-lg bg-violet-50 border border-violet-200 p-3">
+                  <div className="font-medium text-violet-800 mb-2 text-sm flex items-center gap-2">
+                    <span>🔄</span> Succession Planting
+                  </div>
+                  {placement.successionGroupId ? (
+                    <div className="text-sm text-violet-700 space-y-1">
+                      <p>
+                        This is <strong>Sowing #{placement.successionNumber}</strong> in a succession series.
+                      </p>
+                      {placement.expectedHarvestDate && (
+                        <p>
+                          Expected harvest: {new Date(placement.expectedHarvestDate).toLocaleDateString()}
+                        </p>
+                      )}
+                      {placement.plant.successionIntervalDays && (
+                        <p className="text-violet-600">
+                          Next sowing due {placement.plant.successionIntervalDays} days after this one
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-violet-700">
+                      This plant is configured for succession planting every {placement.plant.successionIntervalDays} days.
+                    </p>
+                  )}
+
+                  {/* Add Next Succession Button */}
+                  {placement.plant.successionEnabled && (
+                    <button
+                      onClick={handleCreateSuccession}
+                      disabled={creatingSuccession || saving}
+                      className={`${ui.btn} bg-violet-600 hover:bg-violet-700 text-white w-full mt-3`}
+                    >
+                      {creatingSuccession
+                        ? "Creating..."
+                        : `+ Add Succession #${(placement.successionNumber ?? 0) + 1}`}
+                    </button>
+                  )}
+                </div>
+              )}
+
               {/* Plant description */}
               {placement.plant.description && (
                 <p className="text-sm text-slate-600">{placement.plant.description}</p>
@@ -307,10 +394,10 @@ export default function PlacementTrackingModal({
                       <span className="text-slate-700">{placement.plant.growthRate}</span>
                     </>
                   )}
-                  {placement.plant.averageHeightCm && (
+                  {placement.plant.averageHeightInches && (
                     <>
                       <span className="text-slate-500">Mature height:</span>
-                      <span className="text-slate-700">{Math.round(placement.plant.averageHeightCm / 2.54)}"</span>
+                      <span className="text-slate-700">{Math.round(placement.plant.averageHeightInches)}"</span>
                     </>
                   )}
                 </div>

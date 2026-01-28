@@ -60,6 +60,8 @@ type PlanPlacement = {
   directSowedDate?: string | null;
   harvestStartedDate?: string | null;
   harvestEndedDate?: string | null;
+  // Succession tracking
+  expectedHarvestDate?: string | null;
   bed: { id: number; name: string };
   plant: FullPlantData;
 };
@@ -179,6 +181,11 @@ export default function GardenPage() {
     return false;
   });
 
+  // Time-lapse feature - simulate growth over time
+  const [showTimeLapse, setShowTimeLapse] = useState(false);
+  const [timeLapseDay, setTimeLapseDay] = useState(0); // Days from planting (0 = planting day, max = harvest)
+  const [isTimeLapsePlaying, setIsTimeLapsePlaying] = useState(false);
+
   // Persist icon toggle to localStorage
   useEffect(() => {
     localStorage.setItem("showPlantIcons", showPlantIcons.toString());
@@ -289,6 +296,58 @@ export default function GardenPage() {
     return map;
   }, [placements]);
 
+  // Calculate bed availability based on expected harvest dates
+  const bedAvailability = useMemo(() => {
+    const availability = new Map<number, { availableDate: Date | null; occupiedBy: string[] }>();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const [bedId, bedPlacements] of placementsByBed.entries()) {
+      // Filter to active placements (not yet harvested)
+      const activePlacements = bedPlacements.filter((p) => !p.harvestEndedDate);
+
+      if (activePlacements.length === 0) {
+        // Bed is currently available
+        availability.set(bedId, { availableDate: today, occupiedBy: [] });
+        continue;
+      }
+
+      // Calculate expected harvest dates for each active placement
+      const harvestDates: Date[] = [];
+      const plantNames: string[] = [];
+
+      for (const p of activePlacements) {
+        plantNames.push(p.plant.name);
+
+        // Use expectedHarvestDate if set, otherwise calculate from planting date + days to maturity
+        if (p.expectedHarvestDate) {
+          harvestDates.push(new Date(p.expectedHarvestDate));
+        } else {
+          const plantingDate = p.transplantedDate || p.directSowedDate || p.seedsStartedDate;
+          const daysToMaturity = p.plant.daysToMaturityMax ?? p.plant.daysToMaturityMin;
+
+          if (plantingDate && daysToMaturity) {
+            const harvestDate = new Date(plantingDate);
+            harvestDate.setDate(harvestDate.getDate() + daysToMaturity);
+            harvestDates.push(harvestDate);
+          }
+        }
+      }
+
+      // Available date is the latest expected harvest
+      const latestHarvest = harvestDates.length > 0
+        ? new Date(Math.max(...harvestDates.map((d) => d.getTime())))
+        : null;
+
+      availability.set(bedId, {
+        availableDate: latestHarvest,
+        occupiedBy: plantNames,
+      });
+    }
+
+    return availability;
+  }, [placementsByBed]);
+
   // Compute companion relationships for each placement (for visual indicators)
   const companionStatus = useMemo(() => {
     const status = new Map<number, { hasGood: boolean; hasBad: boolean; goodWith: string[]; badWith: string[] }>();
@@ -319,6 +378,112 @@ export default function GardenPage() {
 
     return status;
   }, [placements, placementsByBed]);
+
+  // Calculate harvest predictions for the next 2 weeks
+  const harvestPredictions = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const twoWeeksFromNow = new Date(today);
+    twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
+
+    const predictions: {
+      plantName: string;
+      bedName: string;
+      estimatedDate: Date;
+      daysUntil: number;
+      status: "ready" | "soon" | "upcoming";
+    }[] = [];
+
+    for (const p of placements) {
+      // Skip if already harvested
+      if (p.harvestEndedDate || p.harvestStartedDate) continue;
+
+      // Determine the planting date (anchor)
+      let plantingDate: Date | null = null;
+      if (p.transplantedDate) {
+        plantingDate = new Date(p.transplantedDate);
+      } else if (p.directSowedDate) {
+        plantingDate = new Date(p.directSowedDate);
+      } else if (p.seedsStartedDate) {
+        plantingDate = new Date(p.seedsStartedDate);
+      }
+
+      if (!plantingDate) continue;
+
+      // Get days to maturity
+      const daysToMaturity = p.plant.daysToMaturityMin ?? p.plant.daysToMaturityMax;
+      if (!daysToMaturity) continue;
+
+      // Calculate estimated harvest date
+      const estimatedDate = new Date(plantingDate);
+      estimatedDate.setDate(estimatedDate.getDate() + daysToMaturity);
+
+      // Only include if within next 2 weeks or already ready
+      const daysUntil = Math.ceil((estimatedDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (daysUntil <= 14) {
+        predictions.push({
+          plantName: p.plant.name,
+          bedName: p.bed.name,
+          estimatedDate,
+          daysUntil,
+          status: daysUntil <= 0 ? "ready" : daysUntil <= 7 ? "soon" : "upcoming",
+        });
+      }
+    }
+
+    // Sort by estimated date
+    return predictions.sort((a, b) => a.estimatedDate.getTime() - b.estimatedDate.getTime());
+  }, [placements]);
+
+  // Calculate max days for time-lapse slider based on longest growing plant
+  const maxTimeLapseDays = useMemo(() => {
+    let maxDays = 90; // Default 90 days
+    for (const p of placements) {
+      const days = p.plant.daysToMaturityMax ?? p.plant.daysToMaturityMin ?? 60;
+      if (days > maxDays) maxDays = days;
+    }
+    return Math.min(maxDays, 180); // Cap at 180 days
+  }, [placements]);
+
+  // Calculate growth scale for each placement based on time-lapse day
+  const getGrowthScale = useCallback((placement: PlanPlacement) => {
+    if (!showTimeLapse) return 1;
+
+    // Get days to maturity
+    const daysToMaturity = placement.plant.daysToMaturityMin ?? placement.plant.daysToMaturityMax ?? 60;
+
+    // Calculate growth progress (0 to 1)
+    const progress = Math.min(1, timeLapseDay / daysToMaturity);
+
+    // Growth curve: starts small, grows quickly in middle, slows at end
+    // Using sigmoid-like curve for natural growth
+    const growthCurve = progress < 0.1
+      ? progress * 3 // Seedling phase - small
+      : progress < 0.7
+      ? 0.3 + (progress - 0.1) * 1.1 // Vegetative growth - fast
+      : 0.96 + (progress - 0.7) * 0.13; // Maturation - slow
+
+    // Scale from 20% (seedling) to 100% (mature)
+    return 0.2 + growthCurve * 0.8;
+  }, [showTimeLapse, timeLapseDay]);
+
+  // Auto-play time-lapse
+  useEffect(() => {
+    if (!isTimeLapsePlaying) return;
+
+    const interval = setInterval(() => {
+      setTimeLapseDay(d => {
+        if (d >= maxTimeLapseDays) {
+          setIsTimeLapsePlaying(false);
+          return d;
+        }
+        return d + 1;
+      });
+    }, 100); // 100ms per day = 10 days per second
+
+    return () => clearInterval(interval);
+  }, [isTimeLapsePlaying, maxTimeLapseDays]);
 
   const handleZoomIn = () => setZoom(z => Math.min(z * 1.3, 10));
   const handleZoomOut = () => setZoom(z => Math.max(z / 1.3, 0.1));
@@ -547,6 +712,7 @@ export default function GardenPage() {
               const size = bedSizeInGardenCells(b, garden.cellInches);
               const plantCount = plantCountByBed.get(b.id) ?? 0;
               const bedPlacements = placementsByBed.get(b.id) ?? [];
+              const availability = bedAvailability.get(b.id);
               const showTip = dotTip && dotTip.bedId === b.id
                 ? { left: dotTip.x, top: dotTip.y, label: dotTip.label }
                 : null;
@@ -590,7 +756,8 @@ export default function GardenPage() {
                         // Calculate size based on plant spacing, similar to bed view
                         const spacingInches = p.w ?? p.plant.spacingInches ?? 12;
                         const pixelsPerInch = (CELL_PX * zoom) / garden.cellInches;
-                        const iconSize = spacingInches * pixelsPerInch;
+                        const growthScale = getGrowthScale(p);
+                        const iconSize = spacingInches * pixelsPerInch * growthScale;
                         const companion = companionStatus.get(p.id);
 
                         // Build companion indicator styles - scale ring size based on dot size
@@ -700,6 +867,13 @@ export default function GardenPage() {
                         <div className="text-[9px] text-slate-600 leading-tight">
                           {plantCount} plants
                         </div>
+                        {availability && availability.availableDate && plantCount > 0 && (
+                          <div className="text-[8px] text-violet-600 leading-tight">
+                            {availability.availableDate <= new Date()
+                              ? "Available now"
+                              : `Avail: ${availability.availableDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -798,7 +972,114 @@ export default function GardenPage() {
             🤝
           </span>
         </button>
+
+        {/* Time-lapse toggle */}
+        <button
+          onClick={() => {
+            setShowTimeLapse(!showTimeLapse);
+            if (!showTimeLapse) {
+              setTimeLapseDay(0);
+              setIsTimeLapsePlaying(false);
+            }
+          }}
+          className={`shadow-lg rounded-lg p-2 transition-all ${
+            showTimeLapse
+              ? "bg-indigo-500 text-white hover:bg-indigo-600"
+              : "bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900"
+          }`}
+          title={showTimeLapse ? "Exit time-lapse" : "Show time-lapse growth"}
+        >
+          <span className="text-lg leading-none w-5 h-5 flex items-center justify-center">
+            ⏱️
+          </span>
+        </button>
       </div>
+
+      {/* Time-lapse controls */}
+      {showTimeLapse && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-white/95 shadow-lg rounded-lg px-4 py-3 flex items-center gap-4">
+          <button
+            onClick={() => {
+              if (isTimeLapsePlaying) {
+                setIsTimeLapsePlaying(false);
+              } else {
+                if (timeLapseDay >= maxTimeLapseDays) setTimeLapseDay(0);
+                setIsTimeLapsePlaying(true);
+              }
+            }}
+            className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600"
+          >
+            {isTimeLapsePlaying ? "⏸" : "▶"}
+          </button>
+          <div className="flex flex-col gap-1">
+            <input
+              type="range"
+              min={0}
+              max={maxTimeLapseDays}
+              value={timeLapseDay}
+              onChange={(e) => {
+                setTimeLapseDay(parseInt(e.target.value));
+                setIsTimeLapsePlaying(false);
+              }}
+              className="w-48 accent-indigo-500"
+            />
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>Day 0</span>
+              <span className="font-medium text-indigo-600">Day {timeLapseDay}</span>
+              <span>Day {maxTimeLapseDays}</span>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setTimeLapseDay(0);
+              setIsTimeLapsePlaying(false);
+            }}
+            className="text-xs text-slate-500 hover:text-slate-700"
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+      {/* Harvest Predictions - Top Left */}
+      {harvestPredictions.length > 0 && (
+        <div className="absolute top-4 left-4 z-20 bg-white/95 shadow-lg rounded-lg px-3 py-2 max-w-[240px] max-h-[200px] overflow-y-auto">
+          <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
+            <span>🥬</span> Upcoming Harvests
+          </p>
+          <div className="space-y-1.5">
+            {harvestPredictions.slice(0, 5).map((pred, idx) => (
+              <div
+                key={`${pred.plantName}-${pred.bedName}-${idx}`}
+                className={`text-xs px-2 py-1 rounded flex items-center justify-between gap-2 ${
+                  pred.status === "ready"
+                    ? "bg-green-100 text-green-700"
+                    : pred.status === "soon"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <span className="font-medium truncate">{pred.plantName}</span>
+                <span className="text-[10px] whitespace-nowrap">
+                  {pred.status === "ready"
+                    ? "Ready now!"
+                    : pred.daysUntil === 1
+                    ? "Tomorrow"
+                    : `${pred.daysUntil} days`}
+                </span>
+              </div>
+            ))}
+            {harvestPredictions.length > 5 && (
+              <Link
+                href="/schedule"
+                className="text-xs text-emerald-600 hover:text-emerald-700 block text-center mt-1"
+              >
+                +{harvestPredictions.length - 5} more →
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Legend - Bottom Left */}
       {showLegend && (

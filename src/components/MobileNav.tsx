@@ -11,6 +11,9 @@ const navLinks = [
   { href: "/beds", label: "Beds" },
   { href: "/garden", label: "Garden View" },
   { href: "/schedule", label: "Schedule" },
+  { href: "/plant-now", label: "Plant Now" },
+  { href: "/journal", label: "Journal" },
+  { href: "/seed-swaps", label: "Seed Swaps" },
   { href: "/stats", label: "Statistics" },
 ];
 

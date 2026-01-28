@@ -185,7 +185,9 @@ export function convertTrefleToPlant(trefle: TreflePlantDetails) {
     growthForm: trefle.specifications?.growth_form || null,
     growthHabit: trefle.specifications?.growth_habit || null,
     growthRate: trefle.specifications?.growth_rate || null,
-    averageHeightCm: trefle.specifications?.average_height?.cm || null,
+    averageHeightInches: trefle.specifications?.average_height?.cm
+      ? Math.round(trefle.specifications.average_height.cm / 2.54)
+      : null,
     minTemperatureC: trefle.specifications?.minimum_temperature?.deg_c || null,
     maxTemperatureC: trefle.specifications?.maximum_temperature?.deg_c || null,
     lightRequirement: trefle.specifications?.light || null,

@@ -145,6 +145,26 @@ export async function POST(req: Request) {
 
     const hasSeeds = body?.hasSeeds === true;
 
+    // Succession planting configuration
+    const successionEnabled = body?.successionEnabled === true;
+    const successionIntervalDays =
+      typeof body?.successionIntervalDays === "number" && Number.isFinite(body.successionIntervalDays)
+        ? body.successionIntervalDays
+        : null;
+    const successionMaxCount =
+      typeof body?.successionMaxCount === "number" && Number.isFinite(body.successionMaxCount)
+        ? body.successionMaxCount
+        : null;
+
+    // Validate succession interval bounds
+    if (successionIntervalDays !== null && (successionIntervalDays < 1 || successionIntervalDays > 90)) {
+      return NextResponse.json({ error: "Succession interval must be between 1 and 90 days." }, { status: 400 });
+    }
+    // Validate succession max count bounds
+    if (successionMaxCount !== null && (successionMaxCount < 1 || successionMaxCount > 20)) {
+      return NextResponse.json({ error: "Max successions must be between 1 and 20." }, { status: 400 });
+    }
+
     const plant = await prisma.plant.create({
       data: {
         userId,
@@ -157,6 +177,9 @@ export async function POST(req: Request) {
         directSowWeeksRelativeToFrost,
         plantingDepthInches,
         hasSeeds,
+        successionEnabled,
+        successionIntervalDays,
+        successionMaxCount,
       },
     });
 

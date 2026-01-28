@@ -77,6 +77,24 @@ export default async function RootLayout({
                       </Link>
                       <Link
                         className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/plant-now"
+                      >
+                        Plant Now
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/journal"
+                      >
+                        Journal
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
+                        href="/seed-swaps"
+                      >
+                        Seed Swaps
+                      </Link>
+                      <Link
+                        className="text-sm text-slate-700 hover:text-slate-900 hover:underline"
                         href="/stats"
                       >
                         Statistics

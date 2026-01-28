@@ -57,7 +57,7 @@ export async function POST(req: Request) {
         growthForm: plantData.growthForm,
         growthHabit: plantData.growthHabit,
         growthRate: plantData.growthRate,
-        averageHeightCm: plantData.averageHeightCm,
+        averageHeightInches: plantData.averageHeightInches,
         minTemperatureC: plantData.minTemperatureC,
         maxTemperatureC: plantData.maxTemperatureC,
         lightRequirement: plantData.lightRequirement,

@@ -16,6 +16,14 @@ type Plant = {
   id: number;
   name: string;
   spacingInches: number;
+  averageHeightInches?: number | null;
+  attractsPollinators?: boolean;
+  pollinatorTypes?: string | null;
+  waterZone?: string | null;
+  // Succession config
+  successionEnabled?: boolean;
+  successionIntervalDays?: number | null;
+  successionMaxCount?: number | null;
 };
 
 type Placement = {
@@ -29,6 +37,10 @@ type Placement = {
   directSowedDate?: string | null;
   harvestStartedDate?: string | null;
   harvestEndedDate?: string | null;
+  // Succession tracking
+  successionGroupId?: string | null;
+  successionNumber?: number | null;
+  expectedHarvestDate?: string | null;
   plant: Plant;
 };
 
@@ -39,7 +51,21 @@ type Bed = {
   heightInches: number;
   cellInches: number;
   placements: Placement[];
+  microClimate?: string | null;
 };
+
+// Micro-climate options with icons and labels
+const MICROCLIMATE_OPTIONS = [
+  { value: "full-sun", label: "Full Sun", icon: "☀️", description: "6+ hours direct sunlight" },
+  { value: "partial-shade", label: "Partial Shade", icon: "⛅", description: "3-6 hours sunlight" },
+  { value: "full-shade", label: "Full Shade", icon: "🌑", description: "Less than 3 hours sunlight" },
+  { value: "south-facing", label: "South-Facing", icon: "🧭", description: "Warm, sun-catching wall" },
+  { value: "north-facing", label: "North-Facing", icon: "❄️", description: "Cool, shaded area" },
+  { value: "windy", label: "Windy", icon: "💨", description: "Exposed to wind" },
+  { value: "sheltered", label: "Sheltered", icon: "🛡️", description: "Protected from wind" },
+  { value: "wet", label: "Wet/Damp", icon: "💧", description: "Retains moisture" },
+  { value: "dry", label: "Dry", icon: "🏜️", description: "Drains quickly" },
+] as const;
 
 async function readJson<T>(
   res: Response
@@ -700,6 +726,11 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
   const [editedName, setEditedName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
+  // Micro-climate editing state
+  const [isEditingMicroClimate, setIsEditingMicroClimate] = useState(false);
+  const [selectedMicroClimates, setSelectedMicroClimates] = useState<string[]>([]);
+  const [savingMicroClimate, setSavingMicroClimate] = useState(false);
+
   // Display mode state - persisted to localStorage
   const [showPlantIcons, setShowPlantIcons] = useState(() => {
     if (typeof window !== "undefined") {
@@ -716,6 +747,25 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     return false;
   });
 
+  // Height/shadow visualization toggle
+  const [showHeightIndicators, setShowHeightIndicators] = useState(false);
+
+  // Pollinator indicator toggle - persisted to localStorage
+  const [showPollinatorIndicators, setShowPollinatorIndicators] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("showPollinatorIndicators") === "true";
+    }
+    return false;
+  });
+
+  // Water zone indicator toggle - persisted to localStorage
+  const [showWaterZoneIndicators, setShowWaterZoneIndicators] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("showWaterZoneIndicators") === "true";
+    }
+    return false;
+  });
+
   // Persist icon toggle to localStorage
   useEffect(() => {
     localStorage.setItem("showPlantIcons", showPlantIcons.toString());
@@ -725,6 +775,16 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
   useEffect(() => {
     localStorage.setItem("showCompanionIndicators", showCompanionIndicators.toString());
   }, [showCompanionIndicators]);
+
+  // Persist pollinator indicator toggle to localStorage
+  useEffect(() => {
+    localStorage.setItem("showPollinatorIndicators", showPollinatorIndicators.toString());
+  }, [showPollinatorIndicators]);
+
+  // Persist water zone indicator toggle to localStorage
+  useEffect(() => {
+    localStorage.setItem("showWaterZoneIndicators", showWaterZoneIndicators.toString());
+  }, [showWaterZoneIndicators]);
 
   const BASE_PIXELS_PER_INCH = 4;
   const PIXELS_PER_INCH = BASE_PIXELS_PER_INCH * zoom;
@@ -916,6 +976,190 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
 
     return status;
   }, [placements, draggedPlant, draggedPlacement, dropPosition]);
+
+  // Calculate harmony score for the bed (0-100%)
+  // Good companions add points, bad companions subtract (weighted more heavily)
+  const harmonyScore = useMemo(() => {
+    if (placements.length < 2) return null; // Need at least 2 plants for relationships
+
+    let goodCount = 0;
+    let badCount = 0;
+    const checkedPairs = new Set<string>();
+
+    for (const p of placements) {
+      for (const other of placements) {
+        if (p.id >= other.id) continue; // Avoid checking same pair twice
+
+        const pairKey = `${Math.min(p.id, other.id)}-${Math.max(p.id, other.id)}`;
+        if (checkedPairs.has(pairKey)) continue;
+        checkedPairs.add(pairKey);
+
+        const result = checkCompatibility(p.plant.name, other.plant.name);
+        if (result.type === "good") goodCount++;
+        else if (result.type === "bad") badCount++;
+      }
+    }
+
+    const totalPairs = checkedPairs.size;
+    if (totalPairs === 0) return null;
+
+    // Score: good pairs add 1 point, bad pairs subtract 2 points
+    // Normalize to 0-100 scale
+    const rawScore = goodCount - (badCount * 2);
+    const maxPossibleScore = totalPairs; // If all were good
+    const minPossibleScore = -totalPairs * 2; // If all were bad
+
+    // Normalize to 0-100
+    const normalized = ((rawScore - minPossibleScore) / (maxPossibleScore - minPossibleScore)) * 100;
+    return {
+      score: Math.round(Math.max(0, Math.min(100, normalized))),
+      goodCount,
+      badCount,
+      neutralCount: totalPairs - goodCount - badCount,
+      totalPairs,
+    };
+  }, [placements]);
+
+  // Calculate space efficiency for the bed
+  const spaceEfficiency = useMemo(() => {
+    if (!bed) return null;
+
+    const bedArea = bed.widthInches * bed.heightInches; // Total bed area in sq inches
+
+    // Calculate total planted area (using plant spacing as diameter)
+    let plantedArea = 0;
+    for (const p of placements) {
+      const spacing = p.w ?? p.plant.spacingInches ?? 12;
+      // Calculate area as a circle (pi * r^2) - more accurate for plant coverage
+      const radius = spacing / 2;
+      plantedArea += Math.PI * radius * radius;
+    }
+
+    // Efficiency percentage (capped at 100% since plants can overlap visually)
+    const efficiency = Math.min(100, Math.round((plantedArea / bedArea) * 100));
+
+    // Estimate how many more plants could fit
+    // Use average plant spacing if we have plants, otherwise default to 12"
+    const avgSpacing = placements.length > 0
+      ? placements.reduce((sum, p) => sum + (p.w ?? p.plant.spacingInches ?? 12), 0) / placements.length
+      : 12;
+    const avgPlantArea = Math.PI * (avgSpacing / 2) * (avgSpacing / 2);
+    const remainingArea = Math.max(0, bedArea - plantedArea);
+    const potentialAdditionalPlants = Math.floor(remainingArea / avgPlantArea);
+
+    return {
+      efficiency,
+      plantedArea: Math.round(plantedArea),
+      totalArea: bedArea,
+      plantCount: placements.length,
+      potentialAdditionalPlants,
+      avgSpacing: Math.round(avgSpacing),
+    };
+  }, [bed, placements]);
+
+  // Calculate pollinator stats for the bed
+  const pollinatorStats = useMemo(() => {
+    if (placements.length === 0) return null;
+
+    const pollinatorPlants = placements.filter(p => p.plant.attractsPollinators);
+    const pollinatorCount = pollinatorPlants.length;
+
+    // Collect all pollinator types
+    const pollinatorTypesSet = new Set<string>();
+    for (const p of pollinatorPlants) {
+      if (p.plant.pollinatorTypes) {
+        p.plant.pollinatorTypes.split(",").forEach(type => pollinatorTypesSet.add(type.trim()));
+      }
+    }
+
+    return {
+      count: pollinatorCount,
+      percentage: Math.round((pollinatorCount / placements.length) * 100),
+      types: Array.from(pollinatorTypesSet),
+      plants: pollinatorPlants.map(p => p.plant.name),
+    };
+  }, [placements]);
+
+  // Calculate water zone stats for the bed
+  const waterZoneStats = useMemo(() => {
+    if (placements.length === 0) return null;
+
+    const zones = { low: 0, medium: 0, high: 0, unknown: 0 };
+
+    for (const p of placements) {
+      const zone = p.plant.waterZone;
+      if (zone === "low" || zone === "medium" || zone === "high") {
+        zones[zone]++;
+      } else {
+        zones.unknown++;
+      }
+    }
+
+    // Check if there's a mix of conflicting water needs (high and low together)
+    const hasConflict = zones.high > 0 && zones.low > 0;
+
+    return {
+      ...zones,
+      hasConflict,
+      total: placements.length,
+    };
+  }, [placements]);
+
+  // Calculate shadow warnings - tall plants south of shorter plants
+  // In northern hemisphere, sun comes from the south, so tall plants on south side shade north
+  const shadowWarnings = useMemo(() => {
+    if (!showHeightIndicators) return new Map<number, { shadedBy: string[]; shades: string[] }>();
+
+    const warnings = new Map<number, { shadedBy: string[]; shades: string[] }>();
+
+    // Initialize all placements
+    for (const p of placements) {
+      warnings.set(p.id, { shadedBy: [], shades: [] });
+    }
+
+    // Check each pair of plants for potential shading
+    // Assuming bed Y increases downward (south is higher Y values in bed coordinates)
+    for (const p1 of placements) {
+      const height1 = p1.plant.averageHeightInches ?? 20; // Default 20" if unknown
+
+      for (const p2 of placements) {
+        if (p1.id === p2.id) continue;
+
+        const height2 = p2.plant.averageHeightInches ?? 20;
+        const heightDiff = height1 - height2;
+
+        // If p1 is significantly taller (>12" difference)
+        if (heightDiff > 12) {
+          // Check if p1 is south of p2 (higher Y = south in bed view)
+          // Also check if they're close enough horizontally to cause shading
+          const spacing1 = p1.w ?? p1.plant.spacingInches ?? 12;
+          const spacing2 = p2.w ?? p2.plant.spacingInches ?? 12;
+          const maxShadowDistance = Math.max(spacing1, spacing2) * 2; // Shadow can extend 2x plant spacing
+
+          const dx = Math.abs(p1.x - p2.x);
+          const dy = p1.y - p2.y; // Positive if p1 is south of p2
+
+          // p1 shades p2 if p1 is south of p2 (positive dy) and within horizontal range
+          if (dy > 0 && dy < maxShadowDistance && dx < maxShadowDistance) {
+            const w1 = warnings.get(p1.id)!;
+            const w2 = warnings.get(p2.id)!;
+            w1.shades.push(p2.plant.name);
+            w2.shadedBy.push(p1.plant.name);
+          }
+        }
+      }
+    }
+
+    return warnings;
+  }, [placements, showHeightIndicators]);
+
+  // Get height category for visual indicator
+  const getHeightCategory = (heightInches: number | null | undefined): "short" | "medium" | "tall" | "unknown" => {
+    if (heightInches == null) return "unknown";
+    if (heightInches < 12) return "short";   // Under 1 foot
+    if (heightInches < 40) return "medium";  // 1-3 feet
+    return "tall";                            // Over 3 feet
+  };
 
   // Fuzzy filter plants based on search query
   const filteredPlants = useMemo(() => {
@@ -1336,6 +1580,40 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     }
   }, [editedName, bed?.name, bedId, loadBed]);
 
+  // Save micro-climate settings
+  const saveMicroClimate = useCallback(async () => {
+    const newValue = selectedMicroClimates.length > 0 ? selectedMicroClimates.join(",") : null;
+    const currentValue = bed?.microClimate || null;
+
+    if (newValue === currentValue) {
+      setIsEditingMicroClimate(false);
+      return;
+    }
+
+    setSavingMicroClimate(true);
+    try {
+      const res = await fetch(`/api/beds/${bedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ microClimate: newValue }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setMessage(data.error || "Failed to update micro-climate");
+        setSavingMicroClimate(false);
+        return;
+      }
+
+      await loadBed();
+      setIsEditingMicroClimate(false);
+    } catch {
+      setMessage("Failed to update micro-climate");
+    } finally {
+      setSavingMicroClimate(false);
+    }
+  }, [selectedMicroClimates, bed?.microClimate, bedId, loadBed]);
+
   // Delete all placements of a specific plant type
   const deleteAllOfPlant = useCallback(
     async (plantName: string) => {
@@ -1672,10 +1950,192 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               <span className="ml-2 text-xs text-slate-500">(rotated for display)</span>
             )}
           </p>
+
+          {/* Micro-climate indicator/editor */}
+          {isEditingMicroClimate ? (
+            <div className="mt-2 p-3 bg-slate-50 rounded-lg border">
+              <p className="text-xs font-medium text-slate-600 mb-2">Select micro-climate conditions:</p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {MICROCLIMATE_OPTIONS.map((option) => {
+                  const isSelected = selectedMicroClimates.includes(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedMicroClimates(selectedMicroClimates.filter(v => v !== option.value));
+                        } else {
+                          setSelectedMicroClimates([...selectedMicroClimates, option.value]);
+                        }
+                      }}
+                      className={`px-2 py-1 text-xs rounded-full border transition-all ${
+                        isSelected
+                          ? "bg-emerald-100 border-emerald-500 text-emerald-700"
+                          : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
+                      }`}
+                      title={option.description}
+                    >
+                      {option.icon} {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={saveMicroClimate}
+                  disabled={savingMicroClimate}
+                  className="text-xs px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                >
+                  {savingMicroClimate ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={() => setIsEditingMicroClimate(false)}
+                  disabled={savingMicroClimate}
+                  className="text-xs px-3 py-1 text-slate-600 hover:text-slate-800"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                setSelectedMicroClimates(bed.microClimate ? bed.microClimate.split(",") : []);
+                setIsEditingMicroClimate(true);
+              }}
+              className="mt-1 text-xs text-slate-500 hover:text-emerald-600 flex items-center gap-1 group"
+              title="Click to edit micro-climate conditions"
+            >
+              {bed.microClimate ? (
+                <>
+                  {bed.microClimate.split(",").map((v) => {
+                    const option = MICROCLIMATE_OPTIONS.find(o => o.value === v);
+                    return option ? (
+                      <span key={v} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">
+                        {option.icon} {option.label}
+                      </span>
+                    ) : null;
+                  })}
+                  <svg className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </>
+              ) : (
+                <span className="text-slate-400 hover:text-emerald-500">+ Add micro-climate conditions</span>
+              )}
+            </button>
+          )}
         </div>
-        <Link className="text-sm underline" href="/beds">
-          Back to beds
-        </Link>
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Harmony Score */}
+          {harmonyScore && (
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
+              style={{
+                backgroundColor: harmonyScore.score >= 70 ? "#dcfce7" : harmonyScore.score >= 40 ? "#fef9c3" : "#fee2e2",
+                borderColor: harmonyScore.score >= 70 ? "#22c55e" : harmonyScore.score >= 40 ? "#eab308" : "#ef4444",
+              }}
+              title={`${harmonyScore.goodCount} good pairs, ${harmonyScore.badCount} bad pairs, ${harmonyScore.neutralCount} neutral`}
+            >
+              <div className="flex items-center gap-1">
+                <span className="text-lg">
+                  {harmonyScore.score >= 70 ? "🤝" : harmonyScore.score >= 40 ? "🤔" : "⚠️"}
+                </span>
+                <span className="text-sm font-semibold" style={{
+                  color: harmonyScore.score >= 70 ? "#15803d" : harmonyScore.score >= 40 ? "#a16207" : "#dc2626",
+                }}>
+                  {harmonyScore.score}%
+                </span>
+              </div>
+              <span className="text-xs text-slate-600">Harmony</span>
+            </div>
+          )}
+
+          {/* Space Efficiency */}
+          {spaceEfficiency && (
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
+              style={{
+                backgroundColor: spaceEfficiency.efficiency >= 70 ? "#dbeafe" : spaceEfficiency.efficiency >= 40 ? "#fef3c7" : "#f1f5f9",
+                borderColor: spaceEfficiency.efficiency >= 70 ? "#3b82f6" : spaceEfficiency.efficiency >= 40 ? "#f59e0b" : "#94a3b8",
+              }}
+              title={`${spaceEfficiency.plantCount} plants using ~${spaceEfficiency.plantedArea} sq in of ${spaceEfficiency.totalArea} sq in${spaceEfficiency.potentialAdditionalPlants > 0 ? `. Room for ~${spaceEfficiency.potentialAdditionalPlants} more plants` : ""}`}
+            >
+              <div className="flex items-center gap-1">
+                <span className="text-lg">
+                  {spaceEfficiency.efficiency >= 70 ? "🌱" : spaceEfficiency.efficiency >= 40 ? "🌿" : "📐"}
+                </span>
+                <span className="text-sm font-semibold" style={{
+                  color: spaceEfficiency.efficiency >= 70 ? "#1d4ed8" : spaceEfficiency.efficiency >= 40 ? "#b45309" : "#475569",
+                }}>
+                  {spaceEfficiency.efficiency}%
+                </span>
+              </div>
+              <span className="text-xs text-slate-600">Space Used</span>
+              {spaceEfficiency.potentialAdditionalPlants > 0 && (
+                <span className="text-xs text-slate-500 ml-1">
+                  (+{spaceEfficiency.potentialAdditionalPlants} more)
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Pollinator Stats */}
+          {pollinatorStats && pollinatorStats.count > 0 && (
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border bg-yellow-50 border-yellow-400"
+              title={`Pollinator-friendly plants: ${pollinatorStats.plants.join(", ")}${pollinatorStats.types.length > 0 ? `. Attracts: ${pollinatorStats.types.join(", ")}` : ""}`}
+            >
+              <div className="flex items-center gap-1">
+                <span className="text-lg">🐝</span>
+                <span className="text-sm font-semibold text-yellow-700">
+                  {pollinatorStats.count}
+                </span>
+              </div>
+              <span className="text-xs text-yellow-700">
+                Pollinator{pollinatorStats.count !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
+
+          {/* Water Zone Stats */}
+          {waterZoneStats && (waterZoneStats.low > 0 || waterZoneStats.medium > 0 || waterZoneStats.high > 0) && (
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${
+                waterZoneStats.hasConflict
+                  ? "bg-orange-50 border-orange-400"
+                  : "bg-blue-50 border-blue-300"
+              }`}
+              title={`Water needs: ${waterZoneStats.high} high, ${waterZoneStats.medium} medium, ${waterZoneStats.low} low${waterZoneStats.hasConflict ? " - Warning: mixed water needs!" : ""}`}
+            >
+              <span className="text-lg">💧</span>
+              <div className="flex items-center gap-1 text-xs">
+                {waterZoneStats.high > 0 && (
+                  <span className="px-1.5 py-0.5 rounded bg-blue-500 text-white font-medium">
+                    {waterZoneStats.high}H
+                  </span>
+                )}
+                {waterZoneStats.medium > 0 && (
+                  <span className="px-1.5 py-0.5 rounded bg-blue-300 text-blue-900 font-medium">
+                    {waterZoneStats.medium}M
+                  </span>
+                )}
+                {waterZoneStats.low > 0 && (
+                  <span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">
+                    {waterZoneStats.low}L
+                  </span>
+                )}
+              </div>
+              {waterZoneStats.hasConflict && (
+                <span className="text-xs text-orange-600 font-medium">Mixed!</span>
+              )}
+            </div>
+          )}
+
+          <Link className="text-sm underline" href="/beds">
+            Back to beds
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[280px_1fr] overflow-hidden">
@@ -2003,6 +2463,48 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 <span className="text-sm font-medium">{showCompanionIndicators ? "Companions" : "Companions"}</span>
               </button>
 
+              {/* Height/shadow indicator toggle */}
+              <button
+                onClick={() => setShowHeightIndicators(!showHeightIndicators)}
+                className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  showHeightIndicators
+                    ? "bg-amber-500 border-amber-600 text-white"
+                    : "hover:bg-gray-50 active:bg-gray-100"
+                }`}
+                title={showHeightIndicators ? "Hide height/shadow indicators" : "Show height/shadow warnings"}
+              >
+                <span className="text-lg">📏</span>
+                <span className="text-sm font-medium">Heights</span>
+              </button>
+
+              {/* Pollinator indicator toggle */}
+              <button
+                onClick={() => setShowPollinatorIndicators(!showPollinatorIndicators)}
+                className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  showPollinatorIndicators
+                    ? "bg-yellow-500 border-yellow-600 text-white"
+                    : "hover:bg-gray-50 active:bg-gray-100"
+                }`}
+                title={showPollinatorIndicators ? "Hide pollinator indicators" : "Show plants that attract pollinators"}
+              >
+                <span className="text-lg">🐝</span>
+                <span className="text-sm font-medium">Pollinators</span>
+              </button>
+
+              {/* Water zone indicator toggle */}
+              <button
+                onClick={() => setShowWaterZoneIndicators(!showWaterZoneIndicators)}
+                className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
+                  showWaterZoneIndicators
+                    ? "bg-blue-500 border-blue-600 text-white"
+                    : "hover:bg-gray-50 active:bg-gray-100"
+                }`}
+                title={showWaterZoneIndicators ? "Hide water zone indicators" : "Show water needs by plant"}
+              >
+                <span className="text-lg">💧</span>
+                <span className="text-sm font-medium">Water</span>
+              </button>
+
               <span className="text-sm text-gray-600">{zoom.toFixed(1)}x</span>
               <div className="flex gap-2">
                 <button
@@ -2220,6 +2722,11 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   }
                 }
 
+                // Height/shadow warning data
+                const shadowWarning = shadowWarnings.get(p.id);
+                const heightCategory = getHeightCategory(p.plant.averageHeightInches);
+                const hasShadeWarning = shadowWarning && (shadowWarning.shadedBy.length > 0 || shadowWarning.shades.length > 0);
+
                 return (
                   <div
                     key={p.id}
@@ -2313,6 +2820,74 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     >
                       ×
                     </button>
+
+                    {/* Height indicator badge */}
+                    {showHeightIndicators && (
+                      <div
+                        className={`absolute -bottom-1 -left-1 px-1.5 py-0.5 rounded-full text-[8px] font-bold shadow-sm flex items-center gap-0.5 ${
+                          heightCategory === "tall"
+                            ? "bg-amber-500 text-white"
+                            : heightCategory === "medium"
+                            ? "bg-yellow-400 text-yellow-900"
+                            : heightCategory === "short"
+                            ? "bg-green-400 text-green-900"
+                            : "bg-gray-300 text-gray-600"
+                        }`}
+                        title={`Height: ${p.plant.averageHeightInches ? `${Math.round(p.plant.averageHeightInches)}"` : "Unknown"}`}
+                      >
+                        {heightCategory === "tall" ? "↑↑" : heightCategory === "medium" ? "↑" : heightCategory === "short" ? "↓" : "?"}
+                      </div>
+                    )}
+
+                    {/* Shadow warning indicator */}
+                    {showHeightIndicators && hasShadeWarning && (
+                      <div
+                        className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs shadow-sm animate-pulse"
+                        title={
+                          shadowWarning?.shadedBy.length
+                            ? `May be shaded by: ${shadowWarning.shadedBy.join(", ")}`
+                            : `May shade: ${shadowWarning?.shades.join(", ")}`
+                        }
+                      >
+                        ☀️
+                      </div>
+                    )}
+
+                    {/* Pollinator indicator badge */}
+                    {showPollinatorIndicators && p.plant.attractsPollinators && (
+                      <div
+                        className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-yellow-400 text-yellow-900 flex items-center justify-center text-xs shadow-sm"
+                        title={`Attracts: ${p.plant.pollinatorTypes || "pollinators"}`}
+                      >
+                        🐝
+                      </div>
+                    )}
+
+                    {/* Water zone indicator badge */}
+                    {showWaterZoneIndicators && p.plant.waterZone && (
+                      <div
+                        className={`absolute -bottom-1 ${showPollinatorIndicators && p.plant.attractsPollinators ? "right-5" : "-right-1"} px-1.5 py-0.5 rounded-full text-[8px] font-bold shadow-sm ${
+                          p.plant.waterZone === "high"
+                            ? "bg-blue-500 text-white"
+                            : p.plant.waterZone === "medium"
+                            ? "bg-blue-300 text-blue-900"
+                            : "bg-blue-100 text-blue-700"
+                        }`}
+                        title={`Water needs: ${p.plant.waterZone}`}
+                      >
+                        {p.plant.waterZone === "high" ? "💧💧" : p.plant.waterZone === "medium" ? "💧" : "·"}
+                      </div>
+                    )}
+
+                    {/* Succession number badge */}
+                    {p.successionNumber && (
+                      <div
+                        className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-violet-500 text-white shadow-sm"
+                        title={`Succession sowing #${p.successionNumber}`}
+                      >
+                        #{p.successionNumber}
+                      </div>
+                    )}
                   </div>
                 );
               })}

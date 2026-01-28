@@ -21,11 +21,15 @@ export interface VerdantlyPlant {
     growingZoneRange?: string; // e.g., "4-10"
     sunlightRequirement?: string; // "Full sun", etc.
     waterRequirement?: string; // "Moderate", etc.
+    waterRequirements?: string; // API sometimes uses plural form
     soilPreference?: string;
     preferredTemperature?: string; // "70-85°F"
     spacingRequirement?: string; // "18-24 inches apart"
     careInstructions?: string;
   };
+
+  // Top-level water requirement (API sometimes returns this at root level)
+  waterRequirements?: string;
 
   // Growth details
   growthDetails: {
@@ -133,10 +137,16 @@ export async function searchVerdantlyPlants(
 
   if (nameResponse.ok) {
     nameData = await nameResponse.json();
+    console.log(`[Verdantly] Name search for "${trimmedQuery}": ${nameData.data?.length || 0} results`);
+  } else {
+    console.log(`[Verdantly] Name search failed: ${nameResponse.status} ${nameResponse.statusText}`);
   }
 
   if (filterResponse.ok) {
     filterData = await filterResponse.json();
+    console.log(`[Verdantly] Filter search for "${trimmedQuery}": ${filterData.data?.length || 0} results`);
+  } else {
+    console.log(`[Verdantly] Filter search failed: ${filterResponse.status} ${filterResponse.statusText}`);
   }
 
   // Merge results and deduplicate by id
@@ -206,6 +216,44 @@ export async function lookupHardinessZone(zipCode: string): Promise<VerdantlyZon
 }
 
 /**
+ * Get a single plant by its Verdantly ID
+ * @param verdantlyId - The Verdantly plant ID (e.g., "veg-tomato-beefsteak")
+ */
+export async function getVerdantlyPlantById(verdantlyId: string): Promise<VerdantlyPlant | null> {
+  if (!RAPIDAPI_KEY || RAPIDAPI_KEY === "YOUR_API_KEY_HERE") {
+    throw new Error("RapidAPI key not configured for Verdantly. Add RAPIDAPI_KEY to your .env file");
+  }
+
+  const url = `${VERDANTLY_API_BASE}/v1/plants/varieties/${verdantlyId}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "X-RapidAPI-Key": RAPIDAPI_KEY,
+      "X-RapidAPI-Host": RAPIDAPI_HOST,
+      "Accept": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    // If not found, return null instead of throwing
+    if (response.status === 404) {
+      return null;
+    }
+    const errorText = await response.text();
+    console.error("Verdantly plant lookup failed:", {
+      status: response.status,
+      statusText: response.statusText,
+      body: errorText,
+    });
+    throw new Error(`Failed to lookup plant: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+/**
  * Parse planting instruction text like "6-8 weeks before last frost" into weeks
  * Returns negative for "before", positive for "after"
  */
@@ -267,6 +315,7 @@ function parseWeeksFromFrost(text: string | undefined, type: "before" | "after" 
 /**
  * Parse days to maturity from various text formats
  * e.g., "65-80 days", "70 days to harvest", "matures in 60-75 days"
+ * Also handles seasonal terms like "mid-summer" as estimates
  */
 function parseDaysToMaturity(text: string | undefined): { min: number | null; max: number | null } {
   if (!text) return { min: null, max: null };
@@ -287,6 +336,33 @@ function parseDaysToMaturity(text: string | undefined): { min: number | null; ma
   if (singleMatch) {
     const days = parseInt(singleMatch[1], 10);
     return { min: days, max: days + 14 }; // Add 2 weeks for harvest window
+  }
+
+  // Seasonal estimates (assuming spring planting after last frost)
+  // These are rough estimates but better than nothing
+  if (lower.includes("early spring")) {
+    return { min: 30, max: 45 };
+  }
+  if (lower.includes("late spring") || lower.includes("spring")) {
+    return { min: 45, max: 60 };
+  }
+  if (lower.includes("early summer")) {
+    return { min: 50, max: 65 };
+  }
+  if (lower.includes("mid-summer") || lower.includes("midsummer") || lower.includes("mid summer")) {
+    return { min: 65, max: 80 };
+  }
+  if (lower.includes("late summer") || lower.includes("summer")) {
+    return { min: 75, max: 95 };
+  }
+  if (lower.includes("early fall") || lower.includes("early autumn")) {
+    return { min: 90, max: 110 };
+  }
+  if (lower.includes("late fall") || lower.includes("late autumn")) {
+    return { min: 110, max: 130 };
+  }
+  if (lower.includes("fall") || lower.includes("autumn")) {
+    return { min: 100, max: 120 };
   }
 
   return { min: null, max: null };
@@ -319,28 +395,57 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
     }
   }
 
-  // Convert mature height from inches to cm
-  let averageHeightCm: number | null = null;
-  if (gd.matureHeight) {
-    averageHeightCm = Math.round(gd.matureHeight * 2.54);
-  }
+  // Store mature height in inches (API already provides inches)
+  const averageHeightInches: number | null = gd.matureHeight || null;
 
-  // Map water requirements to 0-10 scale
+  // Get water requirement from any of the possible field names/locations
+  // Check: growingRequirements.waterRequirement, growingRequirements.waterRequirements, top-level waterRequirements
+  const waterRequirementRaw =
+    gr.waterRequirement ||
+    gr.waterRequirements ||
+    verdantly.waterRequirements ||
+    null;
+
+  // Map water requirements to 0-10 scale for soilHumidity and to waterZone classification
   let soilHumidity: number | null = null;
-  if (gr.waterRequirement) {
-    const lower = gr.waterRequirement.toLowerCase();
-    if (lower.includes("high") || lower.includes("wet")) soilHumidity = 9;
-    else if (lower.includes("moderate") || lower.includes("medium")) soilHumidity = 5;
-    else if (lower.includes("low") || lower.includes("dry")) soilHumidity = 2;
+  let waterZone: "low" | "medium" | "high" | null = null;
+  if (waterRequirementRaw) {
+    const lower = waterRequirementRaw.toLowerCase();
+    if (lower.includes("high") || lower.includes("wet") || lower.includes("frequent")) {
+      soilHumidity = 9;
+      waterZone = "high";
+    } else if (lower.includes("moderate") || lower.includes("medium") || lower.includes("average") || lower.includes("regular")) {
+      soilHumidity = 5;
+      waterZone = "medium";
+    } else if (lower.includes("low") || lower.includes("dry") || lower.includes("drought") || lower.includes("minimal")) {
+      soilHumidity = 2;
+      waterZone = "low";
+    } else {
+      // Default to medium if we have a value but can't classify it
+      soilHumidity = 5;
+      waterZone = "medium";
+    }
   }
 
-  // Map sunlight to 0-10 scale
+  // Map sunlight to 0-10 scale and to sunlightZone classification
   let lightRequirement: number | null = null;
+  let sunlightZone: "full" | "partial" | "shade" | null = null;
   if (gr.sunlightRequirement) {
     const lower = gr.sunlightRequirement.toLowerCase();
-    if (lower.includes("full sun")) lightRequirement = 10;
-    else if (lower.includes("partial shade") || lower.includes("part shade")) lightRequirement = 6;
-    else if (lower.includes("full shade") || lower.includes("shade")) lightRequirement = 3;
+    if (lower.includes("full sun")) {
+      lightRequirement = 10;
+      sunlightZone = "full";
+    } else if (lower.includes("partial shade") || lower.includes("part shade") || lower.includes("partial sun") || lower.includes("part sun")) {
+      lightRequirement = 6;
+      sunlightZone = "partial";
+    } else if (lower.includes("full shade") || lower.includes("shade") || lower.includes("low light")) {
+      lightRequirement = 3;
+      sunlightZone = "shade";
+    } else {
+      // Default to partial if we have a value but can't classify it
+      lightRequirement = 6;
+      sunlightZone = "partial";
+    }
   }
 
   // Build notes with useful information
@@ -389,8 +494,13 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
     transplantWeeksAfterFrost = 1; // Default: transplant 1 week after last frost
   }
 
-  // Try to parse days to maturity from harvesting instructions or description
-  let daysToMaturity = parseDaysToMaturity(ci?.harvestingInstructions);
+  // Try to parse days to maturity from various sources
+  let daysToMaturity = parseDaysToMaturity(lm?.firstHarvestDate);
+
+  // If not found in firstHarvestDate, try harvesting instructions
+  if (daysToMaturity.min === null) {
+    daysToMaturity = parseDaysToMaturity(ci?.harvestingInstructions);
+  }
 
   // If not found, try the description or notes
   if (daysToMaturity.min === null) {
@@ -403,6 +513,7 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
   return {
     name: verdantly.name,
     variety: verdantly.subtype || null,
+    verdantlyId: verdantly.id, // Store Verdantly ID for reliable backfill lookups
     spacingInches: spacingInches || 12,
     plantingDepthInches: null, // Not provided by Verdantly API
     daysToMaturityMin: daysToMaturity.min,
@@ -421,7 +532,7 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
     growthForm: verdantly.type || null,
     growthHabit: gd.growthType || null,
     growthRate: null,
-    averageHeightCm,
+    averageHeightInches,
     minTemperatureC,
     maxTemperatureC,
     lightRequirement,
@@ -432,14 +543,16 @@ export function convertVerdantlyToPlant(verdantly: VerdantlyPlant) {
 
     // Additional fields
     cycle: gd.growthPeriod || null,
-    watering: gr.waterRequirement || null,
+    watering: waterRequirementRaw || null,
     sunlight: gr.sunlightRequirement || null,
     floweringSeason: null,
     harvestSeason: lm?.firstHarvestDate || null,
     careLevel: null,
     maintenance: null,
     indoor: false,
-    droughtTolerant: gr.waterRequirement?.toLowerCase().includes("low") || false,
+    droughtTolerant: waterRequirementRaw?.toLowerCase().includes("low") || false,
+    waterZone, // "low", "medium", "high" classification for UI badges
+    sunlightZone, // "full", "partial", "shade" classification for micro climate matching
     medicinal: false,
     poisonousToHumans: null,
     poisonousToPets: null,

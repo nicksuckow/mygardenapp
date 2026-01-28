@@ -24,6 +24,8 @@ model User {
   beds          Bed[]
   plants        Plant[]
   seedInventory SeedInventory[]
+  journalEntries GardenJournal[]
+  gardenYears   GardenYear[]
 
   // NextAuth.js session support
   accounts           Account[]
@@ -112,6 +114,7 @@ model Plant {
 
   name          String
   variety       String?
+  verdantlyId   String?  // External ID from Verdantly API for reliable backfill lookups
   spacingInches Float   @default(12)
 
   daysToMaturityMin Int?
@@ -138,7 +141,7 @@ model Plant {
   growthForm       String? // e.g., "herb", "shrub", "tree"
   growthHabit      String? // e.g., "erect", "spreading"
   growthRate       String? // e.g., "slow", "moderate", "fast"
-  averageHeightCm  Float?  // Average height in cm
+  averageHeightInches Float? // Average mature height in inches
   minTemperatureC  Float?  // Minimum temperature requirement (Celsius)
   maxTemperatureC  Float?  // Maximum temperature requirement (Celsius)
   lightRequirement Int?    // Light requirement (0-10 scale)
@@ -147,7 +150,7 @@ model Plant {
   edible           Boolean @default(false) // Is the plant edible
   ediblePart       String? // Edible parts (comma-separated)
 
-  // Additional Perenual-specific fields
+  // Growing condition fields
   cycle              String? // "Annual", "Perennial", "Biennial"
   watering           String? // Watering frequency (e.g., "Frequent", "Average")
   sunlight           String? // Sunlight requirements (comma-separated)
@@ -162,12 +165,28 @@ model Plant {
   poisonousToPets    Int?    // 0 = not poisonous, 1 = poisonous
   description        String? // Full plant description
 
+  // Pollinator tracking
+  attractsPollinators Boolean @default(false) // Attracts bees, butterflies, etc.
+  pollinatorTypes     String? // Comma-separated: "bees,butterflies,hummingbirds"
+
+  // Water zone classification
+  waterZone           String? // "low", "medium", "high" water needs
+
+  // Sunlight zone classification
+  sunlightZone        String? // "full", "partial", "shade" for micro climate matching
+
+  // Succession planting configuration
+  successionEnabled      Boolean @default(false) // Enable succession planting for this plant
+  successionIntervalDays Int?    // Days between plantings (e.g., 14 for lettuce)
+  successionMaxCount     Int?    // Max number of successions to suggest (e.g., 6)
+
   placements    BedPlacement[]
   seedInventory SeedInventory[]
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([userId, name])
+  @@index([verdantlyId])
 }
 
 // Bed model - now per-user
@@ -185,6 +204,10 @@ model Bed {
   gardenX      Int? // top-left position in garden grid cells
   gardenY      Int? // top-left position in garden grid cells
   gardenRotated Boolean @default(false)
+
+  // Micro-climate conditions (comma-separated for multiple: "partial-shade,windy")
+  // Options: full-sun, partial-shade, full-shade, south-facing, north-facing, windy, sheltered, wet, dry
+  microClimate String?
 
   placements        BedPlacement[]
   placementHistory  PlacementHistory[]
@@ -308,10 +331,18 @@ model BedPlacement {
   harvestYield            Float?    // total harvest amount
   harvestYieldUnit        String?   // unit: "lbs", "oz", "count", "bunches", etc.
 
+  // Succession planting tracking
+  successionGroupId       String?   // UUID to link related plantings in a succession series
+  successionNumber        Int?      // 1, 2, 3... for ordering within the group
+  expectedHarvestDate     DateTime? // Calculated from planting date + days-to-maturity
+
   bed   Bed   @relation(fields: [bedId], references: [id], onDelete: Cascade)
   plant Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
 
   @@unique([bedId, x, y]) // prevents two placements from sharing the exact same cell
+  @@index([bedId])
+  @@index([plantId])
+  @@index([successionGroupId])
 }
 
 // PlacementHistory - archived placements for crop rotation tracking
@@ -342,4 +373,59 @@ model PlacementHistory {
 
   @@index([bedId, seasonYear])
   @@index([bedId, x, y])
+}
+
+// GardenJournal - journal entries with photos for tracking garden progress
+model GardenJournal {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entryDate   DateTime @default(now()) // Date of the journal entry
+  title       String?  // Optional title
+  content     String   // Journal entry text (markdown supported)
+  weatherNote String?  // Weather conditions that day
+  temperature Float?   // Temperature recorded
+
+  // Optional associations
+  bedId       Int?     // Link to a specific bed
+  placementId Int?     // Link to a specific plant placement
+
+  // Photos (stored as comma-separated URLs or base64)
+  photos      String?  // JSON array of photo URLs/paths
+
+  // Tags for filtering
+  tags        String?  // Comma-separated: "harvest,pest,milestone"
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, entryDate])
+  @@index([userId, bedId])
+}
+
+// GardenYear - for garden inheritance/copying between years
+model GardenYear {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  createdAt DateTime @default(now())
+
+  year        Int     // e.g., 2025, 2026
+  name        String? // Optional name like "2025 Spring Garden"
+
+  // Snapshot of garden configuration (JSON)
+  gardenSnapshot String? // JSON blob of garden layout
+  bedsSnapshot   String? // JSON blob of beds and placements
+
+  // Stats summary
+  totalBeds       Int @default(0)
+  totalPlacements Int @default(0)
+  totalHarvest    Float?
+  harvestUnit     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year])
+  @@index([userId])
 }

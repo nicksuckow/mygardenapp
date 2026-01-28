@@ -17,6 +17,10 @@ type Plant = {
   startIndoorsWeeksBeforeFrost: number | null;
   transplantWeeksAfterFrost: number | null;
   directSowWeeksRelativeToFrost: number | null;
+  // Succession planting
+  successionEnabled?: boolean;
+  successionIntervalDays?: number | null;
+  successionMaxCount?: number | null;
 };
 
 type Bed = {
@@ -35,9 +39,12 @@ type Placement = {
   directSowedDate?: string | null;
   harvestStartedDate?: string | null;
   harvestEndedDate?: string | null;
+  // Succession tracking
+  successionGroupId?: string | null;
+  successionNumber?: number | null;
 };
 
-type TaskType = "seeds" | "transplant" | "directSow" | "harvestStart" | "harvestEnd";
+type TaskType = "seeds" | "transplant" | "directSow" | "harvestStart" | "harvestEnd" | "succession";
 
 type EventRow = {
   date: string;
@@ -93,6 +100,14 @@ const TASK_CONFIG: Record<TaskType, { emoji: string; label: string; completedLab
     bgClass: "bg-purple-100",
     textClass: "text-purple-700",
     borderClass: "border-purple-300",
+  },
+  succession: {
+    emoji: "🔄",
+    label: "Plant next succession",
+    completedLabel: "Succession planted",
+    bgClass: "bg-violet-100",
+    textClass: "text-violet-700",
+    borderClass: "border-violet-300",
   },
 };
 
@@ -377,6 +392,60 @@ export default function SchedulePage() {
             status: "planned",
           });
         }
+      }
+    }
+
+    // Generate succession planting events
+    // Group placements by plantId to track succession counts
+    const plantSuccessionCounts = new Map<number, { count: number; latestDate: Date | null; plant: Plant }>();
+
+    for (const plc of placements) {
+      const plant = plc.plant;
+      if (!plant.successionEnabled || !plant.successionIntervalDays) continue;
+
+      // Find the latest planting date for this placement
+      const plantingDate = plc.directSowedDate || plc.transplantedDate || plc.seedsStartedDate;
+      if (!plantingDate) continue;
+
+      const existing = plantSuccessionCounts.get(plant.id);
+      const plantDate = new Date(plantingDate);
+
+      if (existing) {
+        existing.count += 1;
+        if (!existing.latestDate || plantDate > existing.latestDate) {
+          existing.latestDate = plantDate;
+        }
+      } else {
+        plantSuccessionCounts.set(plant.id, {
+          count: 1,
+          latestDate: plantDate,
+          plant,
+        });
+      }
+    }
+
+    // Generate upcoming succession events
+    for (const [plantId, data] of plantSuccessionCounts.entries()) {
+      const { count, latestDate, plant } = data;
+      const maxCount = plant.successionMaxCount ?? 6;
+      const interval = plant.successionIntervalDays;
+
+      if (!latestDate || !interval) continue;
+
+      // Generate events for remaining successions (up to max)
+      for (let i = count + 1; i <= maxCount; i++) {
+        const dueDate = addDays(latestDate, interval * (i - count));
+
+        rows.push({
+          date: fmt(dueDate),
+          bedId: 0, // Will show as "Any Bed"
+          bedName: "—",
+          plantName: plant.name,
+          count: 1,
+          taskType: "succession",
+          task: `${TASK_CONFIG.succession.emoji} ${TASK_CONFIG.succession.label} #${i}`,
+          status: "planned",
+        });
       }
     }
 

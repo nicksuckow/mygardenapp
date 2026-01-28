@@ -61,7 +61,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     const body = await req.json().catch(() => ({}));
 
     // Build update data object with supported fields
-    const updateData: { name?: string; notes?: string | null; gardenRotated?: boolean } = {};
+    const updateData: { name?: string; notes?: string | null; gardenRotated?: boolean; microClimate?: string | null } = {};
 
     // Handle name update
     if (typeof body.name === "string") {
@@ -85,10 +85,30 @@ export async function PATCH(req: Request, ctx: Ctx) {
       updateData.gardenRotated = body.gardenRotated;
     }
 
+    // Handle microClimate update
+    if (body.microClimate !== undefined) {
+      // Valid options: full-sun, partial-shade, full-shade, south-facing, north-facing, windy, sheltered, wet, dry
+      const validOptions = ["full-sun", "partial-shade", "full-shade", "south-facing", "north-facing", "windy", "sheltered", "wet", "dry"];
+      if (body.microClimate === null || body.microClimate === "") {
+        updateData.microClimate = null;
+      } else if (typeof body.microClimate === "string") {
+        // Validate each comma-separated value
+        const values = body.microClimate.split(",").map((v: string) => v.trim()).filter(Boolean);
+        const invalidValues = values.filter((v: string) => !validOptions.includes(v));
+        if (invalidValues.length > 0) {
+          return NextResponse.json(
+            { error: `Invalid microClimate values: ${invalidValues.join(", ")}. Valid options: ${validOptions.join(", ")}` },
+            { status: 400 }
+          );
+        }
+        updateData.microClimate = values.join(",");
+      }
+    }
+
     // Require at least one field to update
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: "At least one field (name, notes, or gardenRotated) is required" },
+        { error: "At least one field (name, notes, gardenRotated, or microClimate) is required" },
         { status: 400 }
       );
     }

@@ -120,6 +120,10 @@ export async function PATCH(
       notes,
       x,
       y,
+      // Succession fields
+      successionGroupId,
+      successionNumber,
+      expectedHarvestDate,
     } = body;
 
     // Validate dates if provided
@@ -134,6 +138,10 @@ export async function PATCH(
       notes?: string | null;
       x?: number;
       y?: number;
+      // Succession fields
+      successionGroupId?: string | null;
+      successionNumber?: number | null;
+      expectedHarvestDate?: Date | null;
     } = {};
 
     if (seedsStartedDate !== undefined) {
@@ -165,6 +173,17 @@ export async function PATCH(
     }
     if (y !== undefined && typeof y === "number" && y >= 0) {
       updates.y = y;
+    }
+
+    // Succession fields
+    if (successionGroupId !== undefined) {
+      updates.successionGroupId = successionGroupId || null;
+    }
+    if (successionNumber !== undefined) {
+      updates.successionNumber = typeof successionNumber === "number" ? successionNumber : null;
+    }
+    if (expectedHarvestDate !== undefined) {
+      updates.expectedHarvestDate = expectedHarvestDate ? new Date(expectedHarvestDate) : null;
     }
 
     const updated = await prisma.bedPlacement.update({

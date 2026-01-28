@@ -20,7 +20,7 @@ export type FullPlantData = {
   growthForm: string | null;
   growthHabit: string | null;
   growthRate: string | null;
-  averageHeightCm: number | null;
+  averageHeightInches: number | null;
   minTemperatureC: number | null;
   maxTemperatureC: number | null;
   lightRequirement: number | null;
@@ -99,7 +99,7 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
           )}
           <p>
             Spacing: {plant.spacingInches}"
-            {plant.averageHeightCm && ` • Height: ${Math.round(plant.averageHeightCm)}cm`}
+            {plant.averageHeightInches && ` • Height: ${Math.round(plant.averageHeightInches)}"`}
           </p>
         </div>
       </div>
@@ -176,8 +176,8 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
             {plant.plantingDepthInches != null && (
               <p>🌱 Depth: {fmtInches(plant.plantingDepthInches)}"</p>
             )}
-            {plant.averageHeightCm && (
-              <p>📐 Height: {Math.round(plant.averageHeightCm)}cm</p>
+            {plant.averageHeightInches && (
+              <p>📐 Height: {Math.round(plant.averageHeightInches)}"</p>
             )}
             {(plant.growthForm || plant.growthHabit || plant.growthRate) && (
               <p>🌿 {[plant.growthForm, plant.growthHabit, plant.growthRate].filter(Boolean).join(" • ")}</p>

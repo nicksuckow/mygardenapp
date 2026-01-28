@@ -15,11 +15,29 @@ export async function GET() {
 
     const userId = session.user.id;
 
+    // First get user's bed IDs (fast indexed query)
+    const userBeds = await prisma.bed.findMany({
+      where: { userId },
+      select: { id: true },
+    });
+
+    const bedIds = userBeds.map((b) => b.id);
+
+    if (bedIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // Then query placements directly with bedId IN (...) - uses index
     const placements = await prisma.bedPlacement.findMany({
       where: {
-        bed: { userId },
+        bedId: { in: bedIds },
       },
-      include: { plant: true, bed: true },
+      include: {
+        plant: true,
+        bed: {
+          select: { id: true, name: true },
+        },
+      },
       orderBy: [{ bedId: "asc" }, { y: "asc" }, { x: "asc" }],
     });
 

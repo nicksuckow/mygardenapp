@@ -116,6 +116,23 @@ export async function PATCH(req: Request, ctx: Ctx) {
     // Seed tracking
     if (typeof body.hasSeeds === "boolean") data.hasSeeds = body.hasSeeds;
 
+    // Pollinator tracking
+    if (typeof body.attractsPollinators === "boolean") data.attractsPollinators = body.attractsPollinators;
+    if (typeof body.pollinatorTypes === "string" || body.pollinatorTypes === null)
+      data.pollinatorTypes = body.pollinatorTypes;
+
+    // Water zone
+    if (typeof body.waterZone === "string" || body.waterZone === null)
+      data.waterZone = body.waterZone;
+
+    // Succession planting configuration
+    if (typeof body.successionEnabled === "boolean")
+      data.successionEnabled = body.successionEnabled;
+    if (typeof body.successionIntervalDays === "number" || body.successionIntervalDays === null)
+      data.successionIntervalDays = body.successionIntervalDays;
+    if (typeof body.successionMaxCount === "number" || body.successionMaxCount === null)
+      data.successionMaxCount = body.successionMaxCount;
+
     if ("name" in data && data.name === "") {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
