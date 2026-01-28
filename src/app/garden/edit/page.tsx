@@ -6,6 +6,7 @@ import { ui } from "@/lib/uiStyles";
 import { inchesToFeetInches } from "@/lib/dimensions";
 import PlantInfoModal from "@/components/PlantInfoModal";
 import { type FullPlantData } from "@/components/PlantInfoPanel";
+import { getPlantIconAndName, CustomPlantIcon } from "@/lib/plantIcons";
 
 type Walkway = {
   id: number;
@@ -286,6 +287,19 @@ export default function GardenPage() {
   // plant info modal state
   const [selectedPlacement, setSelectedPlacement] = useState<PlanPlacement | null>(null);
   const [showPlantInfoModal, setShowPlantInfoModal] = useState(false);
+
+  // Display mode state - persisted to localStorage
+  const [showPlantIcons, setShowPlantIcons] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("showPlantIcons") === "true";
+    }
+    return false;
+  });
+
+  // Persist icon toggle to localStorage
+  useEffect(() => {
+    localStorage.setItem("showPlantIcons", showPlantIcons.toString());
+  }, [showPlantIcons]);
 
   // zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -2085,15 +2099,25 @@ export default function GardenPage() {
                                 {bedPlacements.map((p) => {
                                   const pos = dotPosPct(b, p);
                                   const dotColor = getStatusDotColor(p);
+                                  const { icon, shortName, customType } = getPlantIconAndName(p.plant.name);
+                                  // Calculate size based on plant spacing, similar to bed view
+                                  const spacingInches = p.w ?? p.plant.spacingInches ?? 12;
+                                  const pixelsPerInch = (CELL_PX * zoom) / garden.cellInches;
+                                  const iconSize = spacingInches * pixelsPerInch;
+
                                   return (
                                     <button
                                       key={p.id}
                                       type="button"
-                                      className={`absolute h-2 w-2 rounded-full ${dotColor} opacity-80 hover:scale-110`}
+                                      className={`absolute rounded-full opacity-90 hover:scale-110 transition-transform flex items-center justify-center ${
+                                        showPlantIcons ? "bg-white/90 shadow-sm border border-slate-200" : dotColor
+                                      }`}
                                       style={{
                                         left: pos.left,
                                         top: pos.top,
                                         transform: "translate(-50%, -50%)",
+                                        width: showPlantIcons ? iconSize : 8,
+                                        height: showPlantIcons ? iconSize : 8,
                                       }}
                                       onPointerEnter={(ev) => {
                                         ev.stopPropagation();
@@ -2127,7 +2151,28 @@ export default function GardenPage() {
                                         setShowPlantInfoModal(true);
                                       }}
                                       title={p.plant.name}
-                                    />
+                                    >
+                                      {showPlantIcons && (
+                                        <div className="flex flex-col items-center justify-center">
+                                          {customType ? (
+                                            <CustomPlantIcon type={customType} size={iconSize * 0.55} />
+                                          ) : (
+                                            <span
+                                              className="leading-none"
+                                              style={{ fontSize: iconSize * 0.5 }}
+                                            >
+                                              {icon}
+                                            </span>
+                                          )}
+                                          <span
+                                            className="text-center leading-tight font-medium truncate w-full px-0.5 text-black"
+                                            style={{ fontSize: Math.max(6, Math.min(10, iconSize / 5)) }}
+                                          >
+                                            {shortName}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </button>
                                   );
                                 })}
 
@@ -2237,6 +2282,21 @@ export default function GardenPage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                   </svg>
+                </button>
+
+                {/* Icon toggle button */}
+                <button
+                  className={`backdrop-blur rounded-lg shadow-lg border p-2 transition-all ${
+                    showPlantIcons
+                      ? "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
+                      : "bg-white/95 hover:bg-slate-100"
+                  }`}
+                  onClick={() => setShowPlantIcons(!showPlantIcons)}
+                  title={showPlantIcons ? "Show status dots" : "Show plant icons"}
+                >
+                  <span className="text-base leading-none block w-4 h-4 flex items-center justify-center">
+                    {showPlantIcons ? "🍅" : "●"}
+                  </span>
                 </button>
               </div>
 
