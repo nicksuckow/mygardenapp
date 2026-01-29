@@ -1317,17 +1317,28 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
   }, []);
 
   // Get position from mouse/touch event relative to canvas (returns data coordinates)
+  // If plantSpacing is provided, offset so the plant would be centered on the cursor
   const getCanvasPosition = useCallback(
-    (clientX: number, clientY: number) => {
+    (clientX: number, clientY: number, plantSpacing?: number) => {
       if (!canvasRef.current || !bed) return null;
 
       const rect = canvasRef.current.getBoundingClientRect();
       const pixelX = (clientX - rect.left - panOffset.x) / zoom;
       const pixelY = (clientY - rect.top - panOffset.y) / zoom;
 
-      // Convert from pixels to display inches
-      const displayInchX = Math.floor(pixelX / BASE_PIXELS_PER_INCH);
-      const displayInchY = Math.floor(pixelY / BASE_PIXELS_PER_INCH);
+      // Convert from pixels to display inches (use exact position, not floored)
+      let displayInchX = pixelX / BASE_PIXELS_PER_INCH;
+      let displayInchY = pixelY / BASE_PIXELS_PER_INCH;
+
+      // If plant spacing provided, offset so cursor is at center of plant
+      if (plantSpacing) {
+        displayInchX -= plantSpacing / 2;
+        displayInchY -= plantSpacing / 2;
+      }
+
+      // Floor to grid alignment
+      displayInchX = Math.floor(displayInchX);
+      displayInchY = Math.floor(displayInchY);
 
       // Convert from display coordinates to data coordinates
       const dataCoords = fromDisplayCoords(displayInchX, displayInchY);
@@ -1657,13 +1668,14 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
       e.preventDefault();
       e.dataTransfer.dropEffect = draggedPlacement ? "move" : "copy";
 
-      const pos = getCanvasPosition(e.clientX, e.clientY);
+      // Pass plant spacing to center the preview on the cursor
+      const pos = getCanvasPosition(e.clientX, e.clientY, draggedPlant?.spacingInches);
       if (pos) {
         const nearest = findNearestValidZone(pos);
         setDropPosition(nearest);
       }
     },
-    [getCanvasPosition, findNearestValidZone, draggedPlacement]
+    [getCanvasPosition, findNearestValidZone, draggedPlacement, draggedPlant]
   );
 
   const handleCanvasDrop = useCallback(
@@ -1735,7 +1747,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
       if (!isTouchDragging || !draggedPlant) return;
 
       const touch = e.touches[0];
-      const pos = getCanvasPosition(touch.clientX, touch.clientY);
+      // Pass plant spacing to center the preview on the touch point
+      const pos = getCanvasPosition(touch.clientX, touch.clientY, draggedPlant.spacingInches);
       if (pos) {
         const nearest = findNearestValidZone(pos);
         setTouchPosition(pos);
@@ -1797,8 +1810,9 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
         });
       }
       // Track hover position when a plant is selected (for click-to-place)
+      // Pass plant spacing to center the preview on the cursor
       if (selectedPlantForDrag && !draggedPlant && !isPanning) {
-        const pos = getCanvasPosition(e.clientX, e.clientY);
+        const pos = getCanvasPosition(e.clientX, e.clientY, selectedPlantForDrag.spacingInches);
         if (pos) {
           const nearest = findNearestValidZone(pos);
           setHoverPosition(nearest);
