@@ -24,6 +24,9 @@
     "resend": "^6.9.1",
     "tesseract.js": "^7.0.0"
   },
+  "overrides": {
+    "@auth/core": "0.41.1"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@types/bcryptjs": "^2.4.6",
