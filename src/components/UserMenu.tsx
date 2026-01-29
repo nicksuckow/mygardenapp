@@ -10,10 +10,10 @@ export default function UserMenu({ session }: { session: Session | null }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm text-slate-600">{session.user.email}</span>
+      <span className="text-sm text-earth-warm">{session.user.email}</span>
       <button
         onClick={() => signOut({ callbackUrl: "/login" })}
-        className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+        className="rounded border border-cream-200 px-3 py-1.5 text-xs font-medium text-earth-warm hover:bg-cream-50 hover:text-earth-deep transition-colors"
       >
         Sign Out
       </button>

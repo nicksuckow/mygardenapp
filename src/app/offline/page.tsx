@@ -6,9 +6,9 @@ export default function OfflinePage() {
   return (
     <div className="max-w-md mx-auto mt-16 text-center">
       <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
-        <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto bg-cream-100 rounded-full flex items-center justify-center">
           <svg
-            className="w-8 h-8 text-slate-400"
+            className="w-8 h-8 text-earth-warm"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -22,11 +22,11 @@ export default function OfflinePage() {
           </svg>
         </div>
 
-        <h1 className="text-xl font-semibold text-slate-900">
+        <h1 className="text-xl font-display font-semibold text-earth-deep">
           You&apos;re Offline
         </h1>
 
-        <p className="text-slate-600 text-sm">
+        <p className="text-earth-warm text-sm">
           It looks like you&apos;ve lost your internet connection. Some features
           may not be available until you&apos;re back online.
         </p>
@@ -34,13 +34,13 @@ export default function OfflinePage() {
         <div className="pt-2">
           <button
             onClick={() => window.location.reload()}
-            className={ui.btnPrimary}
+            className={`${ui.btn} ${ui.btnPrimary}`}
           >
             Try Again
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 pt-4">
+        <p className="text-xs text-earth-warm/60 pt-4">
           Your garden data that was previously viewed may still be available in
           the app.
         </p>

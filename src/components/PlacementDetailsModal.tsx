@@ -175,7 +175,7 @@ export default function PlacementDetailsModal({
         <h2 className="text-lg font-semibold mb-4">Plant Details</h2>
 
         {loading ? (
-          <p className="text-sm text-slate-600">Loading...</p>
+          <p className="text-sm text-earth-warm">Loading...</p>
         ) : error ? (
           <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 mb-4">
             {error}
@@ -183,18 +183,18 @@ export default function PlacementDetailsModal({
         ) : placement ? (
           <div className="space-y-4">
             {/* Placement location info */}
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-              <p className="text-xs text-slate-600">
+            <div className="rounded-lg border border-cream-200 bg-cream-50 px-3 py-2">
+              <p className="text-xs text-earth-warm">
                 Bed: <span className="font-medium">{placement.bed.name}</span> | Position: ({Math.round(placement.x)}", {Math.round(placement.y)}") | Count: <span className="font-medium">{placement.count}</span>
               </p>
             </div>
 
             {/* Plant information - expandable */}
-            <details className="rounded-lg border border-slate-200 bg-slate-50" open>
-              <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100 rounded-t-lg">
+            <details className="rounded-lg border border-cream-200 bg-cream-50" open>
+              <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-earth-deep hover:bg-cream-100 rounded-t-lg">
                 📋 Plant Information: {placement.plant.name}
               </summary>
-              <div className="px-3 py-3 border-t border-slate-200">
+              <div className="px-3 py-3 border-t border-cream-200">
                 <PlantInfoPanel plant={placement.plant} />
               </div>
             </details>
@@ -225,21 +225,21 @@ export default function PlacementDetailsModal({
                 value={plantingDate}
                 onChange={(e) => setPlantingDate(e.target.value)}
               />
-              <span className="text-xs text-slate-500">Date you actually planted this</span>
+              <span className="text-xs text-earth-warm">Date you actually planted this</span>
             </label>
 
             {/* Expected harvest date (read-only) */}
             {placement.expectedHarvestDate && (
               <div className="grid gap-1.5">
-                <span className="text-sm font-medium text-slate-700">Expected harvest date</span>
+                <span className="text-sm font-medium text-earth-deep">Expected harvest date</span>
                 <input
-                  className="rounded border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-600"
+                  className="rounded border border-cream-200 bg-cream-100 px-3 py-2 text-sm text-earth-warm"
                   type="date"
                   value={placement.expectedHarvestDate.slice(0, 10)}
                   readOnly
                   disabled
                 />
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-earth-warm">
                   Calculated from planting date + days to maturity
                 </span>
               </div>
@@ -254,7 +254,7 @@ export default function PlacementDetailsModal({
                 value={actualHarvestStartDate}
                 onChange={(e) => setActualHarvestStartDate(e.target.value)}
               />
-              <span className="text-xs text-slate-500">When you started harvesting</span>
+              <span className="text-xs text-earth-warm">When you started harvesting</span>
             </label>
 
             {/* Actual harvest end date */}
@@ -266,7 +266,7 @@ export default function PlacementDetailsModal({
                 value={actualHarvestEndDate}
                 onChange={(e) => setActualHarvestEndDate(e.target.value)}
               />
-              <span className="text-xs text-slate-500">When harvesting finished</span>
+              <span className="text-xs text-earth-warm">When harvesting finished</span>
             </label>
 
             {/* Notes */}

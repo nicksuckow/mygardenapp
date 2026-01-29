@@ -1,7 +1,87 @@
+/* Google Fonts - must be first */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
+
 @import "tailwindcss";
+
+/* Tailwind v4 theme configuration */
+@theme {
+  /* Primary - Sage Green */
+  --color-sage-50: #f3f6f2;
+  --color-sage-100: #e4ebe3;
+  --color-sage-200: #c9d7c6;
+  --color-sage-300: #A8C4A2;
+  --color-sage-400: #7D9A78;
+  --color-sage-500: #5C7A56;
+  --color-sage-600: #4a6245;
+  --color-sage-700: #3d5039;
+  --color-sage-800: #334230;
+  --color-sage-900: #2b3729;
+  --color-sage: #7D9A78;
+  --color-sage-light: #A8C4A2;
+  --color-sage-dark: #5C7A56;
+
+  /* Secondary - Terracotta */
+  --color-terracotta-50: #fdf6f3;
+  --color-terracotta-100: #fceae3;
+  --color-terracotta-200: #f9d5c7;
+  --color-terracotta-300: #E09070;
+  --color-terracotta-400: #C4704B;
+  --color-terracotta-500: #A85A3A;
+  --color-terracotta-600: #8f4a30;
+  --color-terracotta-700: #763d28;
+  --color-terracotta-800: #623425;
+  --color-terracotta-900: #522e22;
+  --color-terracotta: #C4704B;
+  --color-terracotta-light: #E09070;
+  --color-terracotta-dark: #A85A3A;
+
+  /* Accent - Mustard */
+  --color-mustard-50: #fdfaf2;
+  --color-mustard-100: #faf3de;
+  --color-mustard-200: #f4e5bb;
+  --color-mustard-300: #E8C878;
+  --color-mustard-400: #D4A84B;
+  --color-mustard-500: #B8923A;
+  --color-mustard-600: #9a7730;
+  --color-mustard-700: #7d5e28;
+  --color-mustard-800: #684d26;
+  --color-mustard-900: #594123;
+  --color-mustard: #D4A84B;
+  --color-mustard-light: #E8C878;
+  --color-mustard-dark: #B8923A;
+
+  /* Deep/Grounding - Earth */
+  --color-earth: #3D3229;
+  --color-earth-deep: #3D3229;
+  --color-earth-warm: #6B5B4F;
+
+  /* Neutrals - Cream */
+  --color-cream-50: #FFFEF9;
+  --color-cream-100: #FAF7F2;
+  --color-cream-200: #E8E4DE;
+  --color-cream: #FAF7F2;
+
+  /* Fonts */
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Quicksand', sans-serif;
+}
 
 /* Mobile-friendly defaults */
 @layer base {
+  /* Apply brand fonts */
+  html {
+    font-family: 'Quicksand', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', serif;
+  }
+
+  /* Brand background color */
+  body {
+    background-color: #FAF7F2;
+    color: #3D3229;
+  }
   /* Prevent zoom on input focus on iOS */
   input[type="text"],
   input[type="email"],

@@ -104,8 +104,8 @@ export default function WeatherWidget({ compact = false }: { compact?: boolean }
   if (loading) {
     return (
       <div className="rounded-lg border bg-white p-3 animate-pulse">
-        <div className="h-6 bg-slate-200 rounded w-24 mb-2" />
-        <div className="h-8 bg-slate-200 rounded w-16" />
+        <div className="h-6 bg-cream-200 rounded w-24 mb-2" />
+        <div className="h-8 bg-cream-200 rounded w-16" />
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function WeatherWidget({ compact = false }: { compact?: boolean }
         <WeatherIcon icon={weather.current.icon} className="text-lg" />
         <span className="font-medium">{weather.current.temperature}°F</span>
         {(weather.alerts.frost || weather.alerts.freeze) && (
-          <span className="text-amber-600 text-xs font-medium">
+          <span className="text-mustard-dark text-xs font-medium">
             {weather.alerts.freeze ? "Freeze!" : "Frost!"}
           </span>
         )}
@@ -129,13 +129,13 @@ export default function WeatherWidget({ compact = false }: { compact?: boolean }
   }
 
   return (
-    <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-sky-50 overflow-hidden">
+    <div className="rounded-xl border border-cream-200 bg-gradient-to-br from-sage-light/20 to-cream-100 overflow-hidden">
       {/* Frost/Freeze Alert */}
       {(weather.alerts.frost || weather.alerts.freeze) && (
         <div className={`px-4 py-2 text-sm font-medium ${
           weather.alerts.freeze
-            ? "bg-red-100 text-red-800 border-b border-red-200"
-            : "bg-amber-100 text-amber-800 border-b border-amber-200"
+            ? "bg-terracotta/20 text-terracotta-dark border-b border-terracotta/30"
+            : "bg-mustard/20 text-mustard-dark border-b border-mustard/30"
         }`}>
           {weather.alerts.freeze
             ? "\u26A0\uFE0F Freeze Warning: Temperatures below 32°F expected"
@@ -150,11 +150,11 @@ export default function WeatherWidget({ compact = false }: { compact?: boolean }
             <div className="flex items-center gap-2">
               <WeatherIcon icon={weather.current.icon} className="text-3xl" />
               <div>
-                <p className="text-3xl font-bold text-slate-800">{weather.current.temperature}°F</p>
-                <p className="text-sm text-slate-600">{weather.current.description}</p>
+                <p className="text-3xl font-bold text-earth-deep">{weather.current.temperature}°F</p>
+                <p className="text-sm text-earth-warm">{weather.current.description}</p>
               </div>
             </div>
-            <div className="mt-2 flex gap-4 text-xs text-slate-500">
+            <div className="mt-2 flex gap-4 text-xs text-earth-warm">
               <span>Feels like {weather.current.feelsLike}°F</span>
               <span>Humidity {weather.current.humidity}%</span>
               <span>Wind {weather.current.windSpeed} mph</span>
@@ -162,7 +162,7 @@ export default function WeatherWidget({ compact = false }: { compact?: boolean }
           </div>
           <button
             onClick={() => setShowForecast(!showForecast)}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            className="text-xs text-sage-dark hover:text-sage font-medium"
           >
             {showForecast ? "Hide" : "7-day"}
           </button>
@@ -170,18 +170,18 @@ export default function WeatherWidget({ compact = false }: { compact?: boolean }
 
         {/* Forecast */}
         {showForecast && (
-          <div className="mt-4 pt-4 border-t border-blue-100">
+          <div className="mt-4 pt-4 border-t border-cream-200">
             <div className="grid grid-cols-7 gap-1">
               {weather.forecast.map((day) => (
                 <div key={day.date} className="text-center">
-                  <p className="text-xs font-medium text-slate-600">{day.dayName}</p>
+                  <p className="text-xs font-medium text-earth-warm">{day.dayName}</p>
                   <WeatherIcon icon={day.icon} className="text-lg" />
                   <p className="text-xs">
-                    <span className="font-medium text-slate-800">{day.high}°</span>
-                    <span className="text-slate-400">/{day.low}°</span>
+                    <span className="font-medium text-earth-deep">{day.high}°</span>
+                    <span className="text-earth-warm/60">/{day.low}°</span>
                   </p>
                   {day.precipitationChance > 20 && (
-                    <p className="text-xs text-blue-500">{day.precipitationChance}%</p>
+                    <p className="text-xs text-sage-dark">{day.precipitationChance}%</p>
                   )}
                 </div>
               ))}

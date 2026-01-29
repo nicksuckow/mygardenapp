@@ -160,20 +160,20 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-3xl max-h-[85vh] flex flex-col rounded-lg border border-slate-200 bg-white shadow-lg">
+      <div className="w-full max-w-3xl max-h-[85vh] flex flex-col rounded-lg border border-cream-200 bg-white shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 p-4">
+        <div className="flex items-center justify-between border-b border-cream-200 p-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-earth-deep">
               Search Verdantly Plant Database
             </h2>
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-xs text-earth-warm mt-1">
               Import plant data from Verdantly with detailed growing information
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 hover:bg-slate-100"
+            className="rounded p-1 hover:bg-cream-100"
             aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +183,7 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
         </div>
 
         {/* Search Form */}
-        <div className="border-b border-slate-200 p-4">
+        <div className="border-b border-cream-200 p-4">
           <form onSubmit={handleSearch} className="space-y-4">
             <div>
               <input
@@ -191,7 +191,7 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search plants (e.g., tomato, lettuce)..."
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-base focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-cream-200 px-4 py-3 text-base focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage"
                 autoFocus
               />
             </div>
@@ -210,16 +210,16 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
                   type="checkbox"
                   checked={hasSeeds}
                   onChange={(e) => setHasSeeds(e.target.checked)}
-                  className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  className="w-5 h-5 rounded border-cream-200 text-sage-dark focus:ring-sage"
                 />
-                <span className="text-base text-slate-700">I have seeds for this plant</span>
+                <span className="text-base text-earth-deep">I have seeds for this plant</span>
               </label>
             </div>
           </form>
 
           {total > 0 && (
             <div className="mt-3 flex items-center justify-between gap-3 flex-wrap">
-              <div className="text-sm text-slate-600">
+              <div className="text-sm text-earth-warm">
                 <p>
                   Found {total} result{total !== 1 ? "s" : ""} • Page {currentPage} of {totalPages}
                 </p>
@@ -250,13 +250,13 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
         {/* Results */}
         <div className="flex-1 overflow-y-auto p-4">
           {error && (
-            <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <div className="mb-4 rounded-lg border border-terracotta/30 bg-terracotta-50 px-3 py-2 text-sm text-terracotta">
               {error}
             </div>
           )}
 
           {results.length === 0 && !searching && (
-            <div className="py-8 text-center text-sm text-slate-500">
+            <div className="py-8 text-center text-sm text-cream-500">
               Enter a search term to find plants (try "tomato", "lettuce", or "basil")
             </div>
           )}
@@ -265,37 +265,37 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
             {results.map((plant) => (
               <div
                 key={plant.id}
-                className="flex items-start gap-3 rounded-lg border border-slate-200 p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors"
+                className="flex items-start gap-3 rounded-lg border border-cream-200 p-4 hover:bg-cream-50 active:bg-cream-100 transition-colors"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-slate-900 truncate">
+                    <h3 className="font-medium text-earth-deep truncate">
                       {plant.name}
                     </h3>
                     {plant.subtype && (
-                      <span className="text-xs text-slate-500">({plant.subtype})</span>
+                      <span className="text-xs text-cream-500">({plant.subtype})</span>
                     )}
                   </div>
 
                   {plant.description && (
-                    <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">
+                    <p className="text-xs text-earth-warm line-clamp-2 mt-0.5">
                       {plant.description}
                     </p>
                   )}
 
                   <div className="flex gap-2 mt-2 flex-wrap">
                     {plant.category && (
-                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 capitalize">
+                      <span className="rounded-full bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark capitalize">
                         {plant.category}
                       </span>
                     )}
                     {plant.type && (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 capitalize">
+                      <span className="rounded-full bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark capitalize">
                         {plant.type}
                       </span>
                     )}
                     {plant.growingRequirements.growingZoneRange && (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                      <span className="rounded-full bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark">
                         Zones {plant.growingRequirements.growingZoneRange}
                       </span>
                     )}
@@ -305,7 +305,7 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
                       </span>
                     )}
                     {plant.growingRequirements.spacingRequirement && (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
+                      <span className="rounded-full bg-cream-100 px-2 py-0.5 text-xs font-medium text-earth-deep">
                         {plant.growingRequirements.spacingRequirement}
                       </span>
                     )}
@@ -333,7 +333,7 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
                   {/* Additional plant details that may be useful */}
                   {(plant.growingRequirements.soilPreference || plant.highlights || plant.commonUses) && (
-                    <div className="mt-2 text-xs text-slate-600 space-y-1">
+                    <div className="mt-2 text-xs text-earth-warm space-y-1">
                       {plant.growingRequirements.soilPreference && (
                         <p>🌱 Soil: {plant.growingRequirements.soilPreference}</p>
                       )}
@@ -360,7 +360,7 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
 
           {/* Bottom pagination */}
           {total > 0 && totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-3 border-t border-slate-200 pt-4">
+            <div className="mt-4 flex items-center justify-center gap-3 border-t border-cream-200 pt-4">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1 || searching}
@@ -368,7 +368,7 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
               >
                 ← Previous
               </button>
-              <span className="text-base text-slate-600">
+              <span className="text-base text-earth-warm">
                 Page {currentPage} of {totalPages}
               </span>
               <button
@@ -383,14 +383,14 @@ export default function VerdantlySearchModal({ isOpen, onClose, onImport }: Verd
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 p-4">
-          <p className="text-xs text-slate-500">
+        <div className="border-t border-cream-200 p-4">
+          <p className="text-xs text-cream-500">
             Data provided by{" "}
             <a
               href="https://www.verdantly.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-emerald-600"
+              className="underline hover:text-sage-dark"
             >
               Verdantly.io
             </a>

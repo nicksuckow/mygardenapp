@@ -88,9 +88,9 @@ function getStatusColor(placement: Placement): string {
 function getStatusBgColor(placement: Placement): string {
   if (placement.harvestEndedDate) return "#c4b5fd"; // violet-300
   if (placement.harvestStartedDate) return "#fcd34d"; // amber-300
-  if (placement.transplantedDate || placement.directSowedDate) return "#6ee7b7"; // emerald-300
-  if (placement.seedsStartedDate) return "#93c5fd"; // blue-300
-  return "#cbd5e1"; // slate-300
+  if (placement.transplantedDate || placement.directSowedDate) return "#A8C4A2"; // sage-light
+  if (placement.seedsStartedDate) return "#E8C878"; // mustard-light
+  return "#E8E4DE"; // cream-200
 }
 
 // Custom SVG icons for plants without good emoji matches
@@ -506,16 +506,16 @@ function PlantCard({
       }}
       onDragEnd={onDragEnd}
       onTouchStart={(e) => onTouchStart(plant, e)}
-      className={`flex items-center gap-3 p-3 rounded-lg border bg-white hover:bg-slate-50 cursor-grab active:cursor-grabbing transition-all select-none ${
+      className={`flex items-center gap-3 p-3 rounded-lg border bg-white hover:bg-cream-50 cursor-grab active:cursor-grabbing transition-all select-none ${
         isDragging ? "opacity-50 scale-95" : ""
       }`}
     >
-      <div className="w-10 h-10 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 font-medium text-sm flex-shrink-0">
+      <div className="w-10 h-10 rounded-full bg-sage/20 border-2 border-sage flex items-center justify-center text-sage-dark font-medium text-sm flex-shrink-0">
         {plant.name.charAt(0)}
       </div>
       <div className="min-w-0">
         <p className="font-medium text-sm truncate">{plant.name}</p>
-        <p className="text-xs text-slate-500">{plant.spacingInches}&quot; spacing</p>
+        <p className="text-xs text-earth-warm">{plant.spacingInches}&quot; spacing</p>
       </div>
     </div>
   );
@@ -643,7 +643,7 @@ function MiniMap({
 
       {/* Viewport indicator */}
       <div
-        className="absolute border-2 border-blue-500 bg-blue-500/20 pointer-events-none"
+        className="absolute border-2 border-sage bg-sage/20 pointer-events-none"
         style={{
           left: Math.max(0, viewportX),
           top: Math.max(0, viewportY),
@@ -1927,8 +1927,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             Back to beds
           </Link>
         </div>
-        <p className="text-sm text-gray-600">Loading...</p>
-        {message && <p className="text-sm text-red-600">{message}</p>}
+        <p className="text-sm text-earth-warm">Loading...</p>
+        {message && <p className="text-sm text-terracotta">{message}</p>}
       </div>
     );
   }
@@ -1970,28 +1970,28 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   if (e.key === "Enter") saveBedName();
                   if (e.key === "Escape") setIsEditingName(false);
                 }}
-                className="text-xl font-semibold border-b-2 border-emerald-500 bg-transparent outline-none px-1"
+                className="text-xl font-semibold border-b-2 border-sage bg-transparent outline-none px-1"
                 autoFocus
                 disabled={savingName}
               />
               <button
                 onClick={saveBedName}
                 disabled={savingName}
-                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                className="text-sm text-sage-dark hover:text-sage-dark font-medium"
               >
                 {savingName ? "Saving..." : "Save"}
               </button>
               <button
                 onClick={() => setIsEditingName(false)}
                 disabled={savingName}
-                className="text-sm text-slate-500 hover:text-slate-700"
+                className="text-sm text-earth-warm hover:text-earth-deep"
               >
                 Cancel
               </button>
             </div>
           ) : (
             <h1
-              className="text-xl font-semibold cursor-pointer hover:text-emerald-700 group flex items-center gap-2"
+              className="text-xl font-semibold cursor-pointer hover:text-sage-dark group flex items-center gap-2"
               onClick={() => {
                 setEditedName(bed.name);
                 setIsEditingName(true);
@@ -2000,7 +2000,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             >
               {bed.name}
               <svg
-                className="w-4 h-4 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="w-4 h-4 text-earth-warm/60 opacity-0 group-hover:opacity-100 transition-opacity"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -2009,17 +2009,17 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               </svg>
             </h1>
           )}
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-earth-warm">
             {bed.widthInches}&quot; x {bed.heightInches}&quot; — {bed.cellInches}&quot; grid ({gridCols}x{gridRows})
             {shouldRotate && (
-              <span className="ml-2 text-xs text-slate-500">(rotated for display)</span>
+              <span className="ml-2 text-xs text-earth-warm">(rotated for display)</span>
             )}
           </p>
 
           {/* Micro-climate indicator/editor */}
           {isEditingMicroClimate ? (
-            <div className="mt-2 p-3 bg-slate-50 rounded-lg border">
-              <p className="text-xs font-medium text-slate-600 mb-2">Select micro-climate conditions:</p>
+            <div className="mt-2 p-3 bg-cream-50 rounded-lg border">
+              <p className="text-xs font-medium text-earth-warm mb-2">Select micro-climate conditions:</p>
               <div className="flex flex-wrap gap-2 mb-3">
                 {MICROCLIMATE_OPTIONS.map((option) => {
                   const isSelected = selectedMicroClimates.includes(option.value);
@@ -2035,8 +2035,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       }}
                       className={`px-2 py-1 text-xs rounded-full border transition-all ${
                         isSelected
-                          ? "bg-emerald-100 border-emerald-500 text-emerald-700"
-                          : "bg-white border-slate-300 text-slate-600 hover:border-slate-400"
+                          ? "bg-sage/20 border-sage text-sage-dark"
+                          : "bg-white border-cream-200 text-earth-warm hover:border-earth-warm/40"
                       }`}
                       title={option.description}
                     >
@@ -2049,14 +2049,14 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 <button
                   onClick={saveMicroClimate}
                   disabled={savingMicroClimate}
-                  className="text-xs px-3 py-1 bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50"
+                  className="text-xs px-3 py-1 bg-sage-dark text-white rounded hover:bg-sage disabled:opacity-50"
                 >
                   {savingMicroClimate ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={() => setIsEditingMicroClimate(false)}
                   disabled={savingMicroClimate}
-                  className="text-xs px-3 py-1 text-slate-600 hover:text-slate-800"
+                  className="text-xs px-3 py-1 text-earth-warm hover:text-earth-deep"
                 >
                   Cancel
                 </button>
@@ -2068,7 +2068,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 setSelectedMicroClimates(bed.microClimate ? bed.microClimate.split(",") : []);
                 setIsEditingMicroClimate(true);
               }}
-              className="mt-1 text-xs text-slate-500 hover:text-emerald-600 flex items-center gap-1 group"
+              className="mt-1 text-xs text-earth-warm hover:text-sage-dark flex items-center gap-1 group"
               title="Click to edit micro-climate conditions"
             >
               {bed.microClimate ? (
@@ -2076,17 +2076,17 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   {bed.microClimate.split(",").map((v) => {
                     const option = MICROCLIMATE_OPTIONS.find(o => o.value === v);
                     return option ? (
-                      <span key={v} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-slate-100 rounded text-slate-600">
+                      <span key={v} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-cream-100 rounded text-earth-warm">
                         {option.icon} {option.label}
                       </span>
                     ) : null;
                   })}
-                  <svg className="w-3 h-3 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-earth-warm/60 opacity-0 group-hover:opacity-100 transition-opacity ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                 </>
               ) : (
-                <span className="text-slate-400 hover:text-emerald-500">+ Add micro-climate conditions</span>
+                <span className="text-earth-warm/60 hover:text-sage">+ Add micro-climate conditions</span>
               )}
             </button>
           )}
@@ -2112,7 +2112,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   {harmonyScore.score}%
                 </span>
               </div>
-              <span className="text-xs text-slate-600">Harmony</span>
+              <span className="text-xs text-earth-warm">Harmony</span>
             </div>
           )}
 
@@ -2136,9 +2136,9 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   {spaceEfficiency.efficiency}%
                 </span>
               </div>
-              <span className="text-xs text-slate-600">Space Used</span>
+              <span className="text-xs text-earth-warm">Space Used</span>
               {spaceEfficiency.potentialAdditionalPlants > 0 && (
-                <span className="text-xs text-slate-500 ml-1">
+                <span className="text-xs text-earth-warm ml-1">
                   (+{spaceEfficiency.potentialAdditionalPlants} more)
                 </span>
               )}
@@ -2210,7 +2210,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
 
           {plants.length === 0 ? (
             <div className="space-y-2">
-              <p className="text-sm text-gray-600">No plants yet.</p>
+              <p className="text-sm text-earth-warm">No plants yet.</p>
               <Link className="text-sm underline" href="/plants">
                 Go add plants →
               </Link>
@@ -2229,7 +2229,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     setIsPlantDropdownOpen(true);
                   }}
                   onFocus={() => setIsPlantDropdownOpen(true)}
-                  className="w-full px-4 py-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-4 py-3 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
                 />
                 {plantSearch && (
                   <button
@@ -2237,7 +2237,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       setPlantSearch("");
                       setIsPlantDropdownOpen(false);
                     }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 active:text-gray-800"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-earth-warm/60 hover:text-earth-warm active:text-earth-deep"
                   >
                     ×
                   </button>
@@ -2256,7 +2256,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               {isPlantDropdownOpen && plantSearch && (
                 <div className="relative z-20 border rounded-lg bg-white shadow-lg max-h-64 overflow-y-auto">
                   {filteredPlants.length === 0 ? (
-                    <p className="p-4 text-base text-gray-500">No plants found</p>
+                    <p className="p-4 text-base text-earth-warm">No plants found</p>
                   ) : (
                     filteredPlants.map((plant) => (
                       <button
@@ -2266,14 +2266,14 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                           setPlantSearch("");
                           setIsPlantDropdownOpen(false);
                         }}
-                        className="w-full flex items-center gap-3 p-3 min-h-[52px] hover:bg-slate-50 active:bg-slate-100 text-left border-b last:border-b-0 transition-colors"
+                        className="w-full flex items-center gap-3 p-3 min-h-[52px] hover:bg-cream-50 active:bg-cream-100 text-left border-b last:border-b-0 transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 text-sm flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-sage/20 border-2 border-sage flex items-center justify-center text-sage-dark text-sm flex-shrink-0">
                           {plant.name.charAt(0)}
                         </div>
                         <div className="min-w-0">
                           <p className="text-base font-medium truncate">{plant.name}</p>
-                          <p className="text-sm text-slate-500">{plant.spacingInches}&quot; spacing</p>
+                          <p className="text-sm text-earth-warm">{plant.spacingInches}&quot; spacing</p>
                         </div>
                       </button>
                     ))
@@ -2284,7 +2284,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               {/* Selected plant to place */}
               {selectedPlantForDrag && (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-500">Click in bed or drag to place:</p>
+                  <p className="text-sm text-earth-warm">Click in bed or drag to place:</p>
                   <div className="relative">
                     <PlantCard
                       plant={selectedPlantForDrag}
@@ -2295,7 +2295,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     />
                     <button
                       onClick={() => setSelectedPlantForDrag(null)}
-                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center text-sm font-bold shadow hover:bg-gray-500 active:bg-gray-600 active:scale-95 transition-all"
+                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-earth-warm text-white flex items-center justify-center text-sm font-bold shadow hover:bg-earth-deep active:bg-earth-deep active:scale-95 transition-all"
                       title="Clear selection"
                     >
                       ×
@@ -2305,16 +2305,16 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               )}
 
               {!selectedPlantForDrag && !isPlantDropdownOpen && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-earth-warm">
                   Search and select a plant to place in the bed
                 </p>
               )}
             </div>
           )}
 
-          <div className="rounded border p-2 bg-blue-50 border-blue-200">
-            <p className="text-xs text-blue-900 font-medium">How to use:</p>
-            <ul className="text-xs text-blue-800 mt-1 space-y-0.5 list-disc pl-4">
+          <div className="rounded border p-2 bg-sage/10 border-sage/30">
+            <p className="text-xs text-sage-dark font-medium">How to use:</p>
+            <ul className="text-xs text-earth-deep mt-1 space-y-0.5 list-disc pl-4">
               <li>Search and select a plant above</li>
               <li>Click in bed to place (green zones show valid spots)</li>
               <li>Or drag the selected plant to bed</li>
@@ -2325,13 +2325,13 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             </ul>
           </div>
 
-          {message && <p className="text-sm text-red-600">{message}</p>}
+          {message && <p className="text-sm text-terracotta">{message}</p>}
 
           {/* Counts */}
           <div className="rounded-lg border p-3">
             <p className="text-sm font-medium">Plants in bed</p>
             {counts.size === 0 ? (
-              <p className="text-sm text-gray-600">Nothing placed yet.</p>
+              <p className="text-sm text-earth-warm">Nothing placed yet.</p>
             ) : (
               <ul className="mt-2 text-sm space-y-1">
                 {Array.from(counts.entries()).map(([name, count]) => (
@@ -2341,7 +2341,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     </span>
                     <button
                       onClick={() => deleteAllOfPlant(name)}
-                      className="text-xs text-red-500 hover:text-red-700 hover:underline"
+                      className="text-xs text-terracotta hover:text-terracotta-dark hover:underline"
                       title={`Remove all ${name}`}
                     >
                       Remove all
@@ -2373,9 +2373,9 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               )}
 
               {companionSuggestions.goodPairs.length > 0 && (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-2">
-                  <p className="text-xs font-medium text-green-800 mb-1">Good Pairings</p>
-                  <ul className="text-xs text-green-700 space-y-1">
+                <div className="rounded-lg border border-sage/30 bg-sage/10 p-2">
+                  <p className="text-xs font-medium text-sage-dark mb-1">Good Pairings</p>
+                  <ul className="text-xs text-sage-dark space-y-1">
                     {companionSuggestions.goodPairs.slice(0, 5).map((pair, idx) => (
                       <li key={idx}>
                         <span className="font-medium">{pair.plant1}</span> +{" "}
@@ -2383,7 +2383,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       </li>
                     ))}
                     {companionSuggestions.goodPairs.length > 5 && (
-                      <li className="text-green-600">
+                      <li className="text-sage-dark">
                         +{companionSuggestions.goodPairs.length - 5} more
                       </li>
                     )}
@@ -2398,15 +2398,15 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             <p className="text-sm font-medium mb-2">Status Colors</p>
             <div className="grid grid-cols-2 gap-1 text-xs">
               <div className="flex items-center gap-1">
-                <div className="w-4 h-4 rounded-full bg-slate-300 border-2 border-slate-400" />
+                <div className="w-4 h-4 rounded-full bg-cream-200 border-2 border-earth-warm/40" />
                 <span>Planned</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-4 h-4 rounded-full bg-blue-300 border-2 border-blue-500" />
+                <div className="w-4 h-4 rounded-full bg-mustard-light border-2 border-mustard" />
                 <span>Seeds started</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-4 h-4 rounded-full bg-emerald-300 border-2 border-emerald-500" />
+                <div className="w-4 h-4 rounded-full bg-sage-light border-2 border-sage" />
                 <span>Growing</span>
               </div>
               <div className="flex items-center gap-1">
@@ -2426,7 +2426,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               <p className="text-sm font-medium">Crop Rotation History</p>
               <button
                 onClick={() => setShowHistory(!showHistory)}
-                className="text-xs text-blue-600 hover:text-blue-800"
+                className="text-xs text-sage hover:text-sage-dark"
               >
                 {showHistory ? "Hide" : "Show"}
               </button>
@@ -2435,7 +2435,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             {showHistory && (
               <div className="space-y-2">
                 {historyYears.length === 0 ? (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-earth-warm">
                     No history yet. Archive completed harvests to track crop rotation.
                   </p>
                 ) : (
@@ -2443,7 +2443,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     <select
                       value={selectedHistoryYear || ""}
                       onChange={(e) => setSelectedHistoryYear(Number(e.target.value))}
-                      className="w-full text-sm rounded border border-slate-300 px-2 py-1"
+                      className="w-full text-sm rounded border border-cream-200 px-2 py-1"
                     >
                       {historyYears.map((year) => (
                         <option key={year} value={year}>
@@ -2458,11 +2458,11 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                         .map((h) => (
                           <div
                             key={h.id}
-                            className="text-xs p-2 rounded bg-slate-50 border border-slate-200"
+                            className="text-xs p-2 rounded bg-cream-50 border border-cream-200"
                           >
                             <div className="flex items-center justify-between">
                               <span className="font-medium">{h.plantName}</span>
-                              <span className="text-slate-500 capitalize">{h.seasonName}</span>
+                              <span className="text-earth-warm capitalize">{h.seasonName}</span>
                             </div>
                             {h.plantType && (
                               <span className="inline-block mt-1 px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">
@@ -2470,7 +2470,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                               </span>
                             )}
                             {h.harvestYield && (
-                              <p className="text-slate-600 mt-1">
+                              <p className="text-earth-warm mt-1">
                                 Yield: {h.harvestYield} {h.harvestYieldUnit}
                               </p>
                             )}
@@ -2482,7 +2482,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               </div>
             )}
 
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-earth-warm mt-2">
               Tip: Rotate plant families to prevent soil depletion and disease.
             </p>
           </div>
@@ -2494,7 +2494,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             <p className="text-sm font-medium">
               Bed Layout
               {draggedPlant && (
-                <span className="ml-2 text-emerald-600">
+                <span className="ml-2 text-sage-dark">
                   — {draggedPlacement ? "Moving" : "Placing"} {draggedPlant.name}
                 </span>
               )}
@@ -2506,8 +2506,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 onClick={() => setShowPlantIcons(!showPlantIcons)}
                 className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
                   showPlantIcons
-                    ? "bg-emerald-500 border-emerald-600 text-white"
-                    : "hover:bg-gray-50 active:bg-gray-100"
+                    ? "bg-sage border-sage-dark text-white"
+                    : "hover:bg-cream-100 active:bg-cream-200"
                 }`}
                 title={showPlantIcons ? "Show text labels" : "Show plant icons"}
               >
@@ -2521,7 +2521,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
                   showCompanionIndicators
                     ? "bg-purple-500 border-purple-600 text-white"
-                    : "hover:bg-gray-50 active:bg-gray-100"
+                    : "hover:bg-cream-100 active:bg-cream-200"
                 }`}
                 title={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
               >
@@ -2535,7 +2535,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
                   showHeightIndicators
                     ? "bg-amber-500 border-amber-600 text-white"
-                    : "hover:bg-gray-50 active:bg-gray-100"
+                    : "hover:bg-cream-100 active:bg-cream-200"
                 }`}
                 title={showHeightIndicators ? "Hide height/shadow indicators" : "Show height/shadow warnings"}
               >
@@ -2549,7 +2549,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
                   showPollinatorIndicators
                     ? "bg-yellow-500 border-yellow-600 text-white"
-                    : "hover:bg-gray-50 active:bg-gray-100"
+                    : "hover:bg-cream-100 active:bg-cream-200"
                 }`}
                 title={showPollinatorIndicators ? "Hide pollinator indicators" : "Show plants that attract pollinators"}
               >
@@ -2563,7 +2563,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 className={`h-10 px-3 border rounded-lg transition-all flex items-center justify-center gap-2 ${
                   showWaterZoneIndicators
                     ? "bg-blue-500 border-blue-600 text-white"
-                    : "hover:bg-gray-50 active:bg-gray-100"
+                    : "hover:bg-cream-100 active:bg-cream-200"
                 }`}
                 title={showWaterZoneIndicators ? "Hide water zone indicators" : "Show water needs by plant"}
               >
@@ -2571,25 +2571,25 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 <span className="text-sm font-medium">Water</span>
               </button>
 
-              <span className="text-sm text-gray-600">{zoom.toFixed(1)}x</span>
+              <span className="text-sm text-earth-warm">{zoom.toFixed(1)}x</span>
               <div className="flex gap-2">
                 <button
                   onClick={handleZoomOut}
-                  className="w-10 h-10 text-lg border rounded-lg hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all flex items-center justify-center"
+                  className="w-10 h-10 text-lg border rounded-lg hover:bg-cream-100 active:bg-cream-200 active:scale-95 transition-all flex items-center justify-center"
                   title="Zoom out"
                 >
                   −
                 </button>
                 <button
                   onClick={handleZoomReset}
-                  className="px-4 h-10 text-sm border rounded-lg hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all"
+                  className="px-4 h-10 text-sm border rounded-lg hover:bg-cream-100 active:bg-cream-200 active:scale-95 transition-all"
                   title="Fit to screen"
                 >
                   Fit
                 </button>
                 <button
                   onClick={handleZoomIn}
-                  className="w-10 h-10 text-lg border rounded-lg hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all flex items-center justify-center"
+                  className="w-10 h-10 text-lg border rounded-lg hover:bg-cream-100 active:bg-cream-200 active:scale-95 transition-all flex items-center justify-center"
                   title="Zoom in"
                 >
                   +
@@ -2682,7 +2682,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   return (
                     <div
                       key={idx}
-                      className="absolute rounded-full bg-emerald-400/30 border-2 border-emerald-300/60 border-dashed pointer-events-none transition-opacity duration-200"
+                      className="absolute rounded-full bg-sage/30 border-2 border-sage-light/60 border-dashed pointer-events-none transition-opacity duration-200"
                       style={{
                         left: displayPos.x * PIXELS_PER_INCH,
                         top: displayPos.y * PIXELS_PER_INCH,
@@ -2728,8 +2728,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   <div
                     className={`absolute rounded-full pointer-events-none flex items-center justify-center transition-all duration-150 ${previewCompanionClass} ${
                       isClickMode
-                        ? "bg-emerald-400/50 border-2 border-emerald-400 cursor-pointer"
-                        : "bg-emerald-400/70 border-3 border-emerald-300"
+                        ? "bg-sage/50 border-2 border-sage cursor-pointer"
+                        : "bg-sage/70 border-3 border-sage-light"
                     }`}
                     style={{
                       left: displayPos.x * PIXELS_PER_INCH,
@@ -2828,7 +2828,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                         isBeingDragged
                           ? "opacity-30 scale-90"
                           : isRecentlyPlaced
-                          ? "scale-110 ring-4 ring-emerald-400 ring-opacity-50"
+                          ? "scale-110 ring-4 ring-sage-light ring-opacity-50"
                           : "hover:scale-105"
                       } ${companionClass}`}
                       style={{
@@ -2896,7 +2896,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                           deletePlacement(p.id);
                         }
                       }}
-                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center text-sm font-bold shadow-md opacity-70 md:opacity-0 md:group-hover:opacity-100 hover:bg-red-600 active:bg-red-700 active:scale-95 transition-all z-10"
+                      className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-terracotta text-white flex items-center justify-center text-sm font-bold shadow-md opacity-70 md:opacity-0 md:group-hover:opacity-100 hover:bg-terracotta-dark active:bg-terracotta-dark active:scale-95 transition-all z-10"
                       title={`Remove ${p.plant.name}`}
                     >
                       ×
@@ -2911,8 +2911,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                             : heightCategory === "medium"
                             ? "bg-yellow-400 text-yellow-900"
                             : heightCategory === "short"
-                            ? "bg-green-400 text-green-900"
-                            : "bg-gray-300 text-gray-600"
+                            ? "bg-sage text-earth-deep"
+                            : "bg-cream-200 text-earth-warm"
                         }`}
                         title={`Height: ${p.plant.averageHeightInches ? `${Math.round(p.plant.averageHeightInches)}"` : "Unknown"}`}
                       >
@@ -2976,7 +2976,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               {/* Touch drag indicator */}
               {isTouchDragging && touchPosition && draggedPlant && (
                 <div
-                  className="fixed rounded-full bg-emerald-400/80 border-2 border-emerald-600 pointer-events-none flex items-center justify-center shadow-xl z-50 animate-pulse"
+                  className="fixed rounded-full bg-sage/80 border-2 border-sage-dark pointer-events-none flex items-center justify-center shadow-xl z-50 animate-pulse"
                   style={{
                     width: 60,
                     height: 60,
@@ -2992,7 +2992,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       <span style={{ fontSize: 42 }}>{icon}</span>
                     );
                   })() : (
-                    <span className="text-xs font-medium text-emerald-900">
+                    <span className="text-xs font-medium text-earth-deep">
                       {draggedPlant.name.charAt(0)}
                     </span>
                   )}
@@ -3015,7 +3015,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
           </div>
 
           {draggedPlant && (
-            <p className="mt-2 text-xs text-emerald-600">
+            <p className="mt-2 text-xs text-sage-dark">
               {draggedPlacement ? "Drop" : "Place"} {draggedPlant.name} on a highlighted zone
             </p>
           )}
@@ -3037,13 +3037,13 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
       {companionAlert && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
           <div className="bg-white rounded-lg shadow-xl border overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-            <div className="flex items-center justify-between px-4 py-2 bg-slate-100 border-b">
+            <div className="flex items-center justify-between px-4 py-2 bg-cream-100 border-b">
               <span className="font-medium text-sm">
                 Companion Info for {companionAlert.plantName}
               </span>
               <button
                 onClick={() => setCompanionAlert(null)}
-                className="text-slate-400 hover:text-slate-600 text-lg leading-none"
+                className="text-earth-warm/60 hover:text-earth-warm text-lg leading-none"
               >
                 ×
               </button>
@@ -3066,27 +3066,27 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               )}
               {companionAlert.goodPairs.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                  <p className="text-xs font-semibold text-sage-dark flex items-center gap-1">
                     <span>✓</span> Good companions:
                   </p>
-                  <ul className="text-xs text-emerald-600 space-y-1 pl-5">
+                  <ul className="text-xs text-sage-dark space-y-1 pl-5">
                     {companionAlert.goodPairs.map((pair, idx) => (
                       <li key={idx}>
                         <span className="font-medium">{pair.plant}</span>
-                        <span className="text-emerald-500"> — {pair.reason}</span>
+                        <span className="text-sage"> — {pair.reason}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
               {companionAlert.goodPairs.length === 0 && companionAlert.badPairs.length === 0 && (
-                <p className="text-xs text-slate-500">No known companion relationships.</p>
+                <p className="text-xs text-earth-warm">No known companion relationships.</p>
               )}
             </div>
-            <div className="px-4 py-2 bg-slate-50 border-t">
+            <div className="px-4 py-2 bg-cream-50 border-t">
               <button
                 onClick={() => setCompanionAlert(null)}
-                className="w-full text-xs text-slate-600 hover:text-slate-800 font-medium"
+                className="w-full text-xs text-earth-warm hover:text-earth-deep font-medium"
               >
                 Got it
               </button>
@@ -3098,24 +3098,24 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
       {/* Undo delete toast */}
       {deletedPlacement && (
         <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-right-4 duration-300">
-          <div className="bg-slate-800 text-white rounded-lg shadow-xl px-4 py-3 flex items-center gap-3">
+          <div className="bg-earth-deep text-white rounded-lg shadow-xl px-4 py-3 flex items-center gap-3">
             <div className="flex-1">
               <p className="text-sm font-medium">
                 Removed {deletedPlacement.placement.plant.name}
               </p>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-cream-200">
                 Click undo to restore
               </p>
             </div>
             <button
               onClick={undoDelete}
-              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded transition-colors"
+              className="px-3 py-1.5 bg-sage hover:bg-sage text-white text-sm font-medium rounded transition-colors"
             >
               Undo
             </button>
             <button
               onClick={clearUndoTimer}
-              className="text-slate-400 hover:text-white text-lg leading-none ml-1"
+              className="text-earth-warm/60 hover:text-white text-lg leading-none ml-1"
               title="Dismiss"
             >
               ×

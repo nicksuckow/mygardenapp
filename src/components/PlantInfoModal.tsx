@@ -35,33 +35,33 @@ export default function PlantInfoModal({
         {/* Header with close button */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h2 className="text-lg font-semibold text-slate-900">Plant Information</h2>
+            <h2 className="text-lg font-semibold text-earth-deep">Plant Information</h2>
             {(bedName || placementInfo) && (
-              <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-600">
+              <div className="mt-1 flex flex-wrap gap-2 text-xs text-earth-warm">
                 {bedName && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-blue-700 font-medium">
+                  <span className="rounded-full bg-sage/20 px-2 py-0.5 text-sage-dark font-medium">
                     Bed: {bedName}
                   </span>
                 )}
                 {placementInfo && (
                   <>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-700 font-medium">
+                    <span className="rounded-full bg-cream-100 px-2 py-0.5 text-earth-deep font-medium">
                       Count: {placementInfo.count}
                     </span>
                     {placementInfo.status && placementInfo.status !== "planned" && (
                       <span
                         className={`rounded-full px-2 py-0.5 font-medium ${
                           placementInfo.status === "planted"
-                            ? "bg-blue-100 text-blue-700"
+                            ? "bg-sage/20 text-sage-dark"
                             : placementInfo.status === "growing"
-                            ? "bg-green-100 text-green-700"
+                            ? "bg-sage/20 text-sage-dark"
                             : placementInfo.status === "harvesting"
                             ? "bg-orange-100 text-orange-700"
                             : placementInfo.status === "harvested"
                             ? "bg-purple-100 text-purple-700"
                             : placementInfo.status === "removed"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-slate-100 text-slate-700"
+                            ? "bg-terracotta/20 text-terracotta-dark"
+                            : "bg-cream-100 text-earth-deep"
                         }`}
                       >
                         {placementInfo.status.charAt(0).toUpperCase() + placementInfo.status.slice(1)}
@@ -74,7 +74,7 @@ export default function PlantInfoModal({
           </div>
           <button
             onClick={onClose}
-            className="ml-3 rounded p-1 hover:bg-slate-100"
+            className="ml-3 rounded p-1 hover:bg-cream-100"
             aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

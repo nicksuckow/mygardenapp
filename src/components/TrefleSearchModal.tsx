@@ -97,20 +97,20 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-lg border border-slate-200 bg-white shadow-lg">
+      <div className="w-full max-w-2xl max-h-[80vh] flex flex-col rounded-lg border border-cream-200 bg-white shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 p-4">
+        <div className="flex items-center justify-between border-b border-cream-200 p-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-semibold text-earth-deep">
               Search Trefle Plant Database
             </h2>
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-xs text-earth-warm mt-1">
               Import plant data from the free Trefle botanical API
             </p>
           </div>
           <button
             onClick={onClose}
-            className="rounded p-1 hover:bg-slate-100"
+            className="rounded p-1 hover:bg-cream-100"
             aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +120,7 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
         </div>
 
         {/* Search Form */}
-        <div className="border-b border-slate-200 p-4">
+        <div className="border-b border-cream-200 p-4">
           <form onSubmit={handleSearch} className="space-y-3">
             <div>
               <input
@@ -128,18 +128,18 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by common or scientific name..."
-                className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+                className="w-full rounded border border-cream-200 px-3 py-2 text-sm focus:border-earth-warm focus:outline-none focus:ring-1 focus:ring-earth-warm"
                 autoFocus
               />
             </div>
 
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm text-slate-700">
+              <label className="flex items-center gap-2 text-sm text-earth-deep">
                 <input
                   type="checkbox"
                   checked={vegetableOnly}
                   onChange={(e) => setVegetableOnly(e.target.checked)}
-                  className="rounded border-slate-300"
+                  className="rounded border-cream-200"
                 />
                 Vegetables only
               </label>
@@ -147,7 +147,7 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
               <button
                 type="submit"
                 disabled={searching}
-                className="rounded bg-black px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded bg-black px-4 py-1.5 text-sm font-medium text-white hover:bg-earth-deep disabled:opacity-50"
               >
                 {searching ? "Searching..." : "Search"}
               </button>
@@ -155,7 +155,7 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
           </form>
 
           {total > 0 && (
-            <p className="mt-2 text-xs text-slate-600">
+            <p className="mt-2 text-xs text-earth-warm">
               Found {total} result{total !== 1 ? "s" : ""}
             </p>
           )}
@@ -164,13 +164,13 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
         {/* Results */}
         <div className="flex-1 overflow-y-auto p-4">
           {error && (
-            <div className="mb-4 rounded bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+            <div className="mb-4 rounded bg-terracotta-50 border border-terracotta/30 px-3 py-2 text-sm text-terracotta">
               {error}
             </div>
           )}
 
           {results.length === 0 && !searching && (
-            <div className="py-8 text-center text-sm text-slate-500">
+            <div className="py-8 text-center text-sm text-earth-warm">
               Enter a search term to find plants
             </div>
           )}
@@ -179,29 +179,29 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
             {results.map((plant) => (
               <div
                 key={plant.id}
-                className="flex items-center justify-between rounded border border-slate-200 p-3 hover:bg-slate-50"
+                className="flex items-center justify-between rounded border border-cream-200 p-3 hover:bg-cream-50"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-slate-900">
+                    <h3 className="font-medium text-earth-deep">
                       {plant.common_name || plant.scientific_name}
                     </h3>
                     {plant.vegetable && (
-                      <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
+                      <span className="rounded bg-sage/20 px-1.5 py-0.5 text-xs font-medium text-sage-dark">
                         Vegetable
                       </span>
                     )}
                     {plant.edible && !plant.vegetable && (
-                      <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700">
+                      <span className="rounded bg-sage/20 px-1.5 py-0.5 text-xs font-medium text-sage-dark">
                         Edible
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-600 italic mt-0.5">
+                  <p className="text-xs text-earth-warm italic mt-0.5">
                     {plant.scientific_name}
                   </p>
                   {plant.family_common_name && (
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-earth-warm mt-0.5">
                       {plant.family_common_name} family
                     </p>
                   )}
@@ -210,7 +210,7 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
                 <button
                   onClick={() => handleImport(plant.id)}
                   disabled={importing === plant.id}
-                  className="rounded bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+                  className="rounded bg-black px-3 py-1.5 text-xs font-medium text-white hover:bg-earth-deep disabled:opacity-50"
                 >
                   {importing === plant.id ? "Importing..." : "Import"}
                 </button>
@@ -220,8 +220,8 @@ export default function TrefleSearchModal({ isOpen, onClose, onImport }: TrefleS
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-200 p-4">
-          <p className="text-xs text-slate-500">
+        <div className="border-t border-cream-200 p-4">
+          <p className="text-xs text-earth-warm">
             Data provided by <a href="https://trefle.io" target="_blank" rel="noopener noreferrer" className="underline">Trefle.io</a>
             {" "}- Free rate limit: 60 requests/minute
           </p>

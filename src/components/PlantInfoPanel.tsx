@@ -58,27 +58,27 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
     return (
       <div className="space-y-2">
         <div>
-          <h3 className="font-semibold text-slate-900">{plant.name}</h3>
+          <h3 className="font-semibold text-earth-deep">{plant.name}</h3>
           {plant.variety && (
-            <p className="text-xs text-slate-600">{plant.variety}</p>
+            <p className="text-xs text-earth-warm">{plant.variety}</p>
           )}
           {plant.scientificName && (
-            <p className="text-xs italic text-slate-600">{plant.scientificName}</p>
+            <p className="text-xs italic text-earth-warm">{plant.scientificName}</p>
           )}
         </div>
 
         {plant.description && (
-          <p className="text-xs text-slate-700 line-clamp-2">{plant.description}</p>
+          <p className="text-xs text-earth-deep line-clamp-2">{plant.description}</p>
         )}
 
         <div className="flex flex-wrap gap-1">
           {plant.cycle && (
-            <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+            <span className="rounded bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark">
               {plant.cycle}
             </span>
           )}
           {plant.edible && (
-            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+            <span className="rounded bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark">
               Edible
             </span>
           )}
@@ -89,7 +89,7 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
           )}
         </div>
 
-        <div className="text-xs text-slate-700 space-y-1">
+        <div className="text-xs text-earth-deep space-y-1">
           {(plant.watering || plant.sunlight) && (
             <p>
               {plant.watering && `💧 ${plant.watering}`}
@@ -111,24 +111,24 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-900">{plant.name}</h3>
+        <h3 className="text-lg font-semibold text-earth-deep">{plant.name}</h3>
         {plant.variety && (
-          <p className="text-sm text-slate-600">{plant.variety}</p>
+          <p className="text-sm text-earth-warm">{plant.variety}</p>
         )}
         {plant.scientificName && (
-          <p className="text-sm italic text-slate-600">{plant.scientificName}</p>
+          <p className="text-sm italic text-earth-warm">{plant.scientificName}</p>
         )}
       </div>
 
       {/* Badges */}
       <div className="flex flex-wrap gap-1.5">
         {plant.cycle && (
-          <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
+          <span className="rounded-full bg-sage/20 px-2.5 py-1 text-xs font-medium text-sage-dark">
             {plant.cycle}
           </span>
         )}
         {plant.edible && (
-          <span className="rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
+          <span className="rounded-full bg-sage/20 px-2.5 py-1 text-xs font-medium text-sage-dark">
             Edible{plant.ediblePart ? `: ${plant.ediblePart}` : ""}
           </span>
         )}
@@ -153,7 +153,7 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
           </span>
         )}
         {(plant.poisonousToHumans === 1 || plant.poisonousToPets === 1) && (
-          <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">
+          <span className="rounded-full bg-terracotta/20 px-2.5 py-1 text-xs font-medium text-terracotta-dark">
             ⚠️ Toxic
           </span>
         )}
@@ -161,8 +161,8 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
 
       {/* Description */}
       {plant.description && (
-        <div className={`${ui.card} bg-slate-50 p-3`}>
-          <p className="text-sm text-slate-700">{plant.description}</p>
+        <div className={`${ui.card} bg-cream-50 p-3`}>
+          <p className="text-sm text-earth-deep">{plant.description}</p>
         </div>
       )}
 
@@ -170,8 +170,8 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Physical Characteristics */}
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-900">Physical</h4>
-          <div className="text-xs text-slate-700 space-y-1">
+          <h4 className="text-sm font-semibold text-earth-deep">Physical</h4>
+          <div className="text-xs text-earth-deep space-y-1">
             <p>📏 Spacing: {plant.spacingInches}"</p>
             {plant.plantingDepthInches != null && (
               <p>🌱 Depth: {fmtInches(plant.plantingDepthInches)}"</p>
@@ -187,8 +187,8 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
 
         {/* Growing Conditions */}
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-900">Conditions</h4>
-          <div className="text-xs text-slate-700 space-y-1">
+          <h4 className="text-sm font-semibold text-earth-deep">Conditions</h4>
+          <div className="text-xs text-earth-deep space-y-1">
             {plant.sunlight && <p>☀️ {plant.sunlight}</p>}
             {plant.watering && <p>💧 {plant.watering}</p>}
             {(plant.minTemperatureC != null || plant.maxTemperatureC != null) && (
@@ -217,8 +217,8 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
         plant.floweringSeason ||
         plant.harvestSeason) && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-900">Timing</h4>
-          <div className="text-xs text-slate-700 space-y-1">
+          <h4 className="text-sm font-semibold text-earth-deep">Timing</h4>
+          <div className="text-xs text-earth-deep space-y-1">
             {(plant.daysToMaturityMin != null || plant.daysToMaturityMax != null) && (
               <p>
                 ⏱️ Days to Maturity: {plant.daysToMaturityMin ?? "?"}
@@ -246,18 +246,18 @@ export default function PlantInfoPanel({ plant, compact = false }: PlantInfoPane
       {/* Care & Maintenance */}
       {plant.maintenance && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-900">Maintenance</h4>
-          <p className="text-xs text-slate-700">{plant.maintenance}</p>
+          <h4 className="text-sm font-semibold text-earth-deep">Maintenance</h4>
+          <p className="text-xs text-earth-deep">{plant.maintenance}</p>
         </div>
       )}
 
       {/* Notes */}
       {plant.notes && (
         <details className="text-xs">
-          <summary className="cursor-pointer text-slate-700 font-medium hover:text-slate-900">
+          <summary className="cursor-pointer text-earth-deep font-medium hover:text-earth-deep">
             Additional Notes
           </summary>
-          <div className="mt-2 text-slate-600 whitespace-pre-line bg-slate-50 rounded p-2">
+          <div className="mt-2 text-earth-warm whitespace-pre-line bg-cream-50 rounded p-2">
             {plant.notes}
           </div>
         </details>

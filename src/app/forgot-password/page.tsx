@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ui } from "@/lib/uiStyles";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -52,24 +53,24 @@ export default function ForgotPasswordPage() {
 
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="w-full max-w-md space-y-6 rounded-lg border border-cream-200 bg-white p-8 shadow-sm">
           <div className="text-center">
-            <h1 className="text-2xl font-semibold text-slate-900">
+            <h1 className="text-2xl font-display font-semibold text-earth-deep">
               Reset Token Generated
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-earth-warm">
               Your password reset token has been created
             </p>
           </div>
 
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-            <p className="mb-2 text-sm font-medium text-green-900">
+          <div className="rounded-lg border border-sage/30 bg-sage/10 p-4">
+            <p className="mb-2 text-sm font-medium text-sage-dark">
               Reset Token (save this):
             </p>
-            <div className="mb-3 rounded bg-white p-3 font-mono text-xs text-slate-900 break-all">
+            <div className="mb-3 rounded bg-white p-3 font-mono text-xs text-earth-deep break-all">
               {resetToken}
             </div>
-            <p className="text-xs text-green-700">
+            <p className="text-xs text-sage-dark">
               Expires: {expiresDate}
             </p>
           </div>
@@ -77,21 +78,21 @@ export default function ForgotPasswordPage() {
           <div className="space-y-3">
             <Link
               href={resetUrl}
-              className="block w-full rounded bg-black px-4 py-2 text-center text-sm font-medium text-white hover:bg-slate-800"
+              className={`block w-full text-center ${ui.btn} ${ui.btnPrimary}`}
             >
               Reset Password Now
             </Link>
 
             <Link
               href="/login"
-              className="block text-center text-sm text-slate-600 hover:underline"
+              className="block text-center text-sm text-earth-warm hover:text-earth-deep hover:underline"
             >
               Back to login
             </Link>
           </div>
 
-          <div className="rounded border border-blue-200 bg-blue-50 p-3">
-            <p className="text-xs text-blue-900">
+          <div className="rounded border border-mustard/30 bg-mustard/10 p-3">
+            <p className="text-xs text-earth-deep">
               <strong>Development Mode:</strong> In production, this token would be sent to your email instead of being displayed here.
             </p>
           </div>
@@ -102,12 +103,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md space-y-6 rounded-lg border border-cream-200 bg-white p-8 shadow-sm">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-display font-semibold text-earth-deep">
             Forgot Password
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-earth-warm">
             Enter your email to receive a password reset token
           </p>
         </div>
@@ -116,7 +117,7 @@ export default function ForgotPasswordPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-earth-deep mb-1"
             >
               Email
             </label>
@@ -125,7 +126,7 @@ export default function ForgotPasswordPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              className="w-full rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               required
               autoComplete="email"
               autoFocus
@@ -133,7 +134,7 @@ export default function ForgotPasswordPage() {
           </div>
 
           {error && (
-            <div className="rounded bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+            <div className="rounded bg-terracotta/10 border border-terracotta/30 px-3 py-2 text-sm text-terracotta-dark">
               {error}
             </div>
           )}
@@ -141,7 +142,7 @@ export default function ForgotPasswordPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full ${ui.btn} ${ui.btnPrimary}`}
           >
             {loading ? "Processing..." : "Request Reset Token"}
           </button>
@@ -150,13 +151,13 @@ export default function ForgotPasswordPage() {
         <div className="text-center space-y-2">
           <Link
             href="/login"
-            className="block text-sm text-slate-600 hover:underline"
+            className="block text-sm text-earth-warm hover:text-earth-deep hover:underline"
           >
             Back to login
           </Link>
           <Link
             href="/signup"
-            className="block text-sm text-slate-600 hover:underline"
+            className="block text-sm text-earth-warm hover:text-earth-deep hover:underline"
           >
             Create a new account
           </Link>

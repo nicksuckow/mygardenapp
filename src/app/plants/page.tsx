@@ -518,26 +518,26 @@ export default function PlantsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border border-green-100 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sage/10 via-sage/10 to-teal-50 border border-sage/20 p-6">
         {/* Decorative plant in corner */}
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-32 h-32 text-sage-dark" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
           </svg>
         </div>
 
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 bg-gradient-to-br from-green-400 to-emerald-500 text-white p-2.5 rounded-xl shadow-md">
+            <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage text-white p-2.5 rounded-xl shadow-md">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-sage-dark to-sage-dark bg-clip-text text-transparent">
                 🌿 Plants
               </h1>
-              <p className="text-emerald-800 text-sm mt-1">
+              <p className="text-sage-dark text-sm mt-1">
                 Add plants with timing rules (weeks relative to last frost).
               </p>
             </div>
@@ -558,12 +558,12 @@ export default function PlantsPage() {
 
       {/* Backfill Results */}
       {backfillResults && showBackfillDetails && (
-        <div className="rounded-lg border-2 border-slate-200 bg-white p-4">
+        <div className="rounded-lg border-2 border-cream-200 bg-white p-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-slate-900">Backfill Results</h3>
+            <h3 className="text-sm font-semibold text-earth-deep">Backfill Results</h3>
             <button
               onClick={() => setShowBackfillDetails(false)}
-              className="text-slate-400 hover:text-slate-600"
+              className="text-earth-warm/60 hover:text-earth-warm"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -574,17 +574,17 @@ export default function PlantsPage() {
           {/* Summary badges */}
           <div className="flex flex-wrap gap-2 mb-4">
             {backfillResults.summary.updated > 0 && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-sage/20 text-sage-dark">
                 {backfillResults.summary.updated} updated
               </span>
             )}
             {backfillResults.summary.alreadyComplete > 0 && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-cream-100 text-earth-warm">
                 {backfillResults.summary.alreadyComplete} already complete
               </span>
             )}
             {backfillResults.summary.noNewData > 0 && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-cream-100 text-earth-warm">
                 {backfillResults.summary.noNewData} no data available
               </span>
             )}
@@ -594,7 +594,7 @@ export default function PlantsPage() {
               </span>
             )}
             {backfillResults.summary.errors > 0 && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-terracotta/20 text-terracotta-dark">
                 {backfillResults.summary.errors} errors
               </span>
             )}
@@ -607,15 +607,15 @@ export default function PlantsPage() {
                   key={result.id}
                   className={`text-sm p-2 rounded ${
                     result.status === "updated"
-                      ? "bg-green-50 border border-green-200"
+                      ? "bg-sage/10 border border-sage/30"
                       : result.status === "error"
-                      ? "bg-red-50 border border-red-200"
+                      ? "bg-terracotta-50 border border-terracotta/30"
                       : "bg-amber-50 border border-amber-200"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     {result.status === "updated" && (
-                      <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-sage-dark flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
@@ -625,16 +625,16 @@ export default function PlantsPage() {
                       </svg>
                     )}
                     {result.status === "error" && (
-                      <svg className="w-4 h-4 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 text-terracotta flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     )}
                     <span className="font-medium">{result.name}</span>
                   </div>
                   {result.status === "updated" && (
-                    <div className="text-xs text-green-700 mt-1 ml-6">
+                    <div className="text-xs text-sage-dark mt-1 ml-6">
                       {result.fieldsUpdated && <p>Updated: {result.fieldsUpdated.join(", ")}</p>}
-                      {result.debug && <p className="text-green-600 mt-0.5 font-mono text-[10px]">{result.debug}</p>}
+                      {result.debug && <p className="text-sage-dark mt-0.5 font-mono text-[10px]">{result.debug}</p>}
                     </div>
                   )}
                   {result.status === "not_found" && (
@@ -646,14 +646,14 @@ export default function PlantsPage() {
                     </div>
                   )}
                   {result.status === "error" && result.error && (
-                    <p className="text-xs text-red-700 mt-1 ml-6">
+                    <p className="text-xs text-terracotta mt-1 ml-6">
                       {result.error}
                     </p>
                   )}
                 </div>
               ))}
             {backfillResults.results.length === 0 && (
-              <p className="text-sm text-slate-500 text-center py-4">
+              <p className="text-sm text-cream-500 text-center py-4">
                 All plants already have complete data - nothing to update.
               </p>
             )}
@@ -665,20 +665,20 @@ export default function PlantsPage() {
       <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
         <div>
           <h2 className="text-base font-semibold">Add a New Plant</h2>
-          <p className="text-sm text-slate-600">Search the Verdantly database first, or manually enter plant details below</p>
+          <p className="text-sm text-earth-warm">Search the Verdantly database first, or manually enter plant details below</p>
         </div>
 
         {/* Verdantly Search - Primary Action */}
-        <div className="rounded-lg border-2 border-emerald-200 bg-emerald-50 p-4">
+        <div className="rounded-lg border-2 border-sage/30 bg-sage/10 p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0">
-              <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-sage-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-emerald-900 mb-1">Search Plant Database</h3>
-              <p className="text-sm text-emerald-800 mb-3">
+              <h3 className="text-sm font-semibold text-sage-dark mb-1">Search Plant Database</h3>
+              <p className="text-sm text-sage-dark mb-3">
                 Find pre-filled plant data including timing, spacing, and growing requirements
               </p>
               <div className="flex flex-wrap gap-2">
@@ -726,16 +726,16 @@ export default function PlantsPage() {
         {/* Or divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200"></div>
+            <div className="w-full border-t border-cream-200"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-slate-500">Or enter manually</span>
+            <span className="bg-white px-2 text-cream-500">Or enter manually</span>
           </div>
         </div>
 
         {/* Basic Info Section */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-700">Basic Information</h3>
+          <h3 className="text-sm font-semibold text-earth-deep">Basic Information</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1.5">
               <span className="text-sm font-medium">Name *</span>
@@ -757,7 +757,7 @@ export default function PlantsPage() {
                 min={0.5}
                 step={0.5}
               />
-              <span className="text-xs text-slate-500">Distance between plants in your bed</span>
+              <span className="text-xs text-cream-500">Distance between plants in your bed</span>
             </label>
 
             <label className="grid gap-1.5">
@@ -773,14 +773,14 @@ export default function PlantsPage() {
                 step={0.25}
                 placeholder="e.g., 0.5 or 1"
               />
-              <span className="text-xs text-slate-500">How deep to plant seeds or transplants</span>
+              <span className="text-xs text-cream-500">How deep to plant seeds or transplants</span>
             </label>
           </div>
         </div>
 
         {/* Timing Section */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-slate-700">Timing & Maturity</h3>
+          <h3 className="text-sm font-semibold text-earth-deep">Timing & Maturity</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="grid gap-1.5">
               <span className="text-sm font-medium">Days to Maturity Min</span>
@@ -792,7 +792,7 @@ export default function PlantsPage() {
                 min={1}
                 placeholder="e.g., 60"
               />
-              <span className="text-xs text-slate-500">Earliest days from planting to harvest</span>
+              <span className="text-xs text-cream-500">Earliest days from planting to harvest</span>
             </label>
 
             <label className="grid gap-1.5">
@@ -805,7 +805,7 @@ export default function PlantsPage() {
                 min={1}
                 placeholder="e.g., 80"
               />
-              <span className="text-xs text-slate-500">Latest days from planting to harvest</span>
+              <span className="text-xs text-cream-500">Latest days from planting to harvest</span>
             </label>
 
             <label className="grid gap-1.5">
@@ -817,7 +817,7 @@ export default function PlantsPage() {
                 onChange={(e) => setStartWeeks(e.target.value === "" ? "" : Number(e.target.value))}
                 placeholder="e.g., 6"
               />
-              <span className="text-xs text-slate-500">When to start seeds indoors before frost date</span>
+              <span className="text-xs text-cream-500">When to start seeds indoors before frost date</span>
             </label>
 
             <label className="grid gap-1.5">
@@ -831,7 +831,7 @@ export default function PlantsPage() {
                 }
                 placeholder="e.g., 2"
               />
-              <span className="text-xs text-slate-500">When to transplant outside after frost date</span>
+              <span className="text-xs text-cream-500">When to transplant outside after frost date</span>
             </label>
 
             <label className="grid gap-1.5 sm:col-span-2">
@@ -845,7 +845,7 @@ export default function PlantsPage() {
                 }
                 placeholder="e.g., -2 for 2 weeks before frost, or 1 for 1 week after"
               />
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-cream-500">
                 Negative = weeks before frost, Positive = weeks after frost
               </span>
             </label>
@@ -883,7 +883,7 @@ export default function PlantsPage() {
           </button>
 
           {message ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <div className="rounded-lg border border-cream-200 bg-cream-50 px-3 py-2 text-sm text-earth-deep">
               {message}
             </div>
           ) : null}
@@ -896,7 +896,7 @@ export default function PlantsPage() {
           <div>
             <h2 className="text-lg font-semibold">Your plants</h2>
             {plants.length > 0 && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-cream-500">
                 {filteredPlants.length === plants.length
                   ? `${plants.length} plant${plants.length !== 1 ? "s" : ""}`
                   : `Showing ${filteredPlants.length} of ${plants.length}`}
@@ -913,10 +913,10 @@ export default function PlantsPage() {
                   placeholder="Search plants..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full sm:w-48 rounded-lg border border-slate-200 bg-white px-3 py-1.5 pl-8 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="w-full sm:w-48 rounded-lg border border-cream-200 bg-white px-3 py-1.5 pl-8 text-sm focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
                 />
                 <svg
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-earth-warm/60"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -926,7 +926,7 @@ export default function PlantsPage() {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-earth-warm/60 hover:text-earth-warm"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -939,7 +939,7 @@ export default function PlantsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="rounded-lg border border-cream-200 bg-white px-3 py-1.5 text-sm focus:border-sage focus:outline-none focus:ring-1 focus:ring-sage"
               >
                 <option value="name">Sort: A-Z</option>
                 <option value="spacing">Sort: Spacing</option>
@@ -948,13 +948,13 @@ export default function PlantsPage() {
               </select>
 
               {/* View Toggle */}
-              <div className="flex rounded-lg border border-slate-200 bg-white p-0.5">
+              <div className="flex rounded-lg border border-cream-200 bg-white p-0.5">
                 <button
                   onClick={() => setViewMode("list")}
                   className={`px-2.5 py-1 rounded-md text-sm transition-colors ${
                     viewMode === "list"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-sage/20 text-sage-dark"
+                      : "text-cream-500 hover:text-earth-deep"
                   }`}
                   title="List view"
                 >
@@ -966,8 +966,8 @@ export default function PlantsPage() {
                   onClick={() => setViewMode("cards")}
                   className={`px-2.5 py-1 rounded-md text-sm transition-colors ${
                     viewMode === "cards"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-sage/20 text-sage-dark"
+                      : "text-cream-500 hover:text-earth-deep"
                   }`}
                   title="Card view"
                 >
@@ -983,11 +983,11 @@ export default function PlantsPage() {
         {plants.length === 0 ? (
           <p className={ui.sub}>No plants yet.</p>
         ) : filteredPlants.length === 0 ? (
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-6 text-center">
-            <p className="text-slate-600">No plants match "{searchQuery}"</p>
+          <div className="rounded-lg border border-cream-200 bg-cream-50 p-6 text-center">
+            <p className="text-earth-warm">No plants match "{searchQuery}"</p>
             <button
               onClick={() => setSearchQuery("")}
-              className="mt-2 text-sm text-emerald-600 hover:text-emerald-700"
+              className="mt-2 text-sm text-sage-dark hover:text-sage-dark"
             >
               Clear search
             </button>
@@ -998,7 +998,7 @@ export default function PlantsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <tr className="border-b border-cream-200 bg-cream-50 text-left text-xs font-medium text-cream-500 uppercase tracking-wider">
                     <th className="px-4 py-3">Plant</th>
                     <th className="px-4 py-3 text-center hidden sm:table-cell">Spacing</th>
                     <th className="px-4 py-3 text-center hidden sm:table-cell">DTM</th>
@@ -1006,7 +1006,7 @@ export default function PlantsPage() {
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-cream-100">
                   {filteredPlants.map((p) => {
                     const isEditing = editingId === p.id;
 
@@ -1076,13 +1076,13 @@ export default function PlantsPage() {
                     }
 
                     return (
-                      <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={p.id} className="hover:bg-cream-50 transition-colors">
                         <td className="px-4 py-3">
                           <div>
-                            <p className="font-medium text-slate-900">{p.name}</p>
-                            {p.variety && <p className="text-xs text-slate-500">{p.variety}</p>}
+                            <p className="font-medium text-earth-deep">{p.name}</p>
+                            {p.variety && <p className="text-xs text-cream-500">{p.variety}</p>}
                             {/* Mobile-only stats */}
-                            <div className="sm:hidden mt-1 flex gap-2 text-xs text-slate-500">
+                            <div className="sm:hidden mt-1 flex gap-2 text-xs text-cream-500">
                               <span>{p.spacingInches}"</span>
                               {p.daysToMaturityMin && (
                                 <span>• {p.daysToMaturityMin}{p.daysToMaturityMax ? `-${p.daysToMaturityMax}` : ""} days</span>
@@ -1091,34 +1091,34 @@ export default function PlantsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-center hidden sm:table-cell">
-                          <span className="text-slate-700">{p.spacingInches}"</span>
+                          <span className="text-earth-deep">{p.spacingInches}"</span>
                         </td>
                         <td className="px-4 py-3 text-center hidden sm:table-cell">
                           {p.daysToMaturityMin ? (
-                            <span className="text-slate-700">
+                            <span className="text-earth-deep">
                               {p.daysToMaturityMin}{p.daysToMaturityMax ? `–${p.daysToMaturityMax}` : ""}
                             </span>
                           ) : (
-                            <span className="text-slate-400">—</span>
+                            <span className="text-earth-warm/60">—</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-center hidden md:table-cell">
                           {p.startIndoorsWeeksBeforeFrost ? (
-                            <span className="text-slate-700">{p.startIndoorsWeeksBeforeFrost}w before</span>
+                            <span className="text-earth-deep">{p.startIndoorsWeeksBeforeFrost}w before</span>
                           ) : (
-                            <span className="text-slate-400">—</span>
+                            <span className="text-earth-warm/60">—</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1">
                             <button
-                              className="px-2 py-1 text-xs text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-colors"
+                              className="px-2 py-1 text-xs text-earth-warm hover:text-sage-dark hover:bg-sage/10 rounded transition-colors"
                               onClick={() => startEdit(p)}
                             >
                               Edit
                             </button>
                             <button
-                              className="px-2 py-1 text-xs text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                              className="px-2 py-1 text-xs text-earth-warm hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
                               onClick={() => deletePlant(p.id)}
                             >
                               Delete
@@ -1146,7 +1146,7 @@ export default function PlantsPage() {
                         <div>
                           <p className="font-medium">{p.name}</p>
                           {p.variety && (
-                            <p className="text-xs text-slate-600">{p.variety}</p>
+                            <p className="text-xs text-earth-warm">{p.variety}</p>
                           )}
                         </div>
 
@@ -1171,18 +1171,18 @@ export default function PlantsPage() {
                       <div className="mt-2 space-y-2">
                         {/* Scientific Name */}
                         {p.scientificName && (
-                          <p className="text-xs italic text-slate-600">{p.scientificName}</p>
+                          <p className="text-xs italic text-earth-warm">{p.scientificName}</p>
                         )}
 
                         {/* Badges for key properties */}
                         <div className="flex flex-wrap gap-1">
                           {p.cycle && (
-                            <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                            <span className="rounded bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark">
                               {p.cycle}
                             </span>
                           )}
                           {p.edible && (
-                            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                            <span className="rounded bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark">
                               Edible{p.ediblePart ? `: ${p.ediblePart}` : ""}
                             </span>
                           )}
@@ -1204,10 +1204,10 @@ export default function PlantsPage() {
                           {p.waterZone && (
                             <span className={`rounded px-2 py-0.5 text-xs font-medium ${
                               p.waterZone === "high"
-                                ? "bg-blue-100 text-blue-700"
+                                ? "bg-sage/20 text-sage-dark"
                                 : p.waterZone === "medium"
-                                ? "bg-cyan-100 text-cyan-700"
-                                : "bg-slate-100 text-slate-700"
+                                ? "bg-cream-200 text-earth-warm"
+                                : "bg-cream-100 text-earth-deep"
                             }`}>
                               💧 {p.waterZone} water
                             </span>
@@ -1218,18 +1218,18 @@ export default function PlantsPage() {
                                 ? "bg-amber-100 text-amber-700"
                                 : p.sunlightZone === "partial"
                                 ? "bg-orange-100 text-orange-700"
-                                : "bg-slate-100 text-slate-700"
+                                : "bg-cream-100 text-earth-deep"
                             }`}>
                               ☀️ {p.sunlightZone} sun
                             </span>
                           )}
                           {p.averageHeightInches && (
-                            <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                            <span className="rounded bg-sage/20 px-2 py-0.5 text-xs font-medium text-sage-dark">
                               📏 {Math.round(p.averageHeightInches)}&quot; tall
                             </span>
                           )}
                           {(p.poisonousToHumans === 1 || p.poisonousToPets === 1) && (
-                            <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                            <span className="rounded bg-terracotta/20 px-2 py-0.5 text-xs font-medium text-terracotta-dark">
                               ⚠️ {p.poisonousToHumans === 1 && "Toxic to humans"} {p.poisonousToPets === 1 && "Toxic to pets"}
                             </span>
                           )}
@@ -1242,11 +1242,11 @@ export default function PlantsPage() {
 
                         {/* Description */}
                         {p.description && (
-                          <p className="text-xs text-slate-600 line-clamp-2">{p.description}</p>
+                          <p className="text-xs text-earth-warm line-clamp-2">{p.description}</p>
                         )}
 
                         {/* Growing Info */}
-                        <div className="text-xs text-slate-700 space-y-1">
+                        <div className="text-xs text-earth-deep space-y-1">
                           <p>
                             Spacing: {p.spacingInches}"
                             {p.averageHeightInches && ` • Height: ${Math.round(p.averageHeightInches)}"`}
@@ -1267,7 +1267,7 @@ export default function PlantsPage() {
                             </p>
                           )}
                           {(p.growthForm || p.growthHabit || p.growthRate || p.maintenance) && (
-                            <p className="text-slate-600">
+                            <p className="text-earth-warm">
                               {[p.growthForm, p.growthHabit, p.growthRate, p.maintenance].filter(Boolean).join(" • ")}
                             </p>
                           )}
@@ -1275,10 +1275,10 @@ export default function PlantsPage() {
 
                         {/* Expandable Details */}
                         <details className="text-xs">
-                          <summary className="cursor-pointer text-slate-600 hover:text-slate-900 font-medium">
+                          <summary className="cursor-pointer text-earth-warm hover:text-earth-deep font-medium">
                             More details
                           </summary>
-                          <div className="mt-2 ml-2 space-y-1 text-slate-700">
+                          <div className="mt-2 ml-2 space-y-1 text-earth-deep">
                             <p>
                               DTM: {p.daysToMaturityMin ?? "?"}
                               {p.daysToMaturityMax ? `–${p.daysToMaturityMax}` : ""} days
@@ -1298,7 +1298,7 @@ export default function PlantsPage() {
                               </p>
                             )}
                             <details className="mt-1">
-                              <summary className="cursor-pointer text-slate-600 hover:text-slate-900">
+                              <summary className="cursor-pointer text-earth-warm hover:text-earth-deep">
                                 Planting schedule
                               </summary>
                               <div className="mt-1 ml-2 space-y-1">
@@ -1326,7 +1326,7 @@ export default function PlantsPage() {
                               </div>
                             </details>
                             {p.notes && (
-                              <p className="mt-1 text-slate-600 whitespace-pre-line">{p.notes}</p>
+                              <p className="mt-1 text-earth-warm whitespace-pre-line">{p.notes}</p>
                             )}
                           </div>
                         </details>
@@ -1543,7 +1543,7 @@ export default function PlantsPage() {
                                   : d
                               )
                             }
-                            className="rounded border-slate-300"
+                            className="rounded border-cream-200"
                           />
                           <span className="text-sm font-medium">🐝 Attracts pollinators</span>
                         </label>
@@ -1569,8 +1569,8 @@ export default function PlantsPage() {
                       </div>
 
                       {/* Succession Planting Section */}
-                      <div className="pt-3 border-t border-slate-200 mt-3">
-                        <h4 className="text-sm font-semibold text-slate-700 mb-2">
+                      <div className="pt-3 border-t border-cream-200 mt-3">
+                        <h4 className="text-sm font-semibold text-earth-deep mb-2">
                           🔄 Succession Planting
                         </h4>
                         <label className="flex items-center gap-2 mb-3">
@@ -1584,7 +1584,7 @@ export default function PlantsPage() {
                                   : d
                               )
                             }
-                            className="rounded border-slate-300"
+                            className="rounded border-cream-200"
                           />
                           <span className="text-sm">Enable succession planting</span>
                         </label>
@@ -1592,7 +1592,7 @@ export default function PlantsPage() {
                         {draft?.successionEnabled && (
                           <div className="grid grid-cols-2 gap-3">
                             <label className="grid gap-1">
-                              <span className="text-xs text-slate-600">Days between plantings</span>
+                              <span className="text-xs text-earth-warm">Days between plantings</span>
                               <input
                                 type="number"
                                 min="7"
@@ -1614,7 +1614,7 @@ export default function PlantsPage() {
                               />
                             </label>
                             <label className="grid gap-1">
-                              <span className="text-xs text-slate-600">Max successions</span>
+                              <span className="text-xs text-earth-warm">Max successions</span>
                               <input
                                 type="number"
                                 min="2"

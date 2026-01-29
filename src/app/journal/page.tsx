@@ -184,8 +184,8 @@ export default function JournalPage() {
     return (
       <div className={ui.page}>
         <div className="max-w-4xl mx-auto p-4">
-          <div className="flex items-center gap-2 text-slate-500">
-            <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-earth-warm">
+            <div className="w-5 h-5 border-2 border-earth-warm/60 border-t-transparent rounded-full animate-spin" />
             Loading journal...
           </div>
         </div>
@@ -199,15 +199,15 @@ export default function JournalPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-earth-deep flex items-center gap-2">
               <span>📔</span> Garden Journal
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-earth-warm mt-1">
               Track your garden progress, observations, and milestones
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/garden" className="text-sm underline text-slate-600 hover:text-slate-800">
+            <Link href="/garden" className="text-sm underline text-earth-warm hover:text-earth-deep">
               Back to garden
             </Link>
             {!isAddingEntry && (
@@ -222,7 +222,7 @@ export default function JournalPage() {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-terracotta-50 border border-terracotta/30 rounded-lg text-terracotta text-sm">
             {error}
           </div>
         )}
@@ -230,11 +230,11 @@ export default function JournalPage() {
         {/* New Entry Form */}
         {isAddingEntry && (
           <div className="mb-6 p-4 bg-white rounded-lg border shadow-sm">
-            <h2 className="font-semibold text-slate-900 mb-4">New Journal Entry</h2>
+            <h2 className="font-semibold text-earth-deep mb-4">New Journal Entry</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-earth-deep mb-1">
                   Title (optional)
                 </label>
                 <input
@@ -247,7 +247,7 @@ export default function JournalPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-earth-deep mb-1">
                   What happened in your garden today?
                 </label>
                 <textarea
@@ -261,7 +261,7 @@ export default function JournalPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium text-earth-deep mb-1">
                     Related Bed (optional)
                   </label>
                   <select
@@ -280,7 +280,7 @@ export default function JournalPage() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Weather</label>
+                    <label className="block text-sm font-medium text-earth-deep mb-1">Weather</label>
                     <input
                       type="text"
                       value={newWeather}
@@ -290,7 +290,7 @@ export default function JournalPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Temp (F)</label>
+                    <label className="block text-sm font-medium text-earth-deep mb-1">Temp (F)</label>
                     <input
                       type="number"
                       value={newTemp}
@@ -303,7 +303,7 @@ export default function JournalPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Tags</label>
+                <label className="block text-sm font-medium text-earth-deep mb-2">Tags</label>
                 <div className="flex flex-wrap gap-2">
                   {TAG_SUGGESTIONS.map((tag) => (
                     <button
@@ -312,8 +312,8 @@ export default function JournalPage() {
                       onClick={() => toggleTag(tag)}
                       className={`px-2 py-1 rounded-full text-xs font-medium transition-all ${
                         newTags.includes(tag)
-                          ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-500"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          ? "bg-sage/20 text-sage-dark ring-1 ring-sage"
+                          : "bg-cream-100 text-earth-warm hover:bg-cream-200"
                       }`}
                     >
                       {tag}
@@ -325,7 +325,7 @@ export default function JournalPage() {
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   onClick={() => setIsAddingEntry(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800"
+                  className="px-4 py-2 text-sm text-earth-warm hover:text-earth-deep"
                   disabled={saving}
                 >
                   Cancel
@@ -345,7 +345,7 @@ export default function JournalPage() {
         {/* Filters */}
         {entries.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-3 items-center">
-            <span className="text-sm text-slate-600">Filter:</span>
+            <span className="text-sm text-earth-warm">Filter:</span>
 
             {allTags.length > 0 && (
               <div className="flex flex-wrap gap-1">
@@ -355,8 +355,8 @@ export default function JournalPage() {
                     onClick={() => setFilterTag(filterTag === tag ? null : tag)}
                     className={`px-2 py-0.5 rounded-full text-xs ${
                       filterTag === tag
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        ? "bg-sage/20 text-sage-dark"
+                        : "bg-cream-100 text-earth-warm hover:bg-cream-200"
                     }`}
                   >
                     {tag}
@@ -386,7 +386,7 @@ export default function JournalPage() {
                   setFilterTag(null);
                   setFilterBedId(null);
                 }}
-                className="text-xs text-slate-500 hover:text-slate-700 underline"
+                className="text-xs text-earth-warm hover:text-earth-deep underline"
               >
                 Clear filters
               </button>
@@ -396,7 +396,7 @@ export default function JournalPage() {
 
         {/* Entries List */}
         {filteredEntries.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
+          <div className="text-center py-12 text-earth-warm">
             <p className="text-lg mb-2">
               {entries.length === 0 ? "No journal entries yet" : "No entries match your filters"}
             </p>
@@ -417,14 +417,14 @@ export default function JournalPage() {
                 <div key={entry.id} className="bg-white rounded-lg border p-4 shadow-sm">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-xs text-slate-500">{formatDate(entry.entryDate)}</p>
+                      <p className="text-xs text-earth-warm">{formatDate(entry.entryDate)}</p>
                       {entry.title && (
-                        <h3 className="font-semibold text-slate-900 mt-1">{entry.title}</h3>
+                        <h3 className="font-semibold text-earth-deep mt-1">{entry.title}</h3>
                       )}
                     </div>
                     <button
                       onClick={() => handleDeleteEntry(entry.id)}
-                      className="text-slate-400 hover:text-red-500 transition-colors"
+                      className="text-earth-warm/60 hover:text-terracotta transition-colors"
                       title="Delete entry"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -438,7 +438,7 @@ export default function JournalPage() {
                     </button>
                   </div>
 
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap">{entry.content}</p>
+                  <p className="text-sm text-earth-deep whitespace-pre-wrap">{entry.content}</p>
 
                   {/* Photos preview */}
                   {photos.length > 0 && (
@@ -457,7 +457,7 @@ export default function JournalPage() {
                   {/* Metadata */}
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     {bed && (
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
+                      <span className="px-2 py-0.5 bg-cream-100 text-earth-warm rounded">
                         📍 {bed.name}
                       </span>
                     )}
@@ -470,7 +470,7 @@ export default function JournalPage() {
                     {tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded cursor-pointer hover:bg-emerald-100"
+                        className="px-2 py-0.5 bg-sage/20 text-sage-dark rounded cursor-pointer hover:bg-sage/20"
                         onClick={() => setFilterTag(tag)}
                       >
                         #{tag}

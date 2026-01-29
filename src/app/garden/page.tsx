@@ -79,27 +79,27 @@ function getPlacementStatus(placement: PlanPlacement): string | null {
 function getStatusDotColor(placement: PlanPlacement): string {
   if (placement.harvestEndedDate) return "bg-purple-500";
   if (placement.harvestStartedDate) return "bg-orange-500";
-  if (placement.transplantedDate || placement.directSowedDate) return "bg-green-500";
-  if (placement.seedsStartedDate) return "bg-blue-500";
-  return "bg-slate-400";
+  if (placement.transplantedDate || placement.directSowedDate) return "bg-sage";
+  if (placement.seedsStartedDate) return "bg-mustard";
+  return "bg-earth-warm";
 }
 
 // Get hex border color for status (when showing icons)
 function getStatusBorderColor(placement: PlanPlacement): string {
   if (placement.harvestEndedDate) return "#a855f7"; // purple
   if (placement.harvestStartedDate) return "#f59e0b"; // orange
-  if (placement.transplantedDate || placement.directSowedDate) return "#10b981"; // green
-  if (placement.seedsStartedDate) return "#3b82f6"; // blue
-  return "#94a3b8"; // gray
+  if (placement.transplantedDate || placement.directSowedDate) return "#7D9A78"; // sage
+  if (placement.seedsStartedDate) return "#D4A84B"; // mustard
+  return "#6B5B4F"; // earth-warm
 }
 
 // Get hex background color for status (lighter shade)
 function getStatusBgColor(placement: PlanPlacement): string {
   if (placement.harvestEndedDate) return "#f3e8ff"; // purple-100
   if (placement.harvestStartedDate) return "#fef3c7"; // amber-100
-  if (placement.transplantedDate || placement.directSowedDate) return "#d1fae5"; // emerald-100
-  if (placement.seedsStartedDate) return "#dbeafe"; // blue-100
-  return "#f1f5f9"; // slate-100
+  if (placement.transplantedDate || placement.directSowedDate) return "#E8EFE7"; // sage-light
+  if (placement.seedsStartedDate) return "#faf3de"; // mustard-100
+  return "#FAF7F2"; // cream
 }
 
 function bedSizeInGardenCells(bed: Bed, gardenCellInches: number) {
@@ -564,8 +564,8 @@ export default function GardenPage() {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-4 p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-slate-700 mb-2">No Garden Set Up</h1>
-          <p className="text-slate-500 mb-4">Create your garden layout to get started.</p>
+          <h1 className="text-2xl font-bold text-earth-deep mb-2">No Garden Set Up</h1>
+          <p className="text-earth-warm mb-4">Create your garden layout to get started.</p>
           <Link className={`${ui.btn} ${ui.btnPrimary}`} href="/garden/edit">
             Set Up Garden →
           </Link>
@@ -692,7 +692,7 @@ export default function GardenPage() {
               >
                 <div className="flex items-center gap-1 bg-white/90 backdrop-blur rounded px-1.5 py-0.5 shadow">
                   <span className="text-sm">🚪</span>
-                  <span className="text-[10px] font-bold text-emerald-800 uppercase">{g.side}</span>
+                  <span className="text-[10px] font-bold text-sage-dark uppercase">{g.side}</span>
                 </div>
               </div>
             ))}
@@ -734,7 +734,7 @@ export default function GardenPage() {
                   title={`${b.name} - Click to edit`}
                   onPointerLeave={() => setDotTip((t) => (t?.bedId === b.id ? null : t))}
                 >
-                  <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/20 transition-colors rounded-lg z-10 pointer-events-none" />
+                  <div className="absolute inset-0 bg-sage/0 group-hover:bg-sage/20 transition-colors rounded-lg z-10 pointer-events-none" />
                   <div
                     className="w-full h-full rounded overflow-hidden relative"
                     style={{
@@ -852,7 +852,7 @@ export default function GardenPage() {
                       })}
                       {showTip && (
                         <div
-                          className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-800 shadow"
+                          className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-2 rounded-md border border-cream-200 bg-white px-2 py-1 text-[11px] text-earth-deep shadow"
                           style={{ left: showTip.left, top: showTip.top }}
                         >
                           {showTip.label}
@@ -861,10 +861,10 @@ export default function GardenPage() {
                     </div>
                     <div className="absolute right-1 top-1 z-20 inline-flex items-center gap-1 rounded-md bg-white/90 px-1.5 py-0.5 shadow-sm">
                       <div className="min-w-0">
-                        <div className="max-w-[120px] truncate text-[10px] font-semibold leading-tight text-slate-900">
+                        <div className="max-w-[120px] truncate text-[10px] font-semibold leading-tight text-earth-deep">
                           {b.name}
                         </div>
-                        <div className="text-[9px] text-slate-600 leading-tight">
+                        <div className="text-[9px] text-earth-warm leading-tight">
                           {plantCount} plants
                         </div>
                         {availability && availability.availableDate && plantCount > 0 && (
@@ -889,7 +889,7 @@ export default function GardenPage() {
         {/* Full screen toggle */}
         <button
           onClick={() => setIsFullScreen(!isFullScreen)}
-          className="bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-slate-700 hover:text-slate-900 transition-colors"
+          className="bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-earth-deep hover:text-earth-deep transition-colors"
           title={isFullScreen ? "Exit full screen (Esc)" : "Full screen"}
         >
           {isFullScreen ? (
@@ -907,7 +907,7 @@ export default function GardenPage() {
         <div className="bg-white/90 shadow-lg rounded-lg overflow-hidden">
           <button
             onClick={handleZoomIn}
-            className="block w-full p-2 hover:bg-slate-100 text-slate-700 border-b border-slate-200"
+            className="block w-full p-2 hover:bg-cream-100 text-earth-deep border-b border-cream-200"
             title="Zoom in"
             aria-label="Zoom in"
           >
@@ -917,7 +917,7 @@ export default function GardenPage() {
           </button>
           <button
             onClick={handleZoomReset}
-            className="block w-full px-2 py-1 hover:bg-slate-100 text-xs text-slate-600 border-b border-slate-200"
+            className="block w-full px-2 py-1 hover:bg-cream-100 text-xs text-earth-warm border-b border-cream-200"
             title="Fit to screen"
             aria-label="Fit to screen"
           >
@@ -925,7 +925,7 @@ export default function GardenPage() {
           </button>
           <button
             onClick={handleZoomOut}
-            className="block w-full p-2 hover:bg-slate-100 text-slate-700"
+            className="block w-full p-2 hover:bg-cream-100 text-earth-deep"
             title="Zoom out"
             aria-label="Zoom out"
           >
@@ -938,7 +938,7 @@ export default function GardenPage() {
         {/* Rotate */}
         <button
           onClick={handleRotate}
-          className="bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-slate-700 hover:text-slate-900 transition-colors"
+          className="bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-earth-deep hover:text-earth-deep transition-colors"
           title={`Rotate (${rotation}°)`}
           aria-label="Rotate view"
         >
@@ -952,8 +952,8 @@ export default function GardenPage() {
           onClick={() => setShowPlantIcons(!showPlantIcons)}
           className={`shadow-lg rounded-lg p-2 transition-all ${
             showPlantIcons
-              ? "bg-emerald-500 text-white hover:bg-emerald-600"
-              : "bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900"
+              ? "bg-sage text-white hover:bg-sage-dark"
+              : "bg-white/90 hover:bg-white text-earth-deep hover:text-earth-deep"
           }`}
           title={showPlantIcons ? "Show status dots" : "Show plant icons"}
         >
@@ -968,7 +968,7 @@ export default function GardenPage() {
           className={`shadow-lg rounded-lg p-2 transition-all ${
             showCompanionIndicators
               ? "bg-purple-500 text-white hover:bg-purple-600"
-              : "bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900"
+              : "bg-white/90 hover:bg-white text-earth-deep hover:text-earth-deep"
           }`}
           title={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
         >
@@ -989,7 +989,7 @@ export default function GardenPage() {
           className={`shadow-lg rounded-lg p-2 transition-all ${
             showTimeLapse
               ? "bg-indigo-500 text-white hover:bg-indigo-600"
-              : "bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900"
+              : "bg-white/90 hover:bg-white text-earth-deep hover:text-earth-deep"
           }`}
           title={showTimeLapse ? "Exit time-lapse" : "Show time-lapse growth"}
         >
@@ -1027,7 +1027,7 @@ export default function GardenPage() {
               }}
               className="w-48 accent-indigo-500"
             />
-            <div className="flex justify-between text-xs text-slate-500">
+            <div className="flex justify-between text-xs text-earth-warm">
               <span>Day 0</span>
               <span className="font-medium text-indigo-600">Day {timeLapseDay}</span>
               <span>Day {maxTimeLapseDays}</span>
@@ -1038,7 +1038,7 @@ export default function GardenPage() {
               setTimeLapseDay(0);
               setIsTimeLapsePlaying(false);
             }}
-            className="text-xs text-slate-500 hover:text-slate-700"
+            className="text-xs text-earth-warm hover:text-earth-deep"
           >
             Reset
           </button>
@@ -1048,7 +1048,7 @@ export default function GardenPage() {
       {/* Harvest Predictions - Top Left */}
       {harvestPredictions.length > 0 && (
         <div className="absolute top-4 left-4 z-20 bg-white/95 shadow-lg rounded-lg px-3 py-2 max-w-[240px] max-h-[200px] overflow-y-auto">
-          <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1">
+          <p className="text-xs font-semibold text-earth-deep mb-2 flex items-center gap-1">
             <span>🥬</span> Upcoming Harvests
           </p>
           <div className="space-y-1.5">
@@ -1057,10 +1057,10 @@ export default function GardenPage() {
                 key={`${pred.plantName}-${pred.bedName}-${idx}`}
                 className={`text-xs px-2 py-1 rounded flex items-center justify-between gap-2 ${
                   pred.status === "ready"
-                    ? "bg-green-100 text-green-700"
+                    ? "bg-sage/20 text-sage-dark"
                     : pred.status === "soon"
                     ? "bg-amber-100 text-amber-700"
-                    : "bg-slate-100 text-slate-600"
+                    : "bg-cream-100 text-earth-warm"
                 }`}
               >
                 <span className="font-medium truncate">{pred.plantName}</span>
@@ -1076,7 +1076,7 @@ export default function GardenPage() {
             {harvestPredictions.length > 5 && (
               <Link
                 href="/schedule"
-                className="text-xs text-emerald-600 hover:text-emerald-700 block text-center mt-1"
+                className="text-xs text-sage-dark hover:text-sage hover:underline block text-center mt-1"
               >
                 +{harvestPredictions.length - 5} more →
               </Link>
@@ -1089,10 +1089,10 @@ export default function GardenPage() {
       {showLegend && (
         <div className="absolute bottom-4 left-4 z-20 bg-white/95 shadow-lg rounded-lg px-3 py-2 max-w-[200px]">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-slate-700">Plant Status</p>
+            <p className="text-xs font-semibold text-earth-deep">Plant Status</p>
             <button
               onClick={() => setShowLegend(false)}
-              className="text-slate-400 hover:text-slate-600 -mr-1"
+              className="text-earth-warm/60 hover:text-earth-warm -mr-1"
               title="Hide legend"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -1100,17 +1100,17 @@ export default function GardenPage() {
               </svg>
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-600">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-earth-warm">
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-slate-400" />
+              <div className="w-2 h-2 rounded-full bg-earth-warm" />
               <span>Planned</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <div className="w-2 h-2 rounded-full bg-mustard" />
               <span>Started</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <div className="w-2 h-2 rounded-full bg-sage" />
               <span>Growing</span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -1129,7 +1129,7 @@ export default function GardenPage() {
       {!showLegend && (
         <button
           onClick={() => setShowLegend(true)}
-          className="absolute bottom-4 left-4 z-20 bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-slate-700"
+          className="absolute bottom-4 left-4 z-20 bg-white/90 hover:bg-white shadow-lg rounded-lg p-2 text-earth-deep"
           title="Show legend"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -1158,7 +1158,7 @@ export default function GardenPage() {
         <div className="absolute top-4 left-4 z-30 flex gap-2">
           <button
             onClick={() => setIsFullScreen(false)}
-            className="bg-white/90 hover:bg-white shadow-lg rounded-lg px-3 py-2 text-sm text-slate-700 flex items-center gap-2"
+            className="bg-white/90 hover:bg-white shadow-lg rounded-lg px-3 py-2 text-sm text-earth-deep flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
@@ -1167,7 +1167,7 @@ export default function GardenPage() {
           </button>
           <Link
             href="/garden/edit"
-            className="bg-emerald-500 hover:bg-emerald-600 shadow-lg rounded-lg px-3 py-2 text-sm text-white flex items-center gap-2"
+            className="bg-sage hover:bg-sage-dark shadow-lg rounded-lg px-3 py-2 text-sm text-white flex items-center gap-2"
           >
             Edit Garden
           </Link>
@@ -1195,15 +1195,15 @@ export default function GardenPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Compact Header */}
-      <div className="flex items-center justify-between gap-4 p-3 bg-gradient-to-r from-teal-50 to-cyan-50 border-b border-teal-100">
+      <div className="flex items-center justify-between gap-4 p-3 bg-gradient-to-r from-cream-100 to-sage-light/20 border-b border-sage/30">
         <div className="flex items-center gap-3">
-          <div className="bg-gradient-to-br from-teal-400 to-cyan-500 text-white p-2 rounded-lg shadow-sm">
+          <div className="bg-gradient-to-br from-sage to-sage-dark text-white p-2 rounded-lg shadow-sm">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-teal-700">Garden Layout</h1>
+            <h1 className="text-lg font-bold text-sage-dark">Garden Layout</h1>
           </div>
         </div>
         <div className="flex items-center gap-3">

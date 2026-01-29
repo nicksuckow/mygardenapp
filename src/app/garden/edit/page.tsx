@@ -85,30 +85,30 @@ function getStatusDotColor(placement: PlanPlacement): string {
     return "bg-orange-500"; // orange - harvesting
   }
   if (placement.transplantedDate || placement.directSowedDate) {
-    return "bg-green-500"; // green - growing in ground
+    return "bg-sage"; // sage - growing in ground
   }
   if (placement.seedsStartedDate) {
-    return "bg-blue-500"; // blue - seeds started indoors
+    return "bg-mustard"; // mustard - seeds started indoors
   }
-  return "bg-slate-400"; // gray - planned only
+  return "bg-earth-warm"; // gray - planned only
 }
 
 // Get hex border color for status (when showing icons)
 function getStatusBorderColor(placement: PlanPlacement): string {
   if (placement.harvestEndedDate) return "#a855f7"; // purple
   if (placement.harvestStartedDate) return "#f59e0b"; // orange
-  if (placement.transplantedDate || placement.directSowedDate) return "#10b981"; // green
-  if (placement.seedsStartedDate) return "#3b82f6"; // blue
-  return "#94a3b8"; // gray
+  if (placement.transplantedDate || placement.directSowedDate) return "#7D9A78"; // sage
+  if (placement.seedsStartedDate) return "#D4A84B"; // mustard
+  return "#6B5B4F"; // earth-warm
 }
 
 // Get hex background color for status (lighter shade)
 function getStatusBgColor(placement: PlanPlacement): string {
   if (placement.harvestEndedDate) return "#f3e8ff"; // purple-100
   if (placement.harvestStartedDate) return "#fef3c7"; // amber-100
-  if (placement.transplantedDate || placement.directSowedDate) return "#d1fae5"; // emerald-100
-  if (placement.seedsStartedDate) return "#dbeafe"; // blue-100
-  return "#f1f5f9"; // slate-100
+  if (placement.transplantedDate || placement.directSowedDate) return "#E8EFE7"; // sage-light
+  if (placement.seedsStartedDate) return "#faf3de"; // mustard-100
+  return "#FAF7F2"; // cream
 }
 
 function toInt(v: unknown, fallback: number) {
@@ -151,7 +151,7 @@ function BedCard({
         onDragStart(bed);
       }}
       onDragEnd={onDragEnd}
-      className={`flex items-center gap-3 p-3 rounded-lg border bg-white hover:bg-slate-50 cursor-grab active:cursor-grabbing transition-all select-none ${
+      className={`flex items-center gap-3 p-3 rounded-lg border bg-white hover:bg-cream-50 cursor-grab active:cursor-grabbing transition-all select-none ${
         isDragging ? "opacity-50 scale-95" : ""
       }`}
     >
@@ -169,13 +169,13 @@ function BedCard({
       </div>
       <div className="min-w-0 flex-1">
         <p className="font-medium text-sm truncate">{bed.name}</p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-earth-warm">
           {inchesToFeetInches(bed.widthInches)} × {inchesToFeetInches(bed.heightInches)}
           {isPlaced && " • Placed"}
         </p>
       </div>
       <div className="text-right">
-        <p className="text-xs text-slate-500">{plantCount} plants</p>
+        <p className="text-xs text-earth-warm">{plantCount} plants</p>
       </div>
     </div>
   );
@@ -1074,19 +1074,19 @@ export default function GardenPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-slate-100">
+    <div className="h-screen flex flex-col overflow-hidden bg-cream-100">
       {/* Compact header */}
       <div className="flex-shrink-0 bg-white border-b px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-teal-400 to-cyan-500 text-white p-2 rounded-lg">
+          <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2 rounded-lg">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900">Edit Garden Layout</h1>
+            <h1 className="text-lg font-bold text-earth-deep">Edit Garden Layout</h1>
             {garden && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-earth-warm">
                 {cols} × {rows} cells • {inchesToFeetInches(garden.widthInches)} × {inchesToFeetInches(garden.heightInches)}
               </p>
             )}
@@ -1094,7 +1094,7 @@ export default function GardenPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="lg:hidden px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50"
+            className="lg:hidden px-3 py-1.5 text-sm border rounded-lg hover:bg-cream-100"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? "Hide Tools" : "Show Tools"}
@@ -1110,8 +1110,8 @@ export default function GardenPage() {
 
       {/* Message banner */}
       {message && (
-        <div className="flex-shrink-0 bg-slate-50 border-b px-4 py-2">
-          <p className="text-sm text-slate-700">{message}</p>
+        <div className="flex-shrink-0 bg-cream-50 border-b px-4 py-2">
+          <p className="text-sm text-earth-deep">{message}</p>
         </div>
       )}
 
@@ -1127,7 +1127,7 @@ export default function GardenPage() {
             {/* Garden dimensions */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-slate-900">Garden Dimensions</p>
+                <p className="text-sm font-semibold text-earth-deep">Garden Dimensions</p>
                 <button
                   className={`${ui.btn} ${ui.btnPrimary} text-xs py-1 px-2`}
                   onClick={saveGarden}
@@ -1138,7 +1138,7 @@ export default function GardenPage() {
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-slate-600 w-14">Width</label>
+                  <label className="text-xs text-earth-warm w-14">Width</label>
                   <div className="flex gap-1 flex-1">
                     <input
                       className="w-full rounded border px-2 py-1.5 text-sm"
@@ -1147,7 +1147,7 @@ export default function GardenPage() {
                       onChange={(e) => setGWidthFeet(Math.max(0, Number(e.target.value)))}
                       min={0}
                     />
-                    <span className="text-xs text-slate-500 self-center">ft</span>
+                    <span className="text-xs text-earth-warm self-center">ft</span>
                     <input
                       className="w-14 rounded border px-2 py-1.5 text-sm"
                       type="number"
@@ -1156,12 +1156,12 @@ export default function GardenPage() {
                       min={0}
                       max={11}
                     />
-                    <span className="text-xs text-slate-500 self-center">in</span>
+                    <span className="text-xs text-earth-warm self-center">in</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-slate-600 w-14">Height</label>
+                  <label className="text-xs text-earth-warm w-14">Height</label>
                   <div className="flex gap-1 flex-1">
                     <input
                       className="w-full rounded border px-2 py-1.5 text-sm"
@@ -1170,7 +1170,7 @@ export default function GardenPage() {
                       onChange={(e) => setGHeightFeet(Math.max(0, Number(e.target.value)))}
                       min={0}
                     />
-                    <span className="text-xs text-slate-500 self-center">ft</span>
+                    <span className="text-xs text-earth-warm self-center">ft</span>
                     <input
                       className="w-14 rounded border px-2 py-1.5 text-sm"
                       type="number"
@@ -1179,12 +1179,12 @@ export default function GardenPage() {
                       min={0}
                       max={11}
                     />
-                    <span className="text-xs text-slate-500 self-center">in</span>
+                    <span className="text-xs text-earth-warm self-center">in</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label className="text-xs text-slate-600 w-14">Cell</label>
+                  <label className="text-xs text-earth-warm w-14">Cell</label>
                   <div className="flex gap-1 flex-1">
                     <input
                       className="w-full rounded border px-2 py-1.5 text-sm"
@@ -1193,7 +1193,7 @@ export default function GardenPage() {
                       onChange={(e) => setGCellFeet(Math.max(0, Number(e.target.value)))}
                       min={0}
                     />
-                    <span className="text-xs text-slate-500 self-center">ft</span>
+                    <span className="text-xs text-earth-warm self-center">ft</span>
                     <input
                       className="w-14 rounded border px-2 py-1.5 text-sm"
                       type="number"
@@ -1202,29 +1202,29 @@ export default function GardenPage() {
                       min={0}
                       max={11}
                     />
-                    <span className="text-xs text-slate-500 self-center">in</span>
+                    <span className="text-xs text-earth-warm self-center">in</span>
                   </div>
                 </div>
               </div>
 
               {gardenGridCols > 0 && gardenGridRows > 0 && (
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-earth-warm">
                   Grid: {gardenGridCols} × {gardenGridRows} = {gardenGridCols * gardenGridRows} cells
                 </p>
               )}
             </div>
 
-            <hr className="border-slate-200" />
+            <hr className="border-cream-200" />
 
             {/* Placement mode */}
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-slate-900">Placement Mode</p>
+              <p className="text-sm font-semibold text-earth-deep">Placement Mode</p>
               <div className="flex gap-1">
                 <button
                   className={`flex-1 px-2 py-1.5 text-xs rounded border transition-colors ${
                     placementMode === 'bed'
-                      ? 'bg-emerald-100 border-emerald-500 text-emerald-900'
-                      : 'bg-white border-gray-300 hover:bg-gray-50'
+                      ? 'bg-sage/20 border-sage text-sage-dark'
+                      : 'bg-white border-cream-200 hover:bg-cream-100'
                   }`}
                   onClick={() => {
                     setPlacementMode('bed');
@@ -1237,7 +1237,7 @@ export default function GardenPage() {
                   className={`flex-1 px-2 py-1.5 text-xs rounded border transition-colors ${
                     placementMode === 'walkway'
                       ? 'bg-amber-100 border-amber-500 text-amber-900'
-                      : 'bg-white border-gray-300 hover:bg-gray-50'
+                      : 'bg-white border-cream-200 hover:bg-cream-100'
                   }`}
                   onClick={() => {
                     setPlacementMode('walkway');
@@ -1249,8 +1249,8 @@ export default function GardenPage() {
                 <button
                   className={`flex-1 px-2 py-1.5 text-xs rounded border transition-colors ${
                     placementMode === 'gate'
-                      ? 'bg-blue-100 border-blue-500 text-blue-900'
-                      : 'bg-white border-gray-300 hover:bg-gray-50'
+                      ? 'bg-sage/20 border-sage text-sage-dark'
+                      : 'bg-white border-cream-200 hover:bg-cream-100'
                   }`}
                   onClick={() => {
                     setPlacementMode('gate');
@@ -1263,24 +1263,24 @@ export default function GardenPage() {
 
               {/* Walkway mode expanded UI */}
               {placementMode === 'walkway' && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 space-y-3">
+                <div className="rounded-lg border border-earth-warm/30 bg-cream-100 p-3 space-y-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-200 to-amber-300 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cream-200 to-earth-warm/30 flex items-center justify-center">
                       <span className="text-lg">🚶</span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-amber-900">Add Path</p>
-                      <p className="text-xs text-amber-700">Click & drag on grid</p>
+                      <p className="text-sm font-medium text-earth-deep">Add Path</p>
+                      <p className="text-xs text-earth-warm">Click & drag on grid</p>
                     </div>
                   </div>
 
                   {/* Existing walkways list */}
                   {(garden?.walkways ?? []).length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-amber-800 mb-1">
+                      <p className="text-xs font-medium text-earth-deep mb-1">
                         Existing Paths ({garden?.walkways?.length})
                       </p>
-                      <p className="text-[10px] text-amber-600 mb-1">Click to select, then drag edges to resize</p>
+                      <p className="text-[10px] text-earth-warm mb-1">Click to select, then drag edges to resize</p>
                       <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
                         {(garden?.walkways ?? []).map((w) => (
                           <div
@@ -1288,15 +1288,15 @@ export default function GardenPage() {
                             onClick={() => setSelectedWalkwayId(selectedWalkwayId === w.id ? null : w.id)}
                             className={`flex items-center justify-between text-xs rounded border px-2 py-1.5 cursor-pointer transition-colors ${
                               selectedWalkwayId === w.id
-                                ? 'bg-amber-100 border-amber-400 ring-1 ring-amber-400'
-                                : 'bg-white border-amber-200 hover:bg-amber-50'
+                                ? 'bg-cream-200 border-earth-warm ring-1 ring-earth-warm'
+                                : 'bg-white border-cream-200 hover:bg-cream-100'
                             }`}
                           >
                             <div className="flex items-center gap-2">
                               {selectedWalkwayId === w.id && (
-                                <span className="text-amber-600">✓</span>
+                                <span className="text-sage">✓</span>
                               )}
-                              <span className="text-amber-800">
+                              <span className="text-earth-deep">
                                 {w.width} × {w.height} cells
                               </span>
                             </div>
@@ -1305,7 +1305,7 @@ export default function GardenPage() {
                                 e.stopPropagation();
                                 deleteWalkway(w.id);
                               }}
-                              className="text-red-500 hover:text-red-700 font-bold"
+                              className="text-terracotta hover:text-terracotta-dark font-bold"
                               title="Delete path"
                             >
                               ×
@@ -1320,24 +1320,24 @@ export default function GardenPage() {
 
               {/* Gate mode expanded UI */}
               {placementMode === 'gate' && (
-                <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-3">
+                <div className="rounded-lg border border-sage/30 bg-sage/10 p-3 space-y-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-200 to-blue-300 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sage-100 to-sage-200 flex items-center justify-center">
                       <span className="text-lg">🚪</span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-blue-900">Add Gate</p>
-                      <p className="text-xs text-blue-700">Click on garden edge</p>
+                      <p className="text-sm font-medium text-earth-deep">Add Gate</p>
+                      <p className="text-xs text-earth-warm">Click on garden edge</p>
                     </div>
                   </div>
 
                   {/* Existing gates list */}
                   {(garden?.gates ?? []).length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-blue-800 mb-1">
+                      <p className="text-xs font-medium text-earth-deep mb-1">
                         Existing Gates ({garden?.gates?.length})
                       </p>
-                      <p className="text-[10px] text-blue-600 mb-1">Click to select, drag edges to resize width</p>
+                      <p className="text-[10px] text-earth-warm mb-1">Click to select, drag edges to resize width</p>
                       <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
                         {(garden?.gates ?? []).map((g) => (
                           <div
@@ -1345,15 +1345,15 @@ export default function GardenPage() {
                             onClick={() => setSelectedGateId(selectedGateId === g.id ? null : g.id)}
                             className={`flex items-center justify-between text-xs rounded border px-2 py-1.5 cursor-pointer transition-colors ${
                               selectedGateId === g.id
-                                ? 'bg-blue-100 border-blue-400 ring-1 ring-blue-400'
-                                : 'bg-white border-blue-200 hover:bg-blue-50'
+                                ? 'bg-sage/20 border-sage ring-1 ring-sage'
+                                : 'bg-white border-sage/30 hover:bg-sage/10'
                             }`}
                           >
                             <div className="flex items-center gap-2">
                               {selectedGateId === g.id && (
-                                <span className="text-blue-600">✓</span>
+                                <span className="text-sage">✓</span>
                               )}
-                              <span className="text-blue-800">
+                              <span className="text-earth-deep">
                                 {g.side} • {g.width} cell{g.width > 1 ? 's' : ''} wide
                               </span>
                             </div>
@@ -1362,7 +1362,7 @@ export default function GardenPage() {
                                 e.stopPropagation();
                                 deleteGate(g.id);
                               }}
-                              className="text-red-500 hover:text-red-700 font-bold"
+                              className="text-terracotta hover:text-terracotta-dark font-bold"
                               title="Delete gate"
                             >
                               ×
@@ -1376,12 +1376,12 @@ export default function GardenPage() {
               )}
             </div>
 
-            <hr className="border-slate-200" />
+            <hr className="border-cream-200" />
 
             {/* Bed selection */}
             {beds.length === 0 ? (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center">
-                <p className="text-xs text-slate-700 mb-2">No beds created yet.</p>
+              <div className="rounded-lg border border-cream-200 bg-cream-50 p-3 text-center">
+                <p className="text-xs text-earth-deep mb-2">No beds created yet.</p>
                 <Link className={`${ui.btn} ${ui.btnPrimary} text-xs w-full`} href="/beds">
                   Create your first bed →
                 </Link>
@@ -1400,7 +1400,7 @@ export default function GardenPage() {
                       setIsBedDropdownOpen(true);
                     }}
                     onFocus={() => setIsBedDropdownOpen(true)}
-                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sage focus:border-sage"
                   />
                   {bedSearch && (
                     <button
@@ -1408,7 +1408,7 @@ export default function GardenPage() {
                         setBedSearch("");
                         setIsBedDropdownOpen(false);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-earth-warm/60 hover:text-earth-warm"
                     >
                       ×
                     </button>
@@ -1427,7 +1427,7 @@ export default function GardenPage() {
                 {isBedDropdownOpen && bedSearch && (
                   <div className="relative z-20 border rounded-lg bg-white shadow-lg max-h-48 overflow-y-auto">
                     {filteredBeds.length === 0 ? (
-                      <p className="p-3 text-sm text-gray-500">No beds found</p>
+                      <p className="p-3 text-sm text-earth-warm">No beds found</p>
                     ) : (
                       filteredBeds.map((bed) => {
                         const isPlaced = bed.gardenX != null && bed.gardenY != null;
@@ -1440,7 +1440,7 @@ export default function GardenPage() {
                               setBedSearch("");
                               setIsBedDropdownOpen(false);
                             }}
-                            className="w-full flex items-center gap-2 p-2 hover:bg-slate-50 text-left border-b last:border-b-0"
+                            className="w-full flex items-center gap-2 p-2 hover:bg-cream-50 text-left border-b last:border-b-0"
                           >
                             <div
                               className="w-6 h-6 rounded border flex items-center justify-center text-xs flex-shrink-0"
@@ -1456,7 +1456,7 @@ export default function GardenPage() {
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium truncate">{bed.name}</p>
-                              <p className="text-xs text-slate-500">
+                              <p className="text-xs text-earth-warm">
                                 {inchesToFeetInches(bed.widthInches)} × {inchesToFeetInches(bed.heightInches)}
                                 {isPlaced && " • Placed"}
                               </p>
@@ -1471,7 +1471,7 @@ export default function GardenPage() {
                 {/* Selected bed to drag */}
                 {selectedBedForDrag && (
                   <div className="space-y-1">
-                    <p className="text-xs text-gray-500">Drag to place in garden:</p>
+                    <p className="text-xs text-earth-warm">Drag to place in garden:</p>
                     <div className="relative">
                       <BedCard
                         bed={selectedBedForDrag}
@@ -1485,7 +1485,7 @@ export default function GardenPage() {
                         {selectedBedForDrag.gardenX != null && (
                           <button
                             onClick={() => rotateBed(selectedBedForDrag.id, !selectedBedForDrag.gardenRotated)}
-                            className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shadow hover:bg-blue-600"
+                            className="w-5 h-5 rounded-full bg-sage text-white flex items-center justify-center text-xs font-bold shadow hover:bg-sage-dark"
                             title="Rotate 90°"
                           >
                             ↻
@@ -1493,7 +1493,7 @@ export default function GardenPage() {
                         )}
                         <button
                           onClick={() => setSelectedBedForDrag(null)}
-                          className="w-5 h-5 rounded-full bg-gray-400 text-white flex items-center justify-center text-xs font-bold shadow hover:bg-gray-500"
+                          className="w-5 h-5 rounded-full bg-earth-warm text-white flex items-center justify-center text-xs font-bold shadow hover:bg-earth-deep"
                           title="Clear selection"
                         >
                           ×
@@ -1504,7 +1504,7 @@ export default function GardenPage() {
                 )}
 
                 {!selectedBedForDrag && !isBedDropdownOpen && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-earth-warm">
                     Search and select a bed to drag onto the garden
                   </p>
                 )}
@@ -1512,7 +1512,7 @@ export default function GardenPage() {
                 {/* Placed beds list */}
                 {placedBeds.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-slate-700 mb-1">
+                    <p className="text-xs font-medium text-earth-deep mb-1">
                       In Garden ({placedBeds.length})
                     </p>
                     <div className="space-y-1 max-h-32 overflow-y-auto">
@@ -1521,8 +1521,8 @@ export default function GardenPage() {
                           key={b.id}
                           className={`text-xs p-2 rounded border cursor-pointer transition-colors ${
                             selectedBedId === b.id
-                              ? "border-emerald-400 bg-emerald-50"
-                              : "border-slate-200 hover:bg-slate-50"
+                              ? "border-sage bg-sage/10"
+                              : "border-cream-200 hover:bg-cream-50"
                           }`}
                           onClick={() => {
                             setSelectedBedId(b.id);
@@ -1532,7 +1532,7 @@ export default function GardenPage() {
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{b.name}</span>
                             <button
-                              className="text-red-500 hover:text-red-700"
+                              className="text-terracotta hover:text-terracotta-dark"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 removeBedFromGarden(b.id);
@@ -1542,7 +1542,7 @@ export default function GardenPage() {
                               ×
                             </button>
                           </div>
-                          <p className="text-slate-500">
+                          <p className="text-earth-warm">
                             {plantCountByBed.get(b.id) ?? 0} plants • {b.gardenRotated ? "rotated" : "normal"}
                           </p>
                         </div>
@@ -1554,22 +1554,22 @@ export default function GardenPage() {
               </div>
             )}
 
-            <hr className="border-slate-200" />
+            <hr className="border-cream-200" />
 
             {/* Legend */}
             <div>
-              <p className="text-xs font-medium text-slate-700 mb-2">Plant Status</p>
-              <div className="grid grid-cols-2 gap-1 text-xs text-slate-600">
+              <p className="text-xs font-medium text-earth-deep mb-2">Plant Status</p>
+              <div className="grid grid-cols-2 gap-1 text-xs text-earth-warm">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                  <div className="w-2 h-2 rounded-full bg-earth-warm"></div>
                   <span>Planned</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-mustard"></div>
                   <span>Seeds Started</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <div className="w-2 h-2 rounded-full bg-sage"></div>
                   <span>In Ground</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1583,10 +1583,10 @@ export default function GardenPage() {
               </div>
             </div>
 
-            <hr className="border-slate-200" />
+            <hr className="border-cream-200" />
 
             {/* Help */}
-            <div className="text-xs text-slate-500 space-y-1">
+            <div className="text-xs text-earth-warm space-y-1">
               <p><strong>Tips:</strong></p>
               <ul className="list-disc pl-4 space-y-0.5">
                 <li>Click grid to place bed</li>
@@ -1601,9 +1601,9 @@ export default function GardenPage() {
         {/* Main canvas area */}
         <div className="flex-1 relative min-w-0">
           {!garden ? (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-50">
+            <div className="absolute inset-0 flex items-center justify-center bg-cream-50">
               <div className="text-center p-6">
-                <p className="text-slate-700 mb-2">Set garden dimensions and click "Save" to get started.</p>
+                <p className="text-earth-deep mb-2">Set garden dimensions and click "Save" to get started.</p>
               </div>
             </div>
           ) : (
@@ -1794,7 +1794,7 @@ export default function GardenPage() {
 
                             {/* Delete button */}
                             <button
-                              className="absolute top-1 right-1 bg-white/90 backdrop-blur rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600 shadow-sm z-10"
+                              className="absolute top-1 right-1 bg-white/90 backdrop-blur rounded-full w-5 h-5 text-xs hover:bg-terracotta-50 border border-terracotta/30 text-terracotta shadow-sm z-10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteWalkway(w.id);
@@ -2032,13 +2032,13 @@ export default function GardenPage() {
                           >
                             <div className="flex items-center gap-1 bg-white/90 backdrop-blur rounded px-1.5 py-0.5 shadow">
                               <span className="text-sm">🚪</span>
-                              <span className="text-[10px] font-bold text-emerald-800 uppercase">{g.side}</span>
+                              <span className="text-[10px] font-bold text-sage-dark uppercase">{g.side}</span>
                               {isSelected && (
-                                <span className="text-[10px] font-bold text-blue-600">• {previewW}</span>
+                                <span className="text-[10px] font-bold text-sage-dark">• {previewW}</span>
                               )}
                             </div>
                             <button
-                              className="absolute top-1 right-1 bg-white/90 backdrop-blur rounded-full w-5 h-5 text-xs hover:bg-red-50 border border-red-300 text-red-600 shadow-sm z-10"
+                              className="absolute top-1 right-1 bg-white/90 backdrop-blur rounded-full w-5 h-5 text-xs hover:bg-terracotta-50 border border-terracotta/30 text-terracotta shadow-sm z-10"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteGate(g.id);
@@ -2053,7 +2053,7 @@ export default function GardenPage() {
                               <>
                                 {/* Left edge handle */}
                                 <div
-                                  className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize z-20 hover:bg-blue-600"
+                                  className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-sage rounded cursor-ew-resize z-20 hover:bg-sage-dark"
                                   onPointerDown={(e) => {
                                     e.stopPropagation();
                                     const cell = pointerToCell(e.clientX, e.clientY);
@@ -2069,7 +2069,7 @@ export default function GardenPage() {
                                 />
                                 {/* Right edge handle */}
                                 <div
-                                  className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-blue-500 rounded cursor-ew-resize z-20 hover:bg-blue-600"
+                                  className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-3 h-6 bg-sage rounded cursor-ew-resize z-20 hover:bg-sage-dark"
                                   onPointerDown={(e) => {
                                     e.stopPropagation();
                                     const cell = pointerToCell(e.clientX, e.clientY);
@@ -2272,7 +2272,7 @@ export default function GardenPage() {
                                 {/* Custom tooltip */}
                                 {showTip && (
                                   <div
-                                    className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-2 rounded-md border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-800 shadow"
+                                    className="pointer-events-none absolute z-30 -translate-x-1/2 -translate-y-2 rounded-md border border-cream-200 bg-white px-2 py-1 text-[11px] text-earth-deep shadow"
                                     style={{
                                       left: showTip.left,
                                       top: showTip.top,
@@ -2286,7 +2286,7 @@ export default function GardenPage() {
                               {/* Compact label (top-right) */}
                               <div className="absolute right-1 top-1 z-20 inline-flex items-center gap-1 rounded-md bg-white px-1 py-0.5 shadow-sm">
                                 <button
-                                  className="rounded border bg-white px-1.5 py-0.5 text-[10px] text-slate-700 hover:bg-slate-50"
+                                  className="rounded border bg-white px-1.5 py-0.5 text-[10px] text-earth-deep hover:bg-cream-50"
                                   onPointerDown={(ev) => {
                                     ev.preventDefault();
                                     ev.stopPropagation();
@@ -2302,10 +2302,10 @@ export default function GardenPage() {
                                 </button>
 
                                 <div className="min-w-0">
-                                  <div className="max-w-[140px] truncate text-[10px] font-semibold leading-tight text-slate-900">
+                                  <div className="max-w-[140px] truncate text-[10px] font-semibold leading-tight text-earth-deep">
                                     {b.name}
                                   </div>
-                                  <div className="text-[9px] text-slate-700 leading-tight">
+                                  <div className="text-[9px] text-earth-deep leading-tight">
                                     {plantCount} • {b.gardenRotated ? "rotated" : "normal"}
                                   </div>
                                 </div>
@@ -2319,7 +2319,7 @@ export default function GardenPage() {
                     {/* drag preview outline */}
                     {dragBedId && previewBed && dragPreview && (
                       <div
-                        className="absolute rounded-lg border-2 border-emerald-400 bg-emerald-100/40 pointer-events-none"
+                        className="absolute rounded-lg border-2 border-sage bg-sage/20/40 pointer-events-none"
                         style={{
                           left: dragPreview.x * CELL_PX * zoom,
                           top: dragPreview.y * CELL_PX * zoom,
@@ -2337,17 +2337,17 @@ export default function GardenPage() {
                 {/* Zoom controls */}
                 <div className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-1 flex flex-col gap-1">
                   <button
-                    className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded text-lg font-medium"
+                    className="w-8 h-8 flex items-center justify-center hover:bg-cream-100 rounded text-lg font-medium"
                     onClick={handleZoomIn}
                     title="Zoom in"
                   >
                     +
                   </button>
-                  <div className="text-xs text-center text-slate-600 py-1 border-y">
+                  <div className="text-xs text-center text-earth-warm py-1 border-y">
                     {Math.round(zoom * 100)}%
                   </div>
                   <button
-                    className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded text-lg font-medium"
+                    className="w-8 h-8 flex items-center justify-center hover:bg-cream-100 rounded text-lg font-medium"
                     onClick={handleZoomOut}
                     title="Zoom out"
                   >
@@ -2357,7 +2357,7 @@ export default function GardenPage() {
 
                 {/* Rotate button */}
                 <button
-                  className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-2 hover:bg-slate-100"
+                  className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-2 hover:bg-cream-100"
                   onClick={handleRotate}
                   title={`Rotate view (${rotation}°)`}
                   aria-label="Rotate view"
@@ -2369,7 +2369,7 @@ export default function GardenPage() {
 
                 {/* Auto-fit button */}
                 <button
-                  className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-2 hover:bg-slate-100"
+                  className="bg-white/95 backdrop-blur rounded-lg shadow-lg border p-2 hover:bg-cream-100"
                   onClick={handleZoomReset}
                   title="Auto-fit to screen"
                   aria-label="Auto-fit to screen"
@@ -2383,8 +2383,8 @@ export default function GardenPage() {
                 <button
                   className={`backdrop-blur rounded-lg shadow-lg border p-2 transition-all ${
                     showPlantIcons
-                      ? "bg-emerald-500 border-emerald-600 text-white hover:bg-emerald-600"
-                      : "bg-white/95 hover:bg-slate-100"
+                      ? "bg-sage border-sage-dark text-white hover:bg-sage-dark"
+                      : "bg-white/95 hover:bg-cream-100"
                   }`}
                   onClick={() => setShowPlantIcons(!showPlantIcons)}
                   title={showPlantIcons ? "Show status dots" : "Show plant icons"}
@@ -2400,7 +2400,7 @@ export default function GardenPage() {
                   className={`backdrop-blur rounded-lg shadow-lg border p-2 transition-all ${
                     showCompanionIndicators
                       ? "bg-purple-500 border-purple-600 text-white hover:bg-purple-600"
-                      : "bg-white/95 hover:bg-slate-100"
+                      : "bg-white/95 hover:bg-cream-100"
                   }`}
                   onClick={() => setShowCompanionIndicators(!showCompanionIndicators)}
                   title={showCompanionIndicators ? "Hide companion indicators" : "Show companion indicators"}
@@ -2414,7 +2414,7 @@ export default function GardenPage() {
 
               {/* Garden info overlay (bottom-left) */}
               <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur rounded-lg shadow-lg border px-3 py-2">
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-earth-warm">
                   {inchesToFeetInches(garden.widthInches)} × {inchesToFeetInches(garden.heightInches)}
                   <span className="mx-1">•</span>
                   {cols} × {rows} cells

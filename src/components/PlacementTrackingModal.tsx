@@ -287,14 +287,14 @@ export default function PlacementTrackingModal({
         {loading ? (
           <div className="text-center py-8">Loading...</div>
         ) : error ? (
-          <div className="text-center py-8 text-red-600">{error}</div>
+          <div className="text-center py-8 text-terracotta">{error}</div>
         ) : placement ? (
           <>
             <h2 className="text-lg font-semibold mb-1">
               {placement.plant.name}
               {placement.plant.variety && ` (${placement.plant.variety})`}
             </h2>
-            <p className="text-sm text-slate-600 mb-4">
+            <p className="text-sm text-earth-warm mb-4">
               {placement.bed.name} • {placement.count} plant{placement.count > 1 ? "s" : ""}
               {placement.successionNumber && (
                 <span className="ml-2 inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-violet-100 text-violet-700">
@@ -349,55 +349,55 @@ export default function PlacementTrackingModal({
 
               {/* Plant description */}
               {placement.plant.description && (
-                <p className="text-sm text-slate-600">{placement.plant.description}</p>
+                <p className="text-sm text-earth-warm">{placement.plant.description}</p>
               )}
 
               {/* Plant details grid */}
-              <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-                <div className="font-medium text-slate-700 mb-2 text-sm">Plant Details</div>
+              <div className="rounded-lg bg-cream-50 border border-cream-200 p-3">
+                <div className="font-medium text-earth-deep mb-2 text-sm">Plant Details</div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                   {placement.plant.scientificName && (
                     <>
-                      <span className="text-slate-500">Scientific name:</span>
-                      <span className="text-slate-700 italic">{placement.plant.scientificName}</span>
+                      <span className="text-earth-warm">Scientific name:</span>
+                      <span className="text-earth-deep italic">{placement.plant.scientificName}</span>
                     </>
                   )}
-                  <span className="text-slate-500">Spacing:</span>
-                  <span className="text-slate-700">{placement.plant.spacingInches}"</span>
+                  <span className="text-earth-warm">Spacing:</span>
+                  <span className="text-earth-deep">{placement.plant.spacingInches}"</span>
                   {placement.plant.plantingDepthInches && (
                     <>
-                      <span className="text-slate-500">Planting depth:</span>
-                      <span className="text-slate-700">{placement.plant.plantingDepthInches}"</span>
+                      <span className="text-earth-warm">Planting depth:</span>
+                      <span className="text-earth-deep">{placement.plant.plantingDepthInches}"</span>
                     </>
                   )}
                   {placement.plant.cycle && (
                     <>
-                      <span className="text-slate-500">Cycle:</span>
-                      <span className="text-slate-700">{placement.plant.cycle}</span>
+                      <span className="text-earth-warm">Cycle:</span>
+                      <span className="text-earth-deep">{placement.plant.cycle}</span>
                     </>
                   )}
                   {placement.plant.growthForm && (
                     <>
-                      <span className="text-slate-500">Growth form:</span>
-                      <span className="text-slate-700">{placement.plant.growthForm}</span>
+                      <span className="text-earth-warm">Growth form:</span>
+                      <span className="text-earth-deep">{placement.plant.growthForm}</span>
                     </>
                   )}
                   {placement.plant.growthHabit && (
                     <>
-                      <span className="text-slate-500">Growth habit:</span>
-                      <span className="text-slate-700">{placement.plant.growthHabit}</span>
+                      <span className="text-earth-warm">Growth habit:</span>
+                      <span className="text-earth-deep">{placement.plant.growthHabit}</span>
                     </>
                   )}
                   {placement.plant.growthRate && (
                     <>
-                      <span className="text-slate-500">Growth rate:</span>
-                      <span className="text-slate-700">{placement.plant.growthRate}</span>
+                      <span className="text-earth-warm">Growth rate:</span>
+                      <span className="text-earth-deep">{placement.plant.growthRate}</span>
                     </>
                   )}
                   {placement.plant.averageHeightInches && (
                     <>
-                      <span className="text-slate-500">Mature height:</span>
-                      <span className="text-slate-700">{Math.round(placement.plant.averageHeightInches)}"</span>
+                      <span className="text-earth-warm">Mature height:</span>
+                      <span className="text-earth-deep">{Math.round(placement.plant.averageHeightInches)}"</span>
                     </>
                   )}
                 </div>
@@ -411,43 +411,43 @@ export default function PlacementTrackingModal({
                 placement.plant.soilNutriments !== null ||
                 placement.plant.minTemperatureC !== null ||
                 placement.plant.careLevel) && (
-                <div className="rounded-lg bg-green-50 border border-green-200 p-3">
-                  <div className="font-medium text-green-800 mb-2 text-sm">Growing Requirements</div>
+                <div className="rounded-lg bg-sage/20 border border-sage p-3">
+                  <div className="font-medium text-sage-dark mb-2 text-sm">Growing Requirements</div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                     {placement.plant.sunlight && (
                       <>
-                        <span className="text-green-700">Sunlight:</span>
-                        <span className="text-green-900">{placement.plant.sunlight}</span>
+                        <span className="text-sage-dark">Sunlight:</span>
+                        <span className="text-sage-dark">{placement.plant.sunlight}</span>
                       </>
                     )}
                     {placement.plant.lightRequirement !== null && (
                       <>
-                        <span className="text-green-700">Light level:</span>
-                        <span className="text-green-900">{placement.plant.lightRequirement}/10</span>
+                        <span className="text-sage-dark">Light level:</span>
+                        <span className="text-sage-dark">{placement.plant.lightRequirement}/10</span>
                       </>
                     )}
                     {placement.plant.watering && (
                       <>
-                        <span className="text-green-700">Watering:</span>
-                        <span className="text-green-900">{placement.plant.watering}</span>
+                        <span className="text-sage-dark">Watering:</span>
+                        <span className="text-sage-dark">{placement.plant.watering}</span>
                       </>
                     )}
                     {placement.plant.soilHumidity !== null && (
                       <>
-                        <span className="text-green-700">Soil humidity:</span>
-                        <span className="text-green-900">{placement.plant.soilHumidity}/10</span>
+                        <span className="text-sage-dark">Soil humidity:</span>
+                        <span className="text-sage-dark">{placement.plant.soilHumidity}/10</span>
                       </>
                     )}
                     {placement.plant.soilNutriments !== null && (
                       <>
-                        <span className="text-green-700">Soil nutrients:</span>
-                        <span className="text-green-900">{placement.plant.soilNutriments}/10</span>
+                        <span className="text-sage-dark">Soil nutrients:</span>
+                        <span className="text-sage-dark">{placement.plant.soilNutriments}/10</span>
                       </>
                     )}
                     {(placement.plant.minTemperatureC !== null || placement.plant.maxTemperatureC !== null) && (
                       <>
-                        <span className="text-green-700">Temperature:</span>
-                        <span className="text-green-900">
+                        <span className="text-sage-dark">Temperature:</span>
+                        <span className="text-sage-dark">
                           {placement.plant.minTemperatureC !== null && `${Math.round(placement.plant.minTemperatureC * 9/5 + 32)}°F`}
                           {placement.plant.minTemperatureC !== null && placement.plant.maxTemperatureC !== null && " - "}
                           {placement.plant.maxTemperatureC !== null && `${Math.round(placement.plant.maxTemperatureC * 9/5 + 32)}°F`}
@@ -456,14 +456,14 @@ export default function PlacementTrackingModal({
                     )}
                     {placement.plant.careLevel && (
                       <>
-                        <span className="text-green-700">Care level:</span>
-                        <span className="text-green-900">{placement.plant.careLevel}</span>
+                        <span className="text-sage-dark">Care level:</span>
+                        <span className="text-sage-dark">{placement.plant.careLevel}</span>
                       </>
                     )}
                     {placement.plant.maintenance && (
                       <>
-                        <span className="text-green-700">Maintenance:</span>
-                        <span className="text-green-900">{placement.plant.maintenance}</span>
+                        <span className="text-sage-dark">Maintenance:</span>
+                        <span className="text-sage-dark">{placement.plant.maintenance}</span>
                       </>
                     )}
                   </div>
@@ -479,12 +479,12 @@ export default function PlacementTrackingModal({
                 placement.plant.poisonousToPets) && (
                 <div className="flex flex-wrap gap-2">
                   {placement.plant.edible && (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-sage/20 text-sage-dark">
                       Edible{placement.plant.ediblePart && `: ${placement.plant.ediblePart}`}
                     </span>
                   )}
                   {placement.plant.indoor && (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-sage/20 text-sage-dark">
                       Indoor
                     </span>
                   )}
@@ -499,12 +499,12 @@ export default function PlacementTrackingModal({
                     </span>
                   )}
                   {placement.plant.poisonousToHumans === 1 && (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-terracotta/20 text-terracotta-dark">
                       Toxic to humans
                     </span>
                   )}
                   {placement.plant.poisonousToPets === 1 && (
-                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
+                    <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-terracotta/20 text-terracotta-dark">
                       Toxic to pets
                     </span>
                   )}
@@ -540,31 +540,31 @@ export default function PlacementTrackingModal({
                 placement.plant.transplantWeeksAfterFrost ||
                 placement.plant.directSowWeeksRelativeToFrost ||
                 placement.plant.daysToMaturityMin) && (
-                <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm">
-                  <div className="font-medium text-blue-800 mb-2">Planting Instructions</div>
+                <div className="rounded-lg bg-sage/10 border border-sage/30 p-3 text-sm">
+                  <div className="font-medium text-sage-dark mb-2">Planting Instructions</div>
                   {(placement.plant.startIndoorsInstructions || placement.plant.startIndoorsWeeksBeforeFrost) && (
-                    <div className="text-blue-700 mb-1">
+                    <div className="text-sage-dark mb-1">
                       <span className="font-medium">Start indoors:</span>{" "}
                       {placement.plant.startIndoorsInstructions ||
                         `${placement.plant.startIndoorsWeeksBeforeFrost} weeks before last frost`}
                     </div>
                   )}
                   {(placement.plant.transplantInstructions || placement.plant.transplantWeeksAfterFrost) && (
-                    <div className="text-blue-700 mb-1">
+                    <div className="text-sage-dark mb-1">
                       <span className="font-medium">Transplant:</span>{" "}
                       {placement.plant.transplantInstructions ||
                         `${placement.plant.transplantWeeksAfterFrost} weeks after last frost`}
                     </div>
                   )}
                   {(placement.plant.directSowInstructions || placement.plant.directSowWeeksRelativeToFrost) && (
-                    <div className="text-blue-700 mb-1">
+                    <div className="text-sage-dark mb-1">
                       <span className="font-medium">Direct sow:</span>{" "}
                       {placement.plant.directSowInstructions ||
                         `${placement.plant.directSowWeeksRelativeToFrost! > 0 ? "+" : ""}${placement.plant.directSowWeeksRelativeToFrost} weeks from last frost`}
                     </div>
                   )}
                   {placement.plant.daysToMaturityMin && (
-                    <div className="text-blue-700">
+                    <div className="text-sage-dark">
                       <span className="font-medium">Days to maturity:</span>{" "}
                       {placement.plant.daysToMaturityMin}
                       {placement.plant.daysToMaturityMax && ` - ${placement.plant.daysToMaturityMax}`} days
@@ -575,15 +575,15 @@ export default function PlacementTrackingModal({
 
               {/* Plant notes from Verdantly */}
               {placement.plant.notes && (
-                <div className="rounded-lg bg-slate-50 border border-slate-200 p-3">
-                  <div className="font-medium text-slate-700 mb-2 text-sm">Plant Notes</div>
-                  <p className="text-sm text-slate-600 whitespace-pre-wrap">{placement.plant.notes}</p>
+                <div className="rounded-lg bg-cream-50 border border-cream-200 p-3">
+                  <div className="font-medium text-earth-deep mb-2 text-sm">Plant Notes</div>
+                  <p className="text-sm text-earth-warm whitespace-pre-wrap">{placement.plant.notes}</p>
                 </div>
               )}
 
               {/* Spring planting tasks */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Spring Planting Tasks</h3>
+                <h3 className="text-sm font-semibold text-earth-deep">Spring Planting Tasks</h3>
 
                 <div>
                   <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
@@ -597,7 +597,7 @@ export default function PlacementTrackingModal({
                           setSeedsStartedDate("");
                         }
                       }}
-                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded border-cream-200 text-sage-dark focus:ring-sage"
                     />
                     <span className="text-base">Seeds Started Indoors</span>
                   </label>
@@ -606,7 +606,7 @@ export default function PlacementTrackingModal({
                       type="date"
                       value={seedsStartedDate}
                       onChange={(e) => setSeedsStartedDate(e.target.value)}
-                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
+                      className="ml-8 mt-1 text-base rounded-lg border border-cream-200 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
@@ -623,7 +623,7 @@ export default function PlacementTrackingModal({
                           setTransplantedDate("");
                         }
                       }}
-                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded border-cream-200 text-sage-dark focus:ring-sage"
                     />
                     <span className="text-base">Transplanted Outdoors</span>
                   </label>
@@ -632,7 +632,7 @@ export default function PlacementTrackingModal({
                       type="date"
                       value={transplantedDate}
                       onChange={(e) => setTransplantedDate(e.target.value)}
-                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
+                      className="ml-8 mt-1 text-base rounded-lg border border-cream-200 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
@@ -649,7 +649,7 @@ export default function PlacementTrackingModal({
                           setDirectSowedDate("");
                         }
                       }}
-                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded border-cream-200 text-sage-dark focus:ring-sage"
                     />
                     <span className="text-base">Direct Sowed</span>
                   </label>
@@ -658,7 +658,7 @@ export default function PlacementTrackingModal({
                       type="date"
                       value={directSowedDate}
                       onChange={(e) => setDirectSowedDate(e.target.value)}
-                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
+                      className="ml-8 mt-1 text-base rounded-lg border border-cream-200 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
@@ -666,7 +666,7 @@ export default function PlacementTrackingModal({
 
               {/* Harvest tracking */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Harvest Tracking</h3>
+                <h3 className="text-sm font-semibold text-earth-deep">Harvest Tracking</h3>
 
                 <div>
                   <label className="flex items-center gap-3 min-h-[44px] cursor-pointer">
@@ -680,7 +680,7 @@ export default function PlacementTrackingModal({
                           setHarvestStartedDate("");
                         }
                       }}
-                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded border-cream-200 text-sage-dark focus:ring-sage"
                     />
                     <span className="text-base">Harvest Started</span>
                   </label>
@@ -689,7 +689,7 @@ export default function PlacementTrackingModal({
                       type="date"
                       value={harvestStartedDate}
                       onChange={(e) => setHarvestStartedDate(e.target.value)}
-                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
+                      className="ml-8 mt-1 text-base rounded-lg border border-cream-200 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
@@ -706,7 +706,7 @@ export default function PlacementTrackingModal({
                           setHarvestEndedDate("");
                         }
                       }}
-                      className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      className="w-5 h-5 rounded border-cream-200 text-sage-dark focus:ring-sage"
                     />
                     <span className="text-base">Harvest Ended</span>
                   </label>
@@ -715,15 +715,15 @@ export default function PlacementTrackingModal({
                       type="date"
                       value={harvestEndedDate}
                       onChange={(e) => setHarvestEndedDate(e.target.value)}
-                      className="ml-8 mt-1 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
+                      className="ml-8 mt-1 text-base rounded-lg border border-cream-200 px-3 py-2 min-h-[44px]"
                     />
                   )}
                 </div>
 
                 {/* Yield tracking */}
                 {(harvestStartedDate || harvestEndedDate) && (
-                  <div className="pt-3 border-t border-slate-200">
-                    <label className="block text-base font-medium text-slate-700 mb-2">
+                  <div className="pt-3 border-t border-cream-200">
+                    <label className="block text-base font-medium text-earth-deep mb-2">
                       Total Harvest Yield
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -734,12 +734,12 @@ export default function PlacementTrackingModal({
                         value={harvestYield}
                         onChange={(e) => setHarvestYield(e.target.value)}
                         placeholder="Amount"
-                        className="w-28 text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
+                        className="w-28 text-base rounded-lg border border-cream-200 px-3 py-2 min-h-[44px]"
                       />
                       <select
                         value={harvestYieldUnit}
                         onChange={(e) => setHarvestYieldUnit(e.target.value)}
-                        className="text-base rounded-lg border border-slate-300 px-3 py-2 min-h-[44px]"
+                        className="text-base rounded-lg border border-cream-200 px-3 py-2 min-h-[44px]"
                       >
                         <option value="lbs">lbs</option>
                         <option value="oz">oz</option>
@@ -752,7 +752,7 @@ export default function PlacementTrackingModal({
                         <option value="quarts">quarts</option>
                       </select>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">
+                    <p className="text-xs text-earth-warm mt-1">
                       Track your cumulative harvest from this planting
                     </p>
                   </div>
@@ -761,12 +761,12 @@ export default function PlacementTrackingModal({
 
               {/* Notes */}
               <div>
-                <label className="block text-base font-medium text-slate-700 mb-2">Notes</label>
+                <label className="block text-base font-medium text-earth-deep mb-2">Notes</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add notes about this planting..."
-                  className="w-full text-base rounded-lg border border-slate-300 px-3 py-3"
+                  className="w-full text-base rounded-lg border border-cream-200 px-3 py-3"
                   rows={4}
                 />
               </div>
@@ -798,7 +798,7 @@ export default function PlacementTrackingModal({
 
               {/* Archive button - shown for completed harvests */}
               {harvestEndedDate && (
-                <div className="pt-3 border-t border-slate-200">
+                <div className="pt-3 border-t border-cream-200">
                   <button
                     onClick={handleArchive}
                     disabled={saving}
@@ -806,7 +806,7 @@ export default function PlacementTrackingModal({
                   >
                     Archive to History
                   </button>
-                  <p className="text-xs text-slate-500 mt-2 text-center">
+                  <p className="text-xs text-earth-warm mt-2 text-center">
                     Save this planting to your crop rotation history and clear the spot for next season
                   </p>
                 </div>

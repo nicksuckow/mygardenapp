@@ -69,19 +69,19 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-green-200 rounded-full blur-3xl"></div>
-        <div className="absolute top-40 right-20 w-40 h-40 bg-emerald-200 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-1/3 w-36 h-36 bg-teal-200 rounded-full blur-3xl"></div>
+        <div className="absolute top-10 left-10 w-32 h-32 bg-sage-light rounded-full blur-3xl"></div>
+        <div className="absolute top-40 right-20 w-40 h-40 bg-sage/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-1/3 w-36 h-36 bg-mustard-light/30 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative w-full max-w-md space-y-6 rounded-2xl border border-green-100 bg-white/80 backdrop-blur-sm p-8 shadow-xl">
+      <div className="relative w-full max-w-md space-y-6 rounded-2xl border border-cream-200 bg-white/80 backdrop-blur-sm p-8 shadow-xl">
         <div className="text-center space-y-4">
           {/* Plant icon */}
           <div className="flex justify-center">
-            <div className="bg-gradient-to-br from-green-400 to-emerald-500 text-white p-4 rounded-2xl shadow-lg">
+            <div className="bg-gradient-to-br from-sage to-sage-dark text-white p-4 rounded-2xl shadow-lg">
               <svg className="w-10 h-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 22V11"/>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11"/>
@@ -91,10 +91,10 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-              🌱 Create Account
+            <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+              Create Account
             </h1>
-            <p className="mt-2 text-sm text-emerald-800">
+            <p className="mt-2 text-sm text-earth-warm">
               Start planning your garden today
             </p>
           </div>
@@ -104,7 +104,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-emerald-900 mb-1.5"
+              className="block text-sm font-medium text-earth-deep mb-1.5"
             >
               Name (optional)
             </label>
@@ -113,7 +113,7 @@ export default function SignupPage() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100"
+              className="w-full rounded-lg border-2 border-cream-200 bg-white px-4 py-2.5 text-sm text-earth-deep placeholder-earth-warm/50 transition-colors focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               autoComplete="name"
             />
           </div>
@@ -121,7 +121,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-emerald-900 mb-1.5"
+              className="block text-sm font-medium text-earth-deep mb-1.5"
             >
               Email
             </label>
@@ -130,7 +130,7 @@ export default function SignupPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100"
+              className="w-full rounded-lg border-2 border-cream-200 bg-white px-4 py-2.5 text-sm text-earth-deep placeholder-earth-warm/50 transition-colors focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               required
               autoComplete="email"
             />
@@ -139,7 +139,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-emerald-900 mb-1.5"
+              className="block text-sm font-medium text-earth-deep mb-1.5"
             >
               Password
             </label>
@@ -148,7 +148,7 @@ export default function SignupPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100"
+              className="w-full rounded-lg border-2 border-cream-200 bg-white px-4 py-2.5 text-sm text-earth-deep placeholder-earth-warm/50 transition-colors focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               required
               autoComplete="new-password"
               minLength={8}
@@ -158,7 +158,7 @@ export default function SignupPage() {
           <div>
             <label
               htmlFor="confirm-password"
-              className="block text-sm font-medium text-emerald-900 mb-1.5"
+              className="block text-sm font-medium text-earth-deep mb-1.5"
             >
               Confirm Password
             </label>
@@ -167,7 +167,7 @@ export default function SignupPage() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100"
+              className="w-full rounded-lg border-2 border-cream-200 bg-white px-4 py-2.5 text-sm text-earth-deep placeholder-earth-warm/50 transition-colors focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               required
               autoComplete="new-password"
               minLength={8}
@@ -175,7 +175,7 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div className="rounded bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+            <div className="rounded bg-terracotta/10 border border-terracotta/30 px-3 py-2 text-sm text-terracotta-dark">
               {error}
             </div>
           )}
@@ -183,7 +183,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2.5 text-sm font-medium text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="w-full rounded-lg bg-gradient-to-r from-sage to-sage-dark px-4 py-2.5 text-sm font-medium text-white shadow-md hover:shadow-lg hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -194,22 +194,22 @@ export default function SignupPage() {
                 Creating account...
               </span>
             ) : (
-              "🌱 Create Account"
+              "Create Account"
             )}
           </button>
         </form>
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-green-200"></div>
+            <div className="w-full border-t border-cream-200"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-3 text-emerald-700 font-medium">Already have an account?</span>
+            <span className="bg-white px-3 text-earth-warm font-medium">Already have an account?</span>
           </div>
         </div>
 
         <div className="text-center">
-          <Link href="/login" className="text-sm text-green-600 hover:text-green-700 hover:underline font-medium">
+          <Link href="/login" className="text-sm text-sage-dark hover:text-sage hover:underline font-medium">
             Sign in here
           </Link>
         </div>

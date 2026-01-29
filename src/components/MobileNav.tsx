@@ -27,7 +27,7 @@ export default function MobileNav() {
       {/* Hamburger button - only shows on mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden p-2 -mr-2 text-slate-700 hover:text-slate-900"
+        className="md:hidden p-2 -mr-2 text-earth-warm hover:text-earth-deep"
         aria-label="Toggle menu"
       >
         {isOpen ? (
@@ -51,15 +51,15 @@ export default function MobileNav() {
 
       {/* Mobile menu panel */}
       <div
-        className={`fixed top-0 right-0 z-50 h-full w-64 bg-white shadow-xl border-l border-slate-200 transform transition-transform duration-200 ease-in-out md:hidden ${
+        className={`fixed top-0 right-0 z-50 h-full w-64 bg-cream-100 shadow-xl border-l border-cream-200 transform transition-transform duration-200 ease-in-out md:hidden ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <span className="font-semibold text-slate-900">Menu</span>
+        <div className="flex items-center justify-between p-4 border-b border-cream-200">
+          <span className="font-display font-semibold text-earth-deep">Menu</span>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 text-slate-500 hover:text-slate-700"
+            className="p-2 text-earth-warm hover:text-earth-deep"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -78,8 +78,8 @@ export default function MobileNav() {
                     onClick={() => setIsOpen(false)}
                     className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                        ? "bg-sage/10 text-sage-dark"
+                        : "text-earth-warm hover:bg-cream-50 hover:text-earth-deep"
                     }`}
                   >
                     {link.label}

@@ -73,9 +73,9 @@ const TASK_CONFIG: Record<TaskType, { emoji: string; label: string; completedLab
     emoji: "🏡",
     label: "Transplant outdoors",
     completedLabel: "Transplanted",
-    bgClass: "bg-emerald-100",
-    textClass: "text-emerald-700",
-    borderClass: "border-emerald-300",
+    bgClass: "bg-sage/20",
+    textClass: "text-sage-dark",
+    borderClass: "border-sage",
   },
   directSow: {
     emoji: "🌾",
@@ -684,25 +684,25 @@ export default function SchedulePage() {
     <div className="space-y-6">
       {/* Main content - hidden when printing day modal */}
       <div className={printingDayModal ? "print-hide-for-modal" : ""}>
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-100 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-mustard-50 via-mustard-100 to-mustard-200 border border-mustard/30 p-6">
         {/* Decorative calendar icon */}
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-32 h-32 text-mustard-dark" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
           </svg>
         </div>
 
         <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-blue-400 to-indigo-500 text-white p-2.5 rounded-xl shadow-md">
+          <div className="flex-shrink-0 bg-gradient-to-br from-mustard to-mustard-dark text-white p-2.5 rounded-xl shadow-md">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              📅 Planting Schedule
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-mustard-dark to-earth-warm bg-clip-text text-transparent">
+              Planting Schedule
             </h1>
-            <p className="text-indigo-900 text-sm mt-1">
+            <p className="text-earth-deep text-sm mt-1">
               Planned activities for your garden based on frost dates and plant timing
             </p>
           </div>
@@ -714,7 +714,7 @@ export default function SchedulePage() {
           {/* Filters row */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Bed:</label>
+              <label className="text-sm font-medium text-earth-deep whitespace-nowrap">Bed:</label>
               <select
                 className="rounded border px-3 py-2 text-sm flex-1 sm:flex-none"
                 value={filterBedId}
@@ -733,7 +733,7 @@ export default function SchedulePage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Status:</label>
+              <label className="text-sm font-medium text-earth-deep whitespace-nowrap">Status:</label>
               <select
                 className="rounded border px-3 py-2 text-sm flex-1 sm:flex-none"
                 value={filterStatus}
@@ -748,12 +748,12 @@ export default function SchedulePage() {
 
           {/* View mode and export row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div className="flex rounded-lg border border-slate-200 bg-slate-100 p-1 shadow-sm overflow-x-auto">
+            <div className="flex rounded-lg border border-cream-200 bg-cream-100 p-1 shadow-sm overflow-x-auto">
               <button
                 className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "table"
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "bg-gradient-to-r from-sage to-sage text-white shadow-md"
+                    : "text-earth-warm hover:text-earth-deep hover:bg-white/60"
                 }`}
                 onClick={() => setViewMode("table")}
               >
@@ -762,8 +762,8 @@ export default function SchedulePage() {
               <button
                 className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "week"
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "bg-gradient-to-r from-sage to-sage text-white shadow-md"
+                    : "text-earth-warm hover:text-earth-deep hover:bg-white/60"
                 }`}
                 onClick={() => setViewMode("week")}
               >
@@ -772,8 +772,8 @@ export default function SchedulePage() {
               <button
                 className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "grid"
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "bg-gradient-to-r from-sage to-sage text-white shadow-md"
+                    : "text-earth-warm hover:text-earth-deep hover:bg-white/60"
                 }`}
                 onClick={() => setViewMode("grid")}
               >
@@ -782,8 +782,8 @@ export default function SchedulePage() {
               <button
                 className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap rounded-md ${
                   viewMode === "calendar"
-                    ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-white/60"
+                    ? "bg-gradient-to-r from-sage to-sage text-white shadow-md"
+                    : "text-earth-warm hover:text-earth-deep hover:bg-white/60"
                 }`}
                 onClick={() => setViewMode("calendar")}
               >
@@ -806,7 +806,7 @@ export default function SchedulePage() {
       {/* Color Legend */}
       <div className={`${ui.card} ${ui.cardPad} no-print`}>
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          <span className="text-sm font-medium text-slate-700">Legend:</span>
+          <span className="text-sm font-medium text-earth-deep">Legend:</span>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             {(Object.keys(TASK_CONFIG) as TaskType[]).map((taskType) => (
               <div
@@ -854,27 +854,27 @@ export default function SchedulePage() {
 
           {/* This Week */}
           {upcomingTasks.thisWeek.length > 0 && (
-            <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4">
+            <div className="rounded-xl border-2 border-terracotta/30 bg-terracotta-50 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <div className="p-1.5 rounded-lg bg-amber-200">
-                  <svg className="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <div className="p-1.5 rounded-lg bg-terracotta/20">
+                  <svg className="w-4 h-4 text-terracotta-dark" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="font-semibold text-amber-900">This Week ({upcomingTasks.thisWeek.length})</h3>
+                <h3 className="font-semibold text-earth-deep">This Week ({upcomingTasks.thisWeek.length})</h3>
               </div>
               <div className="space-y-2">
                 {upcomingTasks.thisWeek.slice(0, 5).map((task, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-sm">
-                    <span className="font-mono text-amber-600 text-xs mt-0.5">{task.date}</span>
+                    <span className="font-mono text-terracotta text-xs mt-0.5">{task.date}</span>
                     <div>
-                      <span className="font-medium text-amber-800">{task.task}</span>
-                      <span className="text-amber-700"> - {task.plantName}</span>
+                      <span className="font-medium text-earth-deep">{task.task}</span>
+                      <span className="text-earth-warm"> - {task.plantName}</span>
                     </div>
                   </div>
                 ))}
                 {upcomingTasks.thisWeek.length > 5 && (
-                  <p className="text-xs text-amber-600">+{upcomingTasks.thisWeek.length - 5} more</p>
+                  <p className="text-xs text-terracotta">+{upcomingTasks.thisWeek.length - 5} more</p>
                 )}
               </div>
             </div>
@@ -882,27 +882,27 @@ export default function SchedulePage() {
 
           {/* Next Week */}
           {upcomingTasks.nextWeek.length > 0 && (
-            <div className="rounded-xl border-2 border-blue-300 bg-blue-50 p-4">
+            <div className="rounded-xl border-2 border-sage/30 bg-sage/10 p-4">
               <div className="flex items-center gap-2 mb-3">
-                <div className="p-1.5 rounded-lg bg-blue-200">
-                  <svg className="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <div className="p-1.5 rounded-lg bg-sage/30">
+                  <svg className="w-4 h-4 text-sage-dark" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="font-semibold text-blue-900">Next Week ({upcomingTasks.nextWeek.length})</h3>
+                <h3 className="font-semibold text-earth-deep">Next Week ({upcomingTasks.nextWeek.length})</h3>
               </div>
               <div className="space-y-2">
                 {upcomingTasks.nextWeek.slice(0, 5).map((task, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-sm">
-                    <span className="font-mono text-blue-600 text-xs mt-0.5">{task.date}</span>
+                    <span className="font-mono text-sage-dark text-xs mt-0.5">{task.date}</span>
                     <div>
-                      <span className="font-medium text-blue-800">{task.task}</span>
-                      <span className="text-blue-700"> - {task.plantName}</span>
+                      <span className="font-medium text-earth-deep">{task.task}</span>
+                      <span className="text-earth-warm"> - {task.plantName}</span>
                     </div>
                   </div>
                 ))}
                 {upcomingTasks.nextWeek.length > 5 && (
-                  <p className="text-xs text-blue-600">+{upcomingTasks.nextWeek.length - 5} more</p>
+                  <p className="text-xs text-sage-dark">+{upcomingTasks.nextWeek.length - 5} more</p>
                 )}
               </div>
             </div>
@@ -920,10 +920,10 @@ export default function SchedulePage() {
             </div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-rose-900">Unable to load schedule</p>
-              <p className="mt-1 text-sm text-slate-600">{error}</p>
+              <p className="mt-1 text-sm text-earth-warm">{error}</p>
               {error.includes("Unauthorized") && (
-                <p className="mt-2 text-sm text-slate-700">
-                  Please <a href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium hover:underline">sign in</a> to view your planting schedule.
+                <p className="mt-2 text-sm text-earth-deep">
+                  Please <a href="/login" className="text-sage-dark hover:text-sage-dark font-medium hover:underline">sign in</a> to view your planting schedule.
                 </p>
               )}
             </div>
@@ -950,15 +950,15 @@ export default function SchedulePage() {
         <div className="space-y-4">
           {Object.entries(eventsByMonth).map(([month, monthEvents]) => (
             <div key={month} className={`${ui.card} ${ui.cardPad}`}>
-              <h3 className="text-base font-semibold mb-3 text-slate-800">{month}</h3>
+              <h3 className="text-base font-semibold mb-3 text-earth-deep">{month}</h3>
               <div className="space-y-2">
                 {monthEvents.map((event, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedEvent(event)}
-                    className="w-full text-left flex flex-wrap items-start gap-3 text-sm p-2 rounded hover:bg-slate-100 hover:ring-2 hover:ring-slate-200 transition-all cursor-pointer"
+                    className="w-full text-left flex flex-wrap items-start gap-3 text-sm p-2 rounded hover:bg-cream-100 hover:ring-2 hover:ring-cream-200 transition-all cursor-pointer"
                   >
-                    <span className="font-mono text-slate-600 min-w-[80px]">{event.date}</span>
+                    <span className="font-mono text-earth-warm min-w-[80px]">{event.date}</span>
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${getTaskColorClass(
                         event.taskType
@@ -966,10 +966,10 @@ export default function SchedulePage() {
                     >
                       {event.task}
                     </span>
-                    <span className="text-slate-700">
+                    <span className="text-earth-deep">
                       {event.plantName} ({event.count})
                     </span>
-                    <span className="text-slate-500 text-xs">in {event.bedName}</span>
+                    <span className="text-earth-warm text-xs">in {event.bedName}</span>
                   </button>
                 ))}
               </div>
@@ -981,7 +981,7 @@ export default function SchedulePage() {
         <div className="space-y-4">
           {eventsByWeek.map((week, idx) => (
             <div key={idx} className={`${ui.card} ${ui.cardPad}`}>
-              <h3 className="text-base font-semibold mb-3 text-slate-800">
+              <h3 className="text-base font-semibold mb-3 text-earth-deep">
                 Week of {week.weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {week.weekEnd.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </h3>
               <div className="grid gap-2 md:grid-cols-7">
@@ -996,12 +996,12 @@ export default function SchedulePage() {
                     <div
                       key={day}
                       className={`rounded-lg border p-2 min-h-[80px] ${
-                        isToday ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-white"
+                        isToday ? "border-sage bg-sage/20" : "border-cream-200 bg-white"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-slate-500">{day}</span>
-                        <span className={`text-xs font-mono ${isToday ? "text-emerald-700 font-bold" : "text-slate-400"}`}>
+                        <span className="text-xs font-medium text-earth-warm">{day}</span>
+                        <span className={`text-xs font-mono ${isToday ? "text-sage-dark font-bold" : "text-earth-warm/60"}`}>
                           {dayDate.getDate()}
                         </span>
                       </div>
@@ -1010,7 +1010,7 @@ export default function SchedulePage() {
                           <button
                             key={eIdx}
                             onClick={() => setSelectedEvent(event)}
-                            className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate hover:ring-2 hover:ring-offset-1 hover:ring-slate-400 cursor-pointer ${getTaskColorClass(event.taskType)}`}
+                            className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate hover:ring-2 hover:ring-offset-1 hover:ring-earth-warm/60 cursor-pointer ${getTaskColorClass(event.taskType)}`}
                             title={`${event.task} - ${event.plantName}`}
                           >
                             {TASK_CONFIG[event.taskType].emoji} {event.plantName}
@@ -1019,7 +1019,7 @@ export default function SchedulePage() {
                         {dayEvents.length > 3 && (
                           <button
                             onClick={() => setSelectedDay({ date: dayDate, events: dayEvents })}
-                            className="w-full text-xs text-slate-600 py-0.5 rounded hover:bg-slate-200 hover:text-slate-800 transition-colors cursor-pointer font-medium"
+                            className="w-full text-xs text-earth-warm py-0.5 rounded hover:bg-cream-200 hover:text-earth-deep transition-colors cursor-pointer font-medium"
                           >
                             +{dayEvents.length - 3} more
                           </button>
@@ -1079,7 +1079,7 @@ export default function SchedulePage() {
                   const [year, month] = e.target.value.split("-").map(Number);
                   setSelectedMonth({ year, month });
                 }}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium bg-white shadow-sm"
+                className="rounded-lg border border-cream-200 px-4 py-2 text-sm font-medium bg-white shadow-sm"
               >
                 {availableMonths.map((m) => (
                   <option key={`${m.year}-${m.month}`} value={`${m.year}-${m.month}`}>
@@ -1100,11 +1100,11 @@ export default function SchedulePage() {
 
           {calendarGrid.map((month, mIdx) => (
             <div key={mIdx} className={`${ui.card} ${ui.cardPad} print-card`}>
-              <h3 className="text-lg font-semibold mb-4 text-slate-800">{month.monthName}</h3>
+              <h3 className="text-lg font-semibold mb-4 text-earth-deep">{month.monthName}</h3>
               <div className="grid grid-cols-7 gap-1">
                 {/* Day headers */}
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                  <div key={day} className="text-center text-xs font-medium text-slate-500 py-2">
+                  <div key={day} className="text-center text-xs font-medium text-earth-warm py-2">
                     {day}
                   </div>
                 ))}
@@ -1119,18 +1119,18 @@ export default function SchedulePage() {
                       key={dIdx}
                       className={`min-h-[80px] sm:min-h-[100px] rounded border p-1 ${
                         !day.isCurrentMonth
-                          ? "bg-slate-50 border-slate-100"
+                          ? "bg-cream-50 border-cream-100"
                           : isToday
-                          ? "border-emerald-400 bg-emerald-50"
+                          ? "border-sage bg-sage/20"
                           : hasOverdue
                           ? "border-rose-300 bg-rose-50"
                           : hasEvents
-                          ? "border-blue-200 bg-blue-50"
-                          : "border-slate-200 bg-white"
+                          ? "border-sage/30 bg-sage/10"
+                          : "border-cream-200 bg-white"
                       }`}
                     >
                       <div className={`text-xs text-right mb-1 ${
-                        !day.isCurrentMonth ? "text-slate-300" : isToday ? "text-emerald-700 font-bold" : "text-slate-500"
+                        !day.isCurrentMonth ? "text-cream-200" : isToday ? "text-sage-dark font-bold" : "text-earth-warm"
                       }`}>
                         {day.date.getDate()}
                       </div>
@@ -1139,7 +1139,7 @@ export default function SchedulePage() {
                           <button
                             key={eIdx}
                             onClick={() => setSelectedEvent(event)}
-                            className={`w-full text-left text-xs px-1 py-0.5 rounded hover:ring-2 hover:ring-offset-1 hover:ring-slate-400 transition-all cursor-pointer ${getTaskColorClass(event.taskType)}`}
+                            className={`w-full text-left text-xs px-1 py-0.5 rounded hover:ring-2 hover:ring-offset-1 hover:ring-earth-warm/60 transition-all cursor-pointer ${getTaskColorClass(event.taskType)}`}
                             title={`${event.task} - ${event.plantName} (${event.bedName})`}
                           >
                             <span className="block truncate">
@@ -1150,7 +1150,7 @@ export default function SchedulePage() {
                         {day.events.length > 3 && (
                           <button
                             onClick={() => setSelectedDay({ date: day.date, events: day.events })}
-                            className="w-full text-xs text-slate-600 text-center py-0.5 rounded hover:bg-slate-200 hover:text-slate-800 transition-colors cursor-pointer font-medium"
+                            className="w-full text-xs text-earth-warm text-center py-0.5 rounded hover:bg-cream-200 hover:text-earth-deep transition-colors cursor-pointer font-medium"
                           >
                             +{day.events.length - 3} more
                           </button>
@@ -1168,13 +1168,13 @@ export default function SchedulePage() {
         <div className={`${ui.card} overflow-hidden`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b bg-slate-50">
+              <thead className="border-b bg-cream-50">
                 <tr>
-                  <th className="p-3 font-semibold text-slate-700">Date</th>
-                  <th className="p-3 font-semibold text-slate-700">Bed</th>
-                  <th className="p-3 font-semibold text-slate-700">Plant</th>
-                  <th className="p-3 font-semibold text-slate-700">Count</th>
-                  <th className="p-3 font-semibold text-slate-700">Task</th>
+                  <th className="p-3 font-semibold text-earth-deep">Date</th>
+                  <th className="p-3 font-semibold text-earth-deep">Bed</th>
+                  <th className="p-3 font-semibold text-earth-deep">Plant</th>
+                  <th className="p-3 font-semibold text-earth-deep">Count</th>
+                  <th className="p-3 font-semibold text-earth-deep">Task</th>
                 </tr>
               </thead>
               <tbody>
@@ -1182,22 +1182,22 @@ export default function SchedulePage() {
                   <tr
                     key={idx}
                     onClick={() => setSelectedEvent(e)}
-                    className={`border-b last:border-b-0 hover:bg-slate-100 cursor-pointer transition-colors ${
-                      e.status === "completed" ? "bg-green-50/30" : ""
+                    className={`border-b last:border-b-0 hover:bg-cream-100 cursor-pointer transition-colors ${
+                      e.status === "completed" ? "bg-sage/10" : ""
                     }`}
                   >
-                    <td className="p-3 font-mono text-slate-600">{e.date}</td>
+                    <td className="p-3 font-mono text-earth-warm">{e.date}</td>
                     <td className="p-3">{e.bedName}</td>
                     <td className="p-3">{e.plantName}</td>
-                    <td className="p-3 text-slate-600">{e.count}</td>
+                    <td className="p-3 text-earth-warm">{e.count}</td>
                     <td className="p-3">
                       <span
                         className={
                           e.isActual
-                            ? "text-green-700 font-medium"
+                            ? "text-sage-dark font-medium"
                             : e.status === "completed"
-                            ? "text-green-600"
-                            : "text-slate-600"
+                            ? "text-sage-dark"
+                            : "text-earth-warm"
                         }
                       >
                         {e.task}
@@ -1222,15 +1222,15 @@ export default function SchedulePage() {
             className={`${ui.card} w-full max-w-md max-h-[80vh] overflow-y-auto`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 border-b border-slate-200">
+            <div className="p-5 border-b border-cream-200">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900">{selectedEvent.plantName}</h2>
-                  <p className="text-sm text-slate-600 mt-1">in {selectedEvent.bedName}</p>
+                  <h2 className="text-xl font-semibold text-earth-deep">{selectedEvent.plantName}</h2>
+                  <p className="text-sm text-earth-warm mt-1">in {selectedEvent.bedName}</p>
                 </div>
                 <button
                   onClick={() => setSelectedEvent(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1"
+                  className="text-earth-warm/60 hover:text-earth-warm p-1"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1258,7 +1258,7 @@ export default function SchedulePage() {
 
               {/* All Events for this Plant */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">Full Schedule</h3>
+                <h3 className="text-sm font-semibold text-earth-deep mb-2">Full Schedule</h3>
                 <div className="space-y-2">
                   {getPlantEvents(selectedEvent.plantName, selectedEvent.bedName).map((event, idx) => {
                     const isCurrentEvent = event.date === selectedEvent.date && event.taskType === selectedEvent.taskType;
@@ -1266,18 +1266,18 @@ export default function SchedulePage() {
                       <div
                         key={idx}
                         className={`flex items-center gap-3 p-2 rounded-lg text-sm ${
-                          isCurrentEvent ? "bg-slate-100 ring-2 ring-slate-300" : "hover:bg-slate-50"
+                          isCurrentEvent ? "bg-cream-100 ring-2 ring-cream-200" : "hover:bg-cream-50"
                         }`}
                       >
                         <span className="text-base">{TASK_CONFIG[event.taskType].emoji}</span>
                         <div className="flex-1 min-w-0">
-                          <p className={`font-medium ${event.status === "completed" ? "text-green-700" : "text-slate-800"}`}>
+                          <p className={`font-medium ${event.status === "completed" ? "text-sage-dark" : "text-earth-deep"}`}>
                             {TASK_CONFIG[event.taskType].label}
                           </p>
-                          <p className="text-xs text-slate-500">{event.date}</p>
+                          <p className="text-xs text-earth-warm">{event.date}</p>
                         </div>
                         {event.status === "completed" && (
-                          <span className="text-green-600 text-xs">✓</span>
+                          <span className="text-sage-dark text-xs">✓</span>
                         )}
                       </div>
                     );
@@ -1286,15 +1286,15 @@ export default function SchedulePage() {
               </div>
 
               {/* Plant Count */}
-              <div className="pt-3 border-t border-slate-200">
+              <div className="pt-3 border-t border-cream-200">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">Plants in this bed:</span>
-                  <span className="font-semibold text-slate-900">{selectedEvent.count}</span>
+                  <span className="text-earth-warm">Plants in this bed:</span>
+                  <span className="font-semibold text-earth-deep">{selectedEvent.count}</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50">
+            <div className="p-4 border-t border-cream-200 bg-cream-50">
               <button
                 onClick={() => setSelectedEvent(null)}
                 className={`${ui.btn} ${ui.btnSecondary} w-full`}
@@ -1316,10 +1316,10 @@ export default function SchedulePage() {
             className={`${ui.card} w-full max-w-md max-h-[80vh] overflow-y-auto print-day-modal`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 border-b border-slate-200">
+            <div className="p-5 border-b border-cream-200">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-xl font-semibold text-slate-900">
+                  <h2 className="text-xl font-semibold text-earth-deep">
                     {selectedDay.date.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -1327,13 +1327,13 @@ export default function SchedulePage() {
                       year: "numeric",
                     })}
                   </h2>
-                  <p className="text-sm text-slate-600 mt-1">
+                  <p className="text-sm text-earth-warm mt-1">
                     {selectedDay.events.length} scheduled {selectedDay.events.length === 1 ? "task" : "tasks"}
                   </p>
                 </div>
                 <button
                   onClick={() => setSelectedDay(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1"
+                  className="text-earth-warm/60 hover:text-earth-warm p-1"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1350,7 +1350,7 @@ export default function SchedulePage() {
                     setSelectedDay(null);
                     setSelectedEvent(event);
                   }}
-                  className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all hover:ring-2 hover:ring-offset-1 hover:ring-slate-400 cursor-pointer ${getTaskColorClass(event.taskType)}`}
+                  className={`w-full text-left flex items-center gap-3 p-3 rounded-lg border transition-all hover:ring-2 hover:ring-offset-1 hover:ring-earth-warm/60 cursor-pointer ${getTaskColorClass(event.taskType)}`}
                 >
                   <span className="text-xl">{TASK_CONFIG[event.taskType].emoji}</span>
                   <div className="flex-1 min-w-0">
@@ -1365,7 +1365,7 @@ export default function SchedulePage() {
               ))}
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex gap-2 no-print">
+            <div className="p-4 border-t border-cream-200 bg-cream-50 flex gap-2 no-print">
               <button
                 onClick={handlePrintDayModal}
                 className={`${ui.btn} ${ui.btnSecondary} flex-1`}

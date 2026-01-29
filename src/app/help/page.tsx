@@ -130,15 +130,15 @@ function FAQAccordion({ item }: { item: FAQItem }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-slate-200 last:border-0">
+    <div className="border-b border-cream-200 last:border-0">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left py-4 flex items-center justify-between gap-4 hover:text-emerald-700 transition-colors"
+        className="w-full text-left py-4 flex items-center justify-between gap-4 hover:text-sage-dark transition-colors"
         aria-expanded={isOpen}
       >
-        <span className="font-medium text-slate-900">{item.question}</span>
+        <span className="font-medium text-earth-deep">{item.question}</span>
         <svg
-          className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform ${
+          className={`w-5 h-5 text-earth-warm flex-shrink-0 transition-transform ${
             isOpen ? "rotate-180" : ""
           }`}
           fill="none"
@@ -154,7 +154,7 @@ function FAQAccordion({ item }: { item: FAQItem }) {
         </svg>
       </button>
       {isOpen && (
-        <div className="pb-4 text-slate-600 text-sm leading-relaxed">
+        <div className="pb-4 text-earth-warm text-sm leading-relaxed">
           {item.answer}
         </div>
       )}
@@ -166,18 +166,18 @@ export default function HelpPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className={`${ui.card} ${ui.cardPad}`}>
-        <h1 className="text-2xl font-bold text-slate-900">Help & FAQ</h1>
-        <p className="text-slate-600 mt-2">
-          Find answers to common questions about using Sowplan.
+        <h1 className="text-2xl font-display font-bold text-earth-deep">Help & FAQ</h1>
+        <p className="text-earth-warm mt-2">
+          Find answers to common questions about using Sow Plan.
         </p>
       </div>
 
       {faqSections.map((section) => (
         <div key={section.title} className={`${ui.card} ${ui.cardPad}`}>
-          <h2 className="text-lg font-semibold text-slate-900 mb-2">
+          <h2 className="text-lg font-semibold text-earth-deep mb-2">
             {section.title}
           </h2>
-          <div className="divide-y divide-slate-200">
+          <div className="divide-y divide-cream-200">
             {section.items.map((item) => (
               <FAQAccordion key={item.question} item={item} />
             ))}
@@ -186,33 +186,33 @@ export default function HelpPage() {
       ))}
 
       <div className={`${ui.card} ${ui.cardPad}`}>
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">
+        <h2 className="text-lg font-semibold text-earth-deep mb-2">
           Quick Tips
         </h2>
-        <ul className="space-y-3 text-sm text-slate-600">
+        <ul className="space-y-3 text-sm text-earth-warm">
           <li className="flex gap-2">
-            <span className="text-emerald-600 font-medium">Tip:</span>
+            <span className="text-sage-dark font-medium">Tip:</span>
             <span>
               Keep your frost dates updated each year as they can vary based on
               climate patterns.
             </span>
           </li>
           <li className="flex gap-2">
-            <span className="text-emerald-600 font-medium">Tip:</span>
+            <span className="text-sage-dark font-medium">Tip:</span>
             <span>
               Use garden years to keep historical records of what you planted
               and how it performed.
             </span>
           </li>
           <li className="flex gap-2">
-            <span className="text-emerald-600 font-medium">Tip:</span>
+            <span className="text-sage-dark font-medium">Tip:</span>
             <span>
               Record pest observations in your journal to track patterns and
               plan preventive measures.
             </span>
           </li>
           <li className="flex gap-2">
-            <span className="text-emerald-600 font-medium">Tip:</span>
+            <span className="text-sage-dark font-medium">Tip:</span>
             <span>
               When planning bed layouts, consider companion planting - some plants
               grow better together!
@@ -221,11 +221,11 @@ export default function HelpPage() {
         </ul>
       </div>
 
-      <div className={`${ui.card} ${ui.cardPad} bg-slate-50`}>
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">
+      <div className={`${ui.card} ${ui.cardPad} bg-cream-50`}>
+        <h2 className="text-lg font-semibold text-earth-deep mb-2">
           Need More Help?
         </h2>
-        <p className="text-slate-600 text-sm">
+        <p className="text-earth-warm text-sm">
           If you can&apos;t find what you&apos;re looking for, please reach out through our
           feedback system. We&apos;re always happy to help and appreciate suggestions
           for improving the app.

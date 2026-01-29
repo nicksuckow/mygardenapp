@@ -66,29 +66,29 @@ export default function SeedInventoryPage() {
   const plantsWithSeeds = plants.filter((p) => p.hasSeeds);
   const plantsNeedingSeeds = plants.filter((p) => !p.hasSeeds);
 
-  if (loading) return <p className="text-sm text-slate-600">Loading...</p>;
+  if (loading) return <p className="text-sm text-earth-warm">Loading...</p>;
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border border-amber-100 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-mustard-50 via-mustard-100 to-mustard-200 border border-mustard/30 p-6">
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-32 h-32 text-mustard-dark" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
           </svg>
         </div>
 
         <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white p-2.5 rounded-xl shadow-md">
+          <div className="flex-shrink-0 bg-gradient-to-br from-mustard to-mustard-dark text-white p-2.5 rounded-xl shadow-md">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-mustard-dark to-earth-warm bg-clip-text text-transparent">
               Seed Inventory
             </h1>
-            <p className="text-amber-900 text-sm mt-1">
+            <p className="text-earth-deep text-sm mt-1">
               Track which plants you have seeds for and what you still need to buy
             </p>
           </div>
@@ -97,17 +97,17 @@ export default function SeedInventoryPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div className="rounded-lg border border-slate-200 bg-white p-3 text-center">
-          <p className="text-2xl font-bold text-slate-900">{plants.length}</p>
-          <p className="text-xs text-slate-600">Total Plants</p>
+        <div className="rounded-lg border border-cream-200 bg-white p-3 text-center">
+          <p className="text-2xl font-bold text-earth-deep">{plants.length}</p>
+          <p className="text-xs text-earth-warm">Total Plants</p>
         </div>
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
-          <p className="text-2xl font-bold text-green-700">{plantsWithSeeds.length}</p>
-          <p className="text-xs text-green-600">Have Seeds</p>
+        <div className="rounded-lg border border-sage/20 bg-sage/20 p-3 text-center">
+          <p className="text-2xl font-bold text-sage-dark">{plantsWithSeeds.length}</p>
+          <p className="text-xs text-sage-dark">Have Seeds</p>
         </div>
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
-          <p className="text-2xl font-bold text-amber-700">{plantsNeedingSeeds.length}</p>
-          <p className="text-xs text-amber-600">Need Seeds</p>
+        <div className="rounded-lg border border-terracotta/30 bg-terracotta-50 p-3 text-center">
+          <p className="text-2xl font-bold text-terracotta-dark">{plantsNeedingSeeds.length}</p>
+          <p className="text-xs text-terracotta">Need Seeds</p>
         </div>
       </div>
 
@@ -119,7 +119,7 @@ export default function SeedInventoryPage() {
 
       {plants.length === 0 ? (
         <div className={`${ui.card} ${ui.cardPad} text-center py-12`}>
-          <p className="text-slate-600 mb-4">
+          <p className="text-earth-warm mb-4">
             No plants added yet. Add plants first to track your seed inventory.
           </p>
           <Link href="/plants" className={`${ui.btn} ${ui.btnPrimary}`}>
@@ -131,14 +131,14 @@ export default function SeedInventoryPage() {
           {/* Plants needing seeds - Shopping List */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-400" />
+              <div className="w-3 h-3 rounded-full bg-terracotta" />
               <h2 className="text-lg font-semibold">Need to Buy</h2>
-              <span className="text-sm text-slate-500">({plantsNeedingSeeds.length})</span>
+              <span className="text-sm text-earth-warm">({plantsNeedingSeeds.length})</span>
             </div>
 
             {plantsNeedingSeeds.length === 0 ? (
               <div className={`${ui.card} ${ui.cardPad} text-center py-8`}>
-                <p className="text-slate-500 text-sm">You have seeds for all your plants!</p>
+                <p className="text-earth-warm text-sm">You have seeds for all your plants!</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -148,15 +148,15 @@ export default function SeedInventoryPage() {
                     className={`${ui.card} px-4 py-3 flex items-center justify-between gap-3`}
                   >
                     <div className="min-w-0">
-                      <p className="font-medium text-slate-900 truncate">{plant.name}</p>
+                      <p className="font-medium text-earth-deep truncate">{plant.name}</p>
                       {plant.variety && (
-                        <p className="text-sm text-slate-500 truncate">{plant.variety}</p>
+                        <p className="text-sm text-earth-warm truncate">{plant.variety}</p>
                       )}
                     </div>
                     <button
                       onClick={() => toggleHasSeeds(plant)}
                       disabled={updating === plant.id}
-                      className="flex-shrink-0 text-sm text-green-600 hover:text-green-700 font-medium disabled:opacity-50"
+                      className="flex-shrink-0 text-sm text-sage-dark hover:text-sage-dark font-medium disabled:opacity-50"
                     >
                       {updating === plant.id ? "..." : "Mark as owned"}
                     </button>
@@ -169,14 +169,14 @@ export default function SeedInventoryPage() {
           {/* Plants with seeds - Inventory */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-400" />
+              <div className="w-3 h-3 rounded-full bg-sage" />
               <h2 className="text-lg font-semibold">Have Seeds</h2>
-              <span className="text-sm text-slate-500">({plantsWithSeeds.length})</span>
+              <span className="text-sm text-earth-warm">({plantsWithSeeds.length})</span>
             </div>
 
             {plantsWithSeeds.length === 0 ? (
               <div className={`${ui.card} ${ui.cardPad} text-center py-8`}>
-                <p className="text-slate-500 text-sm">
+                <p className="text-earth-warm text-sm">
                   No seeds yet. Mark plants as owned when you buy seeds.
                 </p>
               </div>
@@ -185,15 +185,15 @@ export default function SeedInventoryPage() {
                 {plantsWithSeeds.map((plant) => (
                   <div
                     key={plant.id}
-                    className={`${ui.card} px-4 py-3 flex items-center justify-between gap-3 border-l-4 border-l-green-400`}
+                    className={`${ui.card} px-4 py-3 flex items-center justify-between gap-3 border-l-4 border-l-sage`}
                   >
                     <div className="min-w-0">
-                      <p className="font-medium text-slate-900 truncate">{plant.name}</p>
+                      <p className="font-medium text-earth-deep truncate">{plant.name}</p>
                       {plant.variety && (
-                        <p className="text-sm text-slate-500 truncate">{plant.variety}</p>
+                        <p className="text-sm text-earth-warm truncate">{plant.variety}</p>
                       )}
                       {plant.daysToMaturityMin && (
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-earth-warm/60">
                           {plant.daysToMaturityMin}
                           {plant.daysToMaturityMax && plant.daysToMaturityMax !== plant.daysToMaturityMin
                             ? `-${plant.daysToMaturityMax}`
@@ -205,7 +205,7 @@ export default function SeedInventoryPage() {
                     <button
                       onClick={() => toggleHasSeeds(plant)}
                       disabled={updating === plant.id}
-                      className="flex-shrink-0 text-sm text-slate-400 hover:text-rose-600 disabled:opacity-50"
+                      className="flex-shrink-0 text-sm text-earth-warm/60 hover:text-rose-600 disabled:opacity-50"
                       title="Remove from inventory"
                     >
                       {updating === plant.id ? "..." : "Remove"}
@@ -219,7 +219,7 @@ export default function SeedInventoryPage() {
       )}
 
       {/* Tip */}
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      <div className="rounded-lg border border-mustard/30 bg-mustard-50 p-4 text-sm text-earth-deep">
         <p>
           <strong>Tip:</strong> When adding a new plant on the{" "}
           <Link href="/plants" className="underline">

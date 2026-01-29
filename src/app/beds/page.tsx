@@ -125,25 +125,25 @@ export default function BedsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border border-amber-100 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-terracotta-50 via-terracotta-100 to-terracotta-200 border border-terracotta/30 p-6">
         {/* Decorative grid pattern */}
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-amber-600" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-32 h-32 text-terracotta-dark" fill="currentColor" viewBox="0 0 24 24">
             <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
           </svg>
         </div>
 
         <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white p-2.5 rounded-xl shadow-md">
+          <div className="flex-shrink-0 bg-gradient-to-br from-terracotta to-terracotta-dark text-white p-2.5 rounded-xl shadow-md">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-              🌾 Garden Beds
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-terracotta-dark to-earth-warm bg-clip-text text-transparent">
+              Garden Beds
             </h1>
-            <p className="text-amber-900 text-sm mt-1">
+            <p className="text-earth-deep text-sm mt-1">
               Create a bed, then open it to lay out plants on a grid.
             </p>
           </div>
@@ -155,7 +155,7 @@ export default function BedsPage() {
         <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
           <div>
             <h2 className="text-base font-semibold">Create a new bed</h2>
-          <p className="text-sm text-slate-600">Define the physical dimensions and grid spacing for plant placement</p>
+          <p className="text-sm text-earth-warm">Define the physical dimensions and grid spacing for plant placement</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -194,7 +194,7 @@ export default function BedsPage() {
                 />
               </div>
             </div>
-            <span className="text-xs text-slate-500">Physical width of your bed (Total: {inchesToFeetInches(totalWidthInches)})</span>
+            <span className="text-xs text-earth-warm">Physical width of your bed (Total: {inchesToFeetInches(totalWidthInches)})</span>
           </div>
 
           <div className="grid gap-1.5">
@@ -222,7 +222,7 @@ export default function BedsPage() {
                 />
               </div>
             </div>
-            <span className="text-xs text-slate-500">Physical height of your bed (Total: {inchesToFeetInches(totalHeightInches)})</span>
+            <span className="text-xs text-earth-warm">Physical height of your bed (Total: {inchesToFeetInches(totalHeightInches)})</span>
           </div>
 
           <div className="grid gap-1.5 sm:col-span-2">
@@ -251,7 +251,7 @@ export default function BedsPage() {
                 />
               </div>
             </div>
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-earth-warm">
               Size of each grid square for plant placement (Total: {inchesToFeetInches(totalCellInches)}). Common: 6&quot; (intensive), 1&apos; (standard), 1&apos;6&quot; (large plants)
             </span>
           </div>
@@ -269,9 +269,9 @@ export default function BedsPage() {
         </div>
 
         {gridCols > 0 && gridRows > 0 ? (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <p className="text-sm font-medium text-emerald-900">Grid Preview</p>
-            <p className="text-sm text-emerald-700">
+          <div className="rounded-lg border border-sage/20 bg-sage/20 px-4 py-3">
+            <p className="text-sm font-medium text-sage-dark">Grid Preview</p>
+            <p className="text-sm text-sage-dark">
               This will create a <span className="font-semibold">{gridCols} × {gridRows}</span> grid
               ({gridCols * gridRows} planting cells total)
             </p>
@@ -284,7 +284,7 @@ export default function BedsPage() {
           </button>
 
           {message ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <div className="rounded-lg border border-cream-200 bg-cream-50 px-3 py-2 text-sm text-earth-deep">
               {message}
             </div>
           ) : null}
@@ -308,13 +308,13 @@ export default function BedsPage() {
                   <div className="space-y-3">
                     <div>
                       <p className="font-semibold text-base">{b.name}</p>
-                      <div className="mt-1 space-y-0.5 text-xs text-slate-600">
+                      <div className="mt-1 space-y-0.5 text-xs text-earth-warm">
                         <p>Size: {inchesToFeetInches(b.widthInches)} × {inchesToFeetInches(b.heightInches)}</p>
                         <p>Grid: {cols} × {rows} cells ({inchesToFeetInches(b.cellInches)} each)</p>
-                        <p className="text-slate-500">{cols * rows} planting spots</p>
+                        <p className="text-earth-warm">{cols * rows} planting spots</p>
                       </div>
                       {b.notes && (
-                        <p className="mt-2 text-xs text-slate-600 italic line-clamp-2">{b.notes}</p>
+                        <p className="mt-2 text-xs text-earth-warm italic line-clamp-2">{b.notes}</p>
                       )}
                     </div>
 

@@ -39,19 +39,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-green-200 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-10 right-10 w-40 h-40 bg-emerald-200 rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 right-20 w-24 h-24 bg-teal-200 rounded-full blur-2xl"></div>
+        <div className="absolute top-10 left-10 w-32 h-32 bg-sage-light rounded-full blur-3xl"></div>
+        <div className="absolute bottom-10 right-10 w-40 h-40 bg-sage/30 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 right-20 w-24 h-24 bg-mustard-light/30 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="w-full max-w-md space-y-6 rounded-2xl border-2 border-green-100 bg-white/95 backdrop-blur-sm p-8 shadow-xl relative z-10">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border-2 border-cream-200 bg-white/95 backdrop-blur-sm p-8 shadow-xl relative z-10">
         <div className="text-center space-y-2">
           {/* Plant icon */}
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-br from-green-400 to-emerald-500 text-white p-4 rounded-2xl shadow-lg">
+            <div className="bg-gradient-to-br from-sage to-sage-dark text-white p-4 rounded-2xl shadow-lg">
               <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 22V11"/>
                 <path d="M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11" strokeLinecap="round"/>
@@ -60,17 +60,17 @@ export default function LoginPage() {
               </svg>
             </div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-            Sowplan
+          <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+            Sow Plan
           </h1>
-          <p className="text-sm text-slate-600">Welcome back! Sign in to tend your garden</p>
+          <p className="text-sm text-earth-warm">Welcome back! Sign in to tend your garden</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-green-900 mb-1.5"
+              className="block text-sm font-medium text-earth-deep mb-1.5"
             >
               Email
             </label>
@@ -79,7 +79,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
+              className="w-full rounded-lg border-2 border-cream-200 px-4 py-2.5 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all"
               placeholder="your@email.com"
               required
               autoComplete="email"
@@ -90,13 +90,13 @@ export default function LoginPage() {
             <div className="flex items-center justify-between mb-1.5">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-green-900"
+                className="block text-sm font-medium text-earth-deep"
               >
                 Password
               </label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-green-600 hover:text-green-700 hover:underline font-medium"
+                className="text-xs text-sage-dark hover:text-sage hover:underline font-medium"
               >
                 Forgot password?
               </Link>
@@ -106,7 +106,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 px-4 py-2.5 text-sm focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-200 transition-all"
+              className="w-full rounded-lg border-2 border-cream-200 px-4 py-2.5 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all"
               placeholder="Enter your password"
               required
               autoComplete="current-password"
@@ -114,8 +114,8 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 border-2 border-red-200 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
-              <span className="text-red-500">⚠️</span>
+            <div className="rounded-lg bg-terracotta/10 border-2 border-terracotta/30 px-4 py-3 text-sm text-terracotta-dark flex items-start gap-2">
+              <span className="text-terracotta">!</span>
               <span>{error}</span>
             </div>
           )}
@@ -123,7 +123,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full rounded-lg bg-gradient-to-r from-sage to-sage-dark px-4 py-3 text-sm font-semibold text-white hover:from-sage-dark hover:to-sage disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -134,20 +134,20 @@ export default function LoginPage() {
                 Signing in...
               </span>
             ) : (
-              "Sign In 🌿"
+              "Sign In"
             )}
           </button>
         </form>
 
-        <div className="text-center text-sm text-slate-600">
+        <div className="text-center text-sm text-earth-warm">
           Don't have an account?{" "}
-          <Link href="/signup" className="text-green-600 hover:text-green-700 hover:underline font-semibold">
+          <Link href="/signup" className="text-sage-dark hover:text-sage hover:underline font-semibold">
             Sign up
           </Link>
         </div>
 
         {/* Decorative bottom accent */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-400 rounded-b-2xl"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-sage via-sage-dark to-terracotta rounded-b-2xl"></div>
       </div>
     </div>
   );

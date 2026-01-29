@@ -398,29 +398,29 @@ export default function SettingsPage() {
     setExpectedMessage("Saved!");
   }
 
-  if (loading) return <p className="text-sm text-slate-600">Loading...</p>;
+  if (loading) return <p className="text-sm text-earth-warm">Loading...</p>;
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 border border-slate-200 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6">
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
           </svg>
         </div>
 
         <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-slate-400 to-gray-500 text-white p-2.5 rounded-xl shadow-md">
+          <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
               Location Data
             </h1>
-            <p className="text-slate-700 text-sm mt-1">
+            <p className="text-earth-warm text-sm mt-1">
               Frost dates drive seed starting and planting timing. Zone is optional.
             </p>
           </div>
@@ -433,22 +433,22 @@ export default function SettingsPage() {
         <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
           <div>
             <h2 className="text-base font-semibold">Expected Frost Dates</h2>
-            <p className="text-sm text-slate-600">Regional averages used for scheduling</p>
+            <p className="text-sm text-earth-warm">Regional averages used for scheduling</p>
           </div>
 
           {/* Saved ZIP Display */}
           {savedZip && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4 flex items-center justify-between">
+            <div className="rounded-lg border border-sage/30 bg-sage/10 p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex-shrink-0 bg-green-100 text-green-700 p-2 rounded-lg">
+                <div className="flex-shrink-0 bg-sage/20 text-sage-dark p-2 rounded-lg">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-xs text-green-700 font-medium uppercase tracking-wide">Your Location</p>
-                  <p className="text-lg font-bold text-green-900">ZIP {savedZip}</p>
+                  <p className="text-xs text-sage-dark font-medium uppercase tracking-wide">Your Location</p>
+                  <p className="text-lg font-bold text-earth-deep">ZIP {savedZip}</p>
                 </div>
               </div>
               <button
@@ -456,7 +456,7 @@ export default function SettingsPage() {
                   setSavedZip("");
                   setZipCode("");
                 }}
-                className="text-xs text-green-600 hover:text-green-800 hover:bg-green-100 px-2 py-1 rounded"
+                className="text-xs text-sage-dark hover:text-earth-deep hover:bg-sage/20 px-2 py-1 rounded"
               >
                 Clear
               </button>
@@ -466,16 +466,16 @@ export default function SettingsPage() {
           {/* ZIP Code Lookup - only show when no ZIP is saved */}
           {!savedZip && (
             <>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
+              <div className="rounded-lg border border-sage/30 bg-sage/10 p-4 space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-blue-900">Quick Setup</p>
-                  <p className="text-xs text-blue-700 mt-1">Enter your ZIP code to auto-fill zone and frost dates</p>
+                  <p className="text-sm font-medium text-earth-deep">Quick Setup</p>
+                  <p className="text-xs text-earth-warm mt-1">Enter your ZIP code to auto-fill zone and frost dates</p>
                 </div>
 
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <input
-                      className="w-full rounded border px-3 py-2 text-sm"
+                      className="w-full rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
                       value={zipCode}
                       onChange={(e) => setZipCode(e.target.value)}
                       onKeyDown={(e) => {
@@ -498,8 +498,8 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 pt-4">
-                <p className="text-xs text-slate-500 mb-3">Or enter manually:</p>
+              <div className="border-t border-cream-200 pt-4">
+                <p className="text-xs text-earth-warm mb-3">Or enter manually:</p>
               </div>
             </>
           )}
@@ -507,7 +507,7 @@ export default function SettingsPage() {
           <label className="grid gap-1.5">
             <span className="text-sm font-medium">USDA Hardiness Zone (optional)</span>
             <input
-              className="rounded border px-3 py-2 text-sm"
+              className="rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               value={zone}
               onChange={(e) => setZone(e.target.value)}
               placeholder="e.g., 6a, 7b, 8a"
@@ -517,7 +517,7 @@ export default function SettingsPage() {
           <label className="grid gap-1.5">
             <span className="text-sm font-medium">Last spring frost date</span>
             <input
-              className="rounded border px-3 py-2 text-sm"
+              className="rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               type="date"
               value={lastSpringFrost}
               onChange={(e) => {
@@ -526,21 +526,21 @@ export default function SettingsPage() {
               }}
             />
             {averageYearsCount ? (
-              <span className="text-xs text-cyan-600 flex items-center gap-1">
+              <span className="text-xs text-sage-dark flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Average over {averageYearsCount} year{averageYearsCount > 1 ? "s" : ""} from NOAA
               </span>
             ) : (
-              <span className="text-xs text-slate-500">Average date of last frost in spring</span>
+              <span className="text-xs text-earth-warm">Average date of last frost in spring</span>
             )}
           </label>
 
           <label className="grid gap-1.5">
             <span className="text-sm font-medium">First fall frost date</span>
             <input
-              className="rounded border px-3 py-2 text-sm"
+              className="rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               type="date"
               value={firstFallFrost}
               onChange={(e) => {
@@ -549,14 +549,14 @@ export default function SettingsPage() {
               }}
             />
             {averageYearsCount ? (
-              <span className="text-xs text-cyan-600 flex items-center gap-1">
+              <span className="text-xs text-sage-dark flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Average over {averageYearsCount} year{averageYearsCount > 1 ? "s" : ""} from NOAA
               </span>
             ) : (
-              <span className="text-xs text-slate-500">Average date of first frost in fall</span>
+              <span className="text-xs text-earth-warm">Average date of first frost in fall</span>
             )}
           </label>
 
@@ -570,10 +570,10 @@ export default function SettingsPage() {
             {expectedMessage && (
               <div className={`rounded-lg border px-3 py-2 text-sm ${
                 expectedMessage.includes("Saved") || expectedMessage.includes("Found")
-                  ? "border-green-200 bg-green-50 text-green-800"
+                  ? "border-sage/30 bg-sage/10 text-sage-dark"
                   : expectedMessage.includes("failed") || expectedMessage.includes("Failed")
-                  ? "border-rose-200 bg-rose-50 text-rose-800"
-                  : "border-slate-200 bg-slate-50 text-slate-700"
+                  ? "border-terracotta/30 bg-terracotta/10 text-terracotta-dark"
+                  : "border-cream-200 bg-cream-100 text-earth-warm"
               }`}>
                 {expectedMessage}
               </div>
@@ -585,18 +585,18 @@ export default function SettingsPage() {
         <div className={`${ui.card} ${ui.cardPad} space-y-4`}>
           <div>
             <h2 className="text-base font-semibold">NOAA Historical Data</h2>
-            <p className="text-sm text-slate-600">Frost dates from nearby weather stations</p>
+            <p className="text-sm text-earth-warm">Frost dates from nearby weather stations</p>
           </div>
 
           {/* Auto-fetch progress */}
           {autoFetchProgress && (
-            <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 flex items-center gap-3">
-              <div className="animate-spin h-4 w-4 border-2 border-cyan-600 border-t-transparent rounded-full"></div>
+            <div className="rounded-lg border border-mustard/30 bg-mustard/10 p-3 flex items-center gap-3">
+              <div className="animate-spin h-4 w-4 border-2 border-mustard-dark border-t-transparent rounded-full"></div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-cyan-800">
+                <p className="text-sm font-medium text-earth-deep">
                   Loading historical data from NOAA...
                 </p>
-                <p className="text-xs text-cyan-600">
+                <p className="text-xs text-mustard-dark">
                   Year {autoFetchProgress.current} of {autoFetchProgress.total}
                 </p>
               </div>
@@ -604,36 +604,36 @@ export default function SettingsPage() {
           )}
 
           {autoFetchComplete && !autoFetchProgress && frostHistory.length > 0 && (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-3 flex items-center gap-2">
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <div className="rounded-lg border border-sage/30 bg-sage/10 p-3 flex items-center gap-2">
+              <svg className="w-4 h-4 text-sage-dark" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-              <p className="text-sm text-green-800">Historical frost data loaded from NOAA</p>
+              <p className="text-sm text-sage-dark">Historical frost data loaded from NOAA</p>
             </div>
           )}
 
           {/* NOAA Lookup Section */}
-          <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 space-y-3">
+          <div className="rounded-lg border border-mustard/30 bg-mustard/10 p-4 space-y-3">
             <div>
-              <p className="text-sm font-medium text-cyan-900 flex items-center gap-2">
+              <p className="text-sm font-medium text-earth-deep flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 Lookup Historical Frost Dates
               </p>
-              <p className="text-xs text-cyan-700 mt-1">Search NOAA weather records for actual frost dates</p>
+              <p className="text-xs text-earth-warm mt-1">Search NOAA weather records for actual frost dates</p>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <input
-                className="flex-1 min-w-[100px] rounded border px-3 py-2 text-sm"
+                className="flex-1 min-w-[100px] rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
                 value={noaaLookupZip}
                 onChange={(e) => setNoaaLookupZip(e.target.value)}
                 placeholder="ZIP code"
                 maxLength={5}
               />
               <select
-                className="rounded border px-3 py-2 text-sm bg-white"
+                className="rounded border border-cream-200 px-3 py-2 text-sm bg-white focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
                 value={noaaLookupYear}
                 onChange={(e) => setNoaaLookupYear(parseInt(e.target.value, 10))}
               >
@@ -649,7 +649,7 @@ export default function SettingsPage() {
                 {noaaLookupLoading ? "Searching..." : "Search Year"}
               </button>
               <button
-                className={`${ui.btn} bg-cyan-600 hover:bg-cyan-700 text-white whitespace-nowrap`}
+                className={`${ui.btn} bg-mustard hover:bg-mustard-dark text-white whitespace-nowrap`}
                 onClick={() => {
                   if (noaaLookupZip && /^\d{5}$/.test(noaaLookupZip)) {
                     const existingYears = frostHistory.map(h => h.year);
@@ -665,58 +665,58 @@ export default function SettingsPage() {
             </div>
 
             {noaaLookupError && (
-              <p className="text-sm text-rose-600">{noaaLookupError}</p>
+              <p className="text-sm text-terracotta-dark">{noaaLookupError}</p>
             )}
 
             {noaaLookupResult && (
-              <div className="rounded-lg border border-cyan-300 bg-white p-3 space-y-3">
+              <div className="rounded-lg border border-mustard/30 bg-white p-3 space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-cyan-900">
+                  <p className="text-sm font-medium text-earth-deep">
                     Results for {noaaLookupYear}
                   </p>
-                  <p className="text-xs text-cyan-600">
+                  <p className="text-xs text-mustard-dark">
                     {noaaLookupResult.recordCount} days of data
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-xs text-slate-500">Last Spring Frost</p>
+                    <p className="text-xs text-earth-warm">Last Spring Frost</p>
                     {noaaLookupResult.lastSpringFrost ? (
-                      <p className="font-medium text-slate-800">
+                      <p className="font-medium text-earth-deep">
                         {new Date(noaaLookupResult.lastSpringFrost + "T12:00:00").toLocaleDateString(undefined, {
                           month: 'short', day: 'numeric'
                         })}
                       </p>
                     ) : (
-                      <p className="text-slate-400 italic">No freeze recorded</p>
+                      <p className="text-earth-warm/60 italic">No freeze recorded</p>
                     )}
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">First Fall Frost</p>
+                    <p className="text-xs text-earth-warm">First Fall Frost</p>
                     {noaaLookupResult.firstFallFrost ? (
-                      <p className="font-medium text-slate-800">
+                      <p className="font-medium text-earth-deep">
                         {new Date(noaaLookupResult.firstFallFrost + "T12:00:00").toLocaleDateString(undefined, {
                           month: 'short', day: 'numeric'
                         })}
                       </p>
                     ) : (
-                      <p className="text-slate-400 italic">No freeze recorded</p>
+                      <p className="text-earth-warm/60 italic">No freeze recorded</p>
                     )}
                   </div>
                 </div>
 
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-earth-warm">
                   Station: {noaaLookupResult.station.name}
                   {noaaLookupResult.isNearbyStation && (
-                    <span className="ml-1 text-amber-600">
+                    <span className="ml-1 text-terracotta">
                       (nearby station{noaaLookupResult.distanceMiles ? `, ~${noaaLookupResult.distanceMiles} mi away` : ""})
                     </span>
                   )}
                 </p>
 
                 <button
-                  className={`${ui.btn} bg-cyan-600 hover:bg-cyan-700 text-white text-sm`}
+                  className={`${ui.btn} bg-mustard hover:bg-mustard-dark text-white text-sm`}
                   onClick={saveNoaaResultToHistory}
                 >
                   Save to History
@@ -727,26 +727,26 @@ export default function SettingsPage() {
 
           {/* History List */}
           {historyLoading ? (
-            <p className="text-sm text-slate-500">Loading history...</p>
+            <p className="text-sm text-earth-warm">Loading history...</p>
           ) : frostHistory.length === 0 ? (
             <div className="text-center py-6">
-              <svg className="w-12 h-12 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <svg className="w-12 h-12 text-cream-200 mx-auto mb-2" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
               </svg>
-              <p className="text-sm text-slate-500">No frost date history yet</p>
-              <p className="text-xs text-slate-400 mt-1">Enter your ZIP and save to fetch NOAA data</p>
+              <p className="text-sm text-earth-warm">No frost date history yet</p>
+              <p className="text-xs text-earth-warm/60 mt-1">Enter your ZIP and save to fetch NOAA data</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {frostHistory.map((record) => (
                 <div
                   key={record.id}
-                  className="rounded-lg border border-slate-200 bg-slate-50 p-3 flex items-center justify-between"
+                  className="rounded-lg border border-cream-200 bg-cream-50 p-3 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4">
-                    <span className="text-sm font-semibold text-slate-700 w-12">{record.year}</span>
+                    <span className="text-sm font-semibold text-earth-warm w-12">{record.year}</span>
                     <div className="text-sm">
-                      <span className="text-slate-500">Spring:</span>{" "}
+                      <span className="text-earth-warm">Spring:</span>{" "}
                       <span className="font-medium">
                         {record.actualLastSpringFrost
                           ? new Date(record.actualLastSpringFrost).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -754,7 +754,7 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <div className="text-sm">
-                      <span className="text-slate-500">Fall:</span>{" "}
+                      <span className="text-earth-warm">Fall:</span>{" "}
                       <span className="font-medium">
                         {record.actualFirstFallFrost
                           ? new Date(record.actualFirstFallFrost).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -764,7 +764,7 @@ export default function SettingsPage() {
                   </div>
                   <button
                     onClick={() => deleteHistoryYear(record.year)}
-                    className="text-xs text-slate-400 hover:text-rose-600 px-2 py-1"
+                    className="text-xs text-earth-warm/60 hover:text-terracotta px-2 py-1"
                   >
                     ×
                   </button>

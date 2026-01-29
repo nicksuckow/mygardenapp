@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { ui } from "@/lib/uiStyles";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -71,12 +72,12 @@ function ResetPasswordForm() {
   if (success) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="w-full max-w-md space-y-6 rounded-lg border border-cream-200 bg-white p-8 shadow-sm">
           <div className="text-center">
             <div className="mb-4 flex justify-center">
-              <div className="rounded-full bg-green-100 p-3">
+              <div className="rounded-full bg-sage/10 p-3">
                 <svg
-                  className="h-8 w-8 text-green-600"
+                  className="h-8 w-8 text-sage-dark"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -90,10 +91,10 @@ function ResetPasswordForm() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-semibold text-slate-900">
+            <h1 className="text-2xl font-display font-semibold text-earth-deep">
               Password Reset Successful
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-earth-warm">
               Your password has been updated. Redirecting to login...
             </p>
           </div>
@@ -104,12 +105,12 @@ function ResetPasswordForm() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md space-y-6 rounded-lg border border-cream-200 bg-white p-8 shadow-sm">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-display font-semibold text-earth-deep">
             Reset Password
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-earth-warm">
             Enter your new password
           </p>
         </div>
@@ -118,7 +119,7 @@ function ResetPasswordForm() {
           <div>
             <label
               htmlFor="token"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-earth-deep mb-1"
             >
               Reset Token
             </label>
@@ -127,7 +128,7 @@ function ResetPasswordForm() {
               type="text"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm font-mono focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              className="w-full rounded border border-cream-200 px-3 py-2 text-sm font-mono focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               required
               placeholder="Enter your reset token"
             />
@@ -136,7 +137,7 @@ function ResetPasswordForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-earth-deep mb-1"
             >
               New Password
             </label>
@@ -145,7 +146,7 @@ function ResetPasswordForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              className="w-full rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               required
               autoComplete="new-password"
               minLength={8}
@@ -155,7 +156,7 @@ function ResetPasswordForm() {
           <div>
             <label
               htmlFor="confirm-password"
-              className="block text-sm font-medium text-slate-700 mb-1"
+              className="block text-sm font-medium text-earth-deep mb-1"
             >
               Confirm New Password
             </label>
@@ -164,7 +165,7 @@ function ResetPasswordForm() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+              className="w-full rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
               required
               autoComplete="new-password"
               minLength={8}
@@ -172,7 +173,7 @@ function ResetPasswordForm() {
           </div>
 
           {error && (
-            <div className="rounded bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+            <div className="rounded bg-terracotta/10 border border-terracotta/30 px-3 py-2 text-sm text-terracotta-dark">
               {error}
             </div>
           )}
@@ -180,7 +181,7 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded bg-black px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full ${ui.btn} ${ui.btnPrimary}`}
           >
             {loading ? "Resetting password..." : "Reset Password"}
           </button>
@@ -189,13 +190,13 @@ function ResetPasswordForm() {
         <div className="text-center space-y-2">
           <Link
             href="/login"
-            className="block text-sm text-slate-600 hover:underline"
+            className="block text-sm text-earth-warm hover:text-earth-deep hover:underline"
           >
             Back to login
           </Link>
           <Link
             href="/forgot-password"
-            className="block text-sm text-slate-600 hover:underline"
+            className="block text-sm text-earth-warm hover:text-earth-deep hover:underline"
           >
             Request a new token
           </Link>
@@ -207,7 +208,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-earth-warm">Loading...</div>}>
       <ResetPasswordForm />
     </Suspense>
   );

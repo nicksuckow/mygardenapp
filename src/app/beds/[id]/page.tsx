@@ -12,7 +12,7 @@ export default async function BedLayoutPage({
     return (
       <div className="space-y-2">
         <h1 className="text-xl font-semibold">Invalid bed</h1>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-earth-warm">
           The URL bed id is invalid: <span className="font-mono">{String(id)}</span>
         </p>
       </div>

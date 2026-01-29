@@ -2,14 +2,14 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Sowplan",
-    short_name: "Sowplan",
+    name: "Sow Plan",
+    short_name: "Sow Plan",
     description:
       "Plan your garden with personalized planting schedules based on your location. Track what you sow, design bed layouts, and manage your growing season.",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#059669", // emerald-600
+    background_color: "#FAF7F2", // cream
+    theme_color: "#7D9A78", // sage
     orientation: "portrait-primary",
     categories: ["lifestyle", "utilities", "productivity"],
     icons: [

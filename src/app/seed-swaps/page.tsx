@@ -96,8 +96,8 @@ export default function SeedSwapsPage() {
     return (
       <div className={ui.page}>
         <div className="max-w-4xl mx-auto p-4">
-          <div className="flex items-center gap-2 text-slate-500">
-            <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-earth-warm">
+            <div className="w-5 h-5 border-2 border-earth-warm/60 border-t-transparent rounded-full animate-spin" />
             Loading...
           </div>
         </div>
@@ -111,26 +111,26 @@ export default function SeedSwapsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-earth-deep flex items-center gap-2">
               <span>🌱</span> Find Seed Swaps
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-earth-warm mt-1">
               Discover local seed libraries, swaps, and gardening communities
               {settings?.zone && ` • Zone ${settings.zone}`}
             </p>
           </div>
-          <Link href="/garden" className="text-sm underline text-slate-600 hover:text-slate-800">
+          <Link href="/garden" className="text-sm underline text-earth-warm hover:text-earth-deep">
             Back to garden
           </Link>
         </div>
 
         {/* Search Section */}
         <div className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="font-semibold text-slate-900 mb-4">Find Local Resources</h2>
+          <h2 className="font-semibold text-earth-deep mb-4">Find Local Resources</h2>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-earth-deep mb-1">
                 Enter your ZIP code
               </label>
               <input
@@ -143,7 +143,7 @@ export default function SeedSwapsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className="block text-sm font-medium text-earth-deep mb-1">
                 Or search by city/state
               </label>
               <input
@@ -174,7 +174,7 @@ export default function SeedSwapsPage() {
 
         {/* Online Resources */}
         <div className="bg-white rounded-lg border p-6 mb-6">
-          <h2 className="font-semibold text-slate-900 mb-4">Online Seed Swap Communities</h2>
+          <h2 className="font-semibold text-earth-deep mb-4">Online Seed Swap Communities</h2>
 
           <div className="grid gap-3">
             {SEED_RESOURCES.map((resource) => (
@@ -183,7 +183,7 @@ export default function SeedSwapsPage() {
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-slate-50 transition-colors"
+                className="flex items-start gap-3 p-3 rounded-lg border hover:bg-cream-50 transition-colors"
               >
                 <span className="text-xl">
                   {resource.type === "organization" ? "🏢" :
@@ -191,32 +191,32 @@ export default function SeedSwapsPage() {
                    resource.type === "community" ? "👥" : "💬"}
                 </span>
                 <div>
-                  <h3 className="font-medium text-slate-900">{resource.name}</h3>
-                  <p className="text-sm text-slate-600">{resource.description}</p>
+                  <h3 className="font-medium text-earth-deep">{resource.name}</h3>
+                  <p className="text-sm text-earth-warm">{resource.description}</p>
                 </div>
-                <span className="ml-auto text-slate-400">→</span>
+                <span className="ml-auto text-earth-warm/60">→</span>
               </a>
             ))}
           </div>
         </div>
 
         {/* Tips */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-          <h2 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+        <div className="bg-mustard-50 border border-mustard/30 rounded-lg p-6">
+          <h2 className="font-semibold text-earth-deep mb-3 flex items-center gap-2">
             <span>💡</span> Tips for Finding Local Seed Swaps
           </h2>
 
           <ul className="space-y-2">
             {SEARCH_TIPS.map((tip, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-sm text-amber-800">
-                <span className="text-amber-500 mt-0.5">•</span>
+              <li key={idx} className="flex items-start gap-2 text-sm text-earth-deep">
+                <span className="text-mustard-dark mt-0.5">•</span>
                 {tip}
               </li>
             ))}
           </ul>
 
-          <div className="mt-4 pt-4 border-t border-amber-200">
-            <p className="text-sm text-amber-700">
+          <div className="mt-4 pt-4 border-t border-mustard/30">
+            <p className="text-sm text-earth-warm">
               <strong>Pro tip:</strong> Spring (February-April) is peak seed swap season!
               Many communities hold annual events before planting season begins.
             </p>
@@ -225,10 +225,10 @@ export default function SeedSwapsPage() {
 
         {/* Quick Links */}
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
-          <Link href="/seeds" className="text-emerald-600 hover:text-emerald-700 underline">
+          <Link href="/seeds" className="text-sage-dark hover:text-sage-dark underline">
             View my seed inventory →
           </Link>
-          <Link href="/plants" className="text-emerald-600 hover:text-emerald-700 underline">
+          <Link href="/plants" className="text-sage-dark hover:text-sage-dark underline">
             Browse my plants →
           </Link>
         </div>

@@ -241,8 +241,8 @@ export default function PlantNowPage() {
     transplant: {
       emoji: "🏡",
       label: "Transplant",
-      bgClass: "bg-emerald-100",
-      textClass: "text-emerald-700",
+      bgClass: "bg-sage/20",
+      textClass: "text-sage-dark",
     },
     "direct-sow": {
       emoji: "🌾",
@@ -256,8 +256,8 @@ export default function PlantNowPage() {
     return (
       <div className={ui.page}>
         <div className="max-w-6xl mx-auto p-4">
-          <div className="flex items-center gap-2 text-slate-500">
-            <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+          <div className="flex items-center gap-2 text-earth-warm">
+            <div className="w-5 h-5 border-2 border-earth-warm/60 border-t-transparent rounded-full animate-spin" />
             Loading...
           </div>
         </div>
@@ -269,8 +269,8 @@ export default function PlantNowPage() {
     return (
       <div className={ui.page}>
         <div className="max-w-6xl mx-auto p-4">
-          <p className="text-red-600">{error}</p>
-          <Link href="/garden" className="text-emerald-600 underline mt-2 block">
+          <p className="text-terracotta">{error}</p>
+          <Link href="/garden" className="text-sage-dark underline mt-2 block">
             Back to garden
           </Link>
         </div>
@@ -283,7 +283,7 @@ export default function PlantNowPage() {
       <div className={ui.page}>
         <div className="max-w-6xl mx-auto p-4">
           <div className="text-center py-8">
-            <p className="text-slate-600 mb-4">
+            <p className="text-earth-warm mb-4">
               Please configure your frost dates in settings to see what you can plant now.
             </p>
             <Link href="/settings" className={ui.btnPrimary}>
@@ -300,15 +300,15 @@ export default function PlantNowPage() {
       <div className="max-w-6xl mx-auto p-4">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-earth-deep flex items-center gap-2">
               <span>🌿</span> What Can I Plant Now?
             </h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-sm text-earth-warm mt-1">
               Based on your frost dates: Last frost {formatDate(new Date(settings.lastSpringFrost))}, First frost{" "}
               {formatDate(new Date(settings.firstFallFrost))}
             </p>
           </div>
-          <Link href="/garden" className="text-sm underline text-slate-600 hover:text-slate-800">
+          <Link href="/garden" className="text-sm underline text-earth-warm hover:text-earth-deep">
             Back to garden
           </Link>
         </div>
@@ -316,7 +316,7 @@ export default function PlantNowPage() {
         {/* Successions Due Section */}
         {successionsDue.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-earth-deep mb-3 flex items-center gap-2">
               <span className="text-violet-500">🔄</span> Successions Due
             </h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -329,23 +329,23 @@ export default function PlantNowPage() {
                     key={`succ-${item.plantId}`}
                     className={`rounded-lg border-2 p-4 ${
                       isOverdue
-                        ? "border-red-300 bg-red-50"
+                        ? "border-terracotta/30 bg-terracotta-50"
                         : isDueSoon
                         ? "border-violet-300 bg-violet-50"
                         : "border-violet-200 bg-white"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-semibold text-slate-900">{item.plantName}</h3>
+                      <h3 className="font-semibold text-earth-deep">{item.plantName}</h3>
                       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700">
                         #{item.nextSuccessionNumber}
                       </span>
                     </div>
 
-                    <div className="text-sm text-slate-600 space-y-1">
+                    <div className="text-sm text-earth-warm space-y-1">
                       {item.latestPlacement && (
                         <p>
-                          <span className="text-slate-500">Last planted:</span>{" "}
+                          <span className="text-earth-warm">Last planted:</span>{" "}
                           {item.latestPlacement.plantedDate
                             ? formatDate(new Date(item.latestPlacement.plantedDate))
                             : "N/A"}{" "}
@@ -354,10 +354,10 @@ export default function PlantNowPage() {
                       )}
                       {item.dueDate && (
                         <p>
-                          <span className="text-slate-500">Due:</span> {formatDate(new Date(item.dueDate))}
+                          <span className="text-earth-warm">Due:</span> {formatDate(new Date(item.dueDate))}
                         </p>
                       )}
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-earth-warm">
                         {item.currentCount}/{item.maxCount} planted • Every {item.intervalDays} days
                       </p>
                     </div>
@@ -366,10 +366,10 @@ export default function PlantNowPage() {
                       <span
                         className={`text-xs font-medium ${
                           isOverdue
-                            ? "text-red-600"
+                            ? "text-terracotta"
                             : isDueSoon
                             ? "text-violet-600"
-                            : "text-slate-600"
+                            : "text-earth-warm"
                         }`}
                       >
                         {isOverdue
@@ -386,7 +386,7 @@ export default function PlantNowPage() {
               })}
             </div>
             {successionsDue.length > 6 && (
-              <p className="text-sm text-slate-500 mt-2">
+              <p className="text-sm text-earth-warm mt-2">
                 + {successionsDue.length - 6} more succession{successionsDue.length - 6 > 1 ? "s" : ""} scheduled
               </p>
             )}
@@ -396,7 +396,7 @@ export default function PlantNowPage() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="flex items-center gap-2">
-            <label className="text-sm text-slate-600">Show:</label>
+            <label className="text-sm text-earth-warm">Show:</label>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value as PlantableCategory | "all")}
@@ -409,12 +409,12 @@ export default function PlantNowPage() {
             </select>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-earth-warm cursor-pointer">
             <input
               type="checkbox"
               checked={showSeedsOnly}
               onChange={(e) => setShowSeedsOnly(e.target.checked)}
-              className="rounded border-slate-300"
+              className="rounded border-cream-200"
             />
             Only plants I have seeds for
           </label>
@@ -432,7 +432,7 @@ export default function PlantNowPage() {
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
                   categoryFilter === cat
                     ? `${config.bgClass} ${config.textClass} ring-2 ring-offset-1 ring-current`
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : "bg-cream-100 text-earth-warm hover:bg-cream-200"
                 }`}
               >
                 {config.emoji} {config.label} ({count})
@@ -443,14 +443,14 @@ export default function PlantNowPage() {
 
         {/* Results */}
         {filteredItems.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
+          <div className="text-center py-12 text-earth-warm">
             <p className="text-lg mb-2">No plants to show right now</p>
             <p className="text-sm">
               {showSeedsOnly
                 ? "Try unchecking 'Only plants I have seeds for' or add more plants to your library."
                 : "Add plants with planting information to your library to see recommendations."}
             </p>
-            <Link href="/plants" className="text-emerald-600 underline mt-4 inline-block">
+            <Link href="/plants" className="text-sage-dark underline mt-4 inline-block">
               Go to Plants →
             </Link>
           </div>
@@ -465,29 +465,29 @@ export default function PlantNowPage() {
                     item.status === "ending-soon"
                       ? "border-orange-300 bg-orange-50"
                       : item.status === "just-started"
-                      ? "border-blue-300 bg-blue-50"
-                      : "border-slate-200 bg-white"
+                      ? "border-sage/30 bg-sage/10"
+                      : "border-cream-200 bg-white"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-semibold text-slate-900">{item.plant.name}</h3>
+                    <h3 className="font-semibold text-earth-deep">{item.plant.name}</h3>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${config.bgClass} ${config.textClass}`}>
                       {config.emoji} {config.label}
                     </span>
                   </div>
 
                   {item.plant.variety && (
-                    <p className="text-xs text-slate-500 mb-2">{item.plant.variety}</p>
+                    <p className="text-xs text-earth-warm mb-2">{item.plant.variety}</p>
                   )}
 
-                  <div className="text-sm text-slate-600 space-y-1">
+                  <div className="text-sm text-earth-warm space-y-1">
                     <p>
-                      <span className="text-slate-500">Window:</span> {formatDate(item.windowStart)} -{" "}
+                      <span className="text-earth-warm">Window:</span> {formatDate(item.windowStart)} -{" "}
                       {formatDate(item.windowEnd)}
                     </p>
                     {item.plant.daysToMaturityMin && (
                       <p>
-                        <span className="text-slate-500">Days to harvest:</span>{" "}
+                        <span className="text-earth-warm">Days to harvest:</span>{" "}
                         {item.plant.daysToMaturityMin}
                         {item.plant.daysToMaturityMax && item.plant.daysToMaturityMax !== item.plant.daysToMaturityMin
                           ? `-${item.plant.daysToMaturityMax}`
@@ -502,8 +502,8 @@ export default function PlantNowPage() {
                         item.status === "ending-soon"
                           ? "text-orange-600"
                           : item.status === "just-started"
-                          ? "text-blue-600"
-                          : "text-emerald-600"
+                          ? "text-sage-dark"
+                          : "text-sage-dark"
                       }`}
                     >
                       {item.status === "ending-soon"
@@ -514,7 +514,7 @@ export default function PlantNowPage() {
                     </span>
 
                     {item.plant.hasSeeds && (
-                      <span className="text-xs text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded">
+                      <span className="text-xs text-sage-dark bg-sage/20 px-2 py-0.5 rounded">
                         🌰 Have seeds
                       </span>
                     )}

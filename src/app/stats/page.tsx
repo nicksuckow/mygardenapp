@@ -56,7 +56,7 @@ export default function StatsPage() {
     return (
       <div className="space-y-4">
         <h1 className="text-xl font-semibold">Garden Statistics</h1>
-        <p className="text-slate-600">Loading...</p>
+        <p className="text-earth-warm">Loading...</p>
       </div>
     );
   }
@@ -65,7 +65,7 @@ export default function StatsPage() {
     return (
       <div className="space-y-4">
         <h1 className="text-xl font-semibold">Garden Statistics</h1>
-        <p className="text-red-600">{error || "No data available"}</p>
+        <p className="text-terracotta">{error || "No data available"}</p>
       </div>
     );
   }
@@ -85,22 +85,22 @@ export default function StatsPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className={`${ui.card} ${ui.cardPad} text-center`}>
-          <p className="text-3xl font-bold text-emerald-600">{stats.summary.totalBeds}</p>
-          <p className="text-sm text-slate-600">Beds</p>
+          <p className="text-3xl font-bold text-sage-dark">{stats.summary.totalBeds}</p>
+          <p className="text-sm text-earth-warm">Beds</p>
         </div>
         <div className={`${ui.card} ${ui.cardPad} text-center`}>
-          <p className="text-3xl font-bold text-blue-600">{stats.summary.totalPlants}</p>
-          <p className="text-sm text-slate-600">Plant Types</p>
+          <p className="text-3xl font-bold text-sage">{stats.summary.totalPlants}</p>
+          <p className="text-sm text-earth-warm">Plant Types</p>
         </div>
         <div className={`${ui.card} ${ui.cardPad} text-center`}>
           <p className="text-3xl font-bold text-amber-600">{stats.summary.totalPlacements}</p>
-          <p className="text-sm text-slate-600">Planted</p>
+          <p className="text-sm text-earth-warm">Planted</p>
         </div>
         <div className={`${ui.card} ${ui.cardPad} text-center`}>
-          <p className="text-3xl font-bold text-purple-600">
+          <p className="text-3xl font-bold text-earth-deep">
             {stats.companionPlanting.score !== null ? `${stats.companionPlanting.score}%` : "N/A"}
           </p>
-          <p className="text-sm text-slate-600">Companion Score</p>
+          <p className="text-sm text-earth-warm">Companion Score</p>
         </div>
       </div>
 
@@ -108,10 +108,10 @@ export default function StatsPage() {
       {statusTotal > 0 && (
         <div className={`${ui.card} ${ui.cardPad}`}>
           <h2 className="font-semibold mb-3">Growth Progress</h2>
-          <div className="flex h-6 rounded-full overflow-hidden bg-slate-100">
+          <div className="flex h-6 rounded-full overflow-hidden bg-cream-100">
             {stats.statusBreakdown.planned > 0 && (
               <div
-                className="bg-slate-400 flex items-center justify-center text-xs text-white font-medium"
+                className="bg-earth-warm/60 flex items-center justify-center text-xs text-white font-medium"
                 style={{ width: `${(stats.statusBreakdown.planned / statusTotal) * 100}%` }}
                 title={`Planned: ${stats.statusBreakdown.planned}`}
               >
@@ -120,7 +120,7 @@ export default function StatsPage() {
             )}
             {stats.statusBreakdown.seedsStarted > 0 && (
               <div
-                className="bg-blue-400 flex items-center justify-center text-xs text-white font-medium"
+                className="bg-mustard flex items-center justify-center text-xs text-white font-medium"
                 style={{ width: `${(stats.statusBreakdown.seedsStarted / statusTotal) * 100}%` }}
                 title={`Seeds Started: ${stats.statusBreakdown.seedsStarted}`}
               >
@@ -129,7 +129,7 @@ export default function StatsPage() {
             )}
             {stats.statusBreakdown.growing > 0 && (
               <div
-                className="bg-emerald-400 flex items-center justify-center text-xs text-white font-medium"
+                className="bg-sage flex items-center justify-center text-xs text-white font-medium"
                 style={{ width: `${(stats.statusBreakdown.growing / statusTotal) * 100}%` }}
                 title={`Growing: ${stats.statusBreakdown.growing}`}
               >
@@ -157,13 +157,13 @@ export default function StatsPage() {
           </div>
           <div className="flex flex-wrap gap-4 mt-3 text-xs">
             <span className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-slate-400" /> Planned ({stats.statusBreakdown.planned})
+              <div className="w-3 h-3 rounded-full bg-earth-warm/60" /> Planned ({stats.statusBreakdown.planned})
             </span>
             <span className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-blue-400" /> Seeds Started ({stats.statusBreakdown.seedsStarted})
+              <div className="w-3 h-3 rounded-full bg-mustard" /> Seeds Started ({stats.statusBreakdown.seedsStarted})
             </span>
             <span className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full bg-emerald-400" /> Growing ({stats.statusBreakdown.growing})
+              <div className="w-3 h-3 rounded-full bg-sage" /> Growing ({stats.statusBreakdown.growing})
             </span>
             <span className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-amber-400" /> Harvesting ({stats.statusBreakdown.harvesting})
@@ -183,16 +183,16 @@ export default function StatsPage() {
             <div className="space-y-2">
               {stats.topPlants.map((plant, idx) => (
                 <div key={plant.name} className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 w-5">{idx + 1}.</span>
+                  <span className="text-sm text-earth-warm w-5">{idx + 1}.</span>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="text-sm font-medium">{plant.name}</span>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-cream-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-emerald-400 rounded-full"
+                        className="h-full bg-sage rounded-full"
                         style={{ width: `${(plant.count / stats.topPlants[0].count) * 100}%` }}
                       />
                     </div>
-                    <span className="text-sm text-slate-600">{plant.count}</span>
+                    <span className="text-sm text-earth-warm">{plant.count}</span>
                   </div>
                 </div>
               ))}
@@ -209,18 +209,18 @@ export default function StatsPage() {
                 <div key={bed.name} className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{bed.name}</span>
-                    <span className="text-slate-600">
+                    <span className="text-earth-warm">
                       {bed.utilizationPercent}% ({bed.placementCount} plants)
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-cream-100 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full ${
                         bed.utilizationPercent > 80
                           ? "bg-amber-400"
                           : bed.utilizationPercent > 50
-                          ? "bg-emerald-400"
-                          : "bg-blue-400"
+                          ? "bg-sage"
+                          : "bg-sage/50"
                       }`}
                       style={{ width: `${bed.utilizationPercent}%` }}
                     />
@@ -244,9 +244,9 @@ export default function StatsPage() {
                   <div key={idx} className="flex items-center justify-between text-sm">
                     <div>
                       <span className="font-medium">{harvest.plantName}</span>
-                      <span className="text-slate-500 ml-1">({harvest.bedName})</span>
+                      <span className="text-earth-warm ml-1">({harvest.bedName})</span>
                     </div>
-                    <span className={isOverdue ? "text-amber-600 font-medium" : "text-slate-600"}>
+                    <span className={isOverdue ? "text-amber-600 font-medium" : "text-earth-warm"}>
                       {isOverdue
                         ? "Ready!"
                         : daysUntil === 0
@@ -268,9 +268,9 @@ export default function StatsPage() {
             <h2 className="font-semibold mb-3">Total Harvests</h2>
             <div className="grid grid-cols-2 gap-3">
               {stats.harvestYields.map((yield_) => (
-                <div key={yield_.unit} className="bg-slate-50 rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-emerald-600">{yield_.amount}</p>
-                  <p className="text-sm text-slate-600">{yield_.unit}</p>
+                <div key={yield_.unit} className="bg-cream-50 rounded-lg p-3 text-center">
+                  <p className="text-2xl font-bold text-sage-dark">{yield_.amount}</p>
+                  <p className="text-sm text-earth-warm">{yield_.unit}</p>
                 </div>
               ))}
             </div>
@@ -284,16 +284,16 @@ export default function StatsPage() {
             <div className="space-y-2">
               {stats.plantYields.map((item, idx) => (
                 <div key={`${item.plantName}-${item.unit}`} className="flex items-center gap-2">
-                  <span className="text-sm text-slate-500 w-5">{idx + 1}.</span>
+                  <span className="text-sm text-earth-warm w-5">{idx + 1}.</span>
                   <div className="flex-1 flex items-center gap-2">
                     <span className="text-sm font-medium">{item.plantName}</span>
-                    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex-1 h-2 bg-cream-100 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-amber-400 rounded-full"
                         style={{ width: `${(item.amount / stats.plantYields[0].amount) * 100}%` }}
                       />
                     </div>
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-earth-warm">
                       {item.amount} {item.unit}
                     </span>
                   </div>
@@ -310,20 +310,20 @@ export default function StatsPage() {
           <h2 className="font-semibold mb-3">Historical Yields by Year</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {stats.historicalYields.map((yearData) => (
-              <div key={yearData.year} className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-200 p-4">
-                <h3 className="font-semibold text-amber-800 mb-2">{yearData.year}</h3>
+              <div key={yearData.year} className="bg-gradient-to-br from-mustard-50 to-mustard-100 rounded-lg border border-mustard/30 p-4">
+                <h3 className="font-semibold text-earth-deep mb-2">{yearData.year}</h3>
                 <div className="space-y-1">
                   {yearData.yields.map((y) => (
                     <div key={y.unit} className="flex justify-between text-sm">
-                      <span className="text-amber-700">{y.unit}</span>
-                      <span className="font-medium text-amber-900">{y.amount}</span>
+                      <span className="text-earth-warm">{y.unit}</span>
+                      <span className="font-medium text-earth-deep">{y.amount}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-500 mt-3">
+          <p className="text-xs text-earth-warm mt-3">
             Archive completed harvests to build your historical yield data for comparison
           </p>
         </div>
@@ -349,14 +349,14 @@ export default function StatsPage() {
               </div>
             )}
             {stats.companionPlanting.goodPairs.length > 0 && (
-              <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                <p className="text-sm font-semibold text-emerald-700 mb-2">Great Pairings</p>
-                <ul className="space-y-1 text-sm text-emerald-600">
+              <div className="rounded-lg border border-sage/20 bg-sage/20 p-3">
+                <p className="text-sm font-semibold text-sage-dark mb-2">Great Pairings</p>
+                <ul className="space-y-1 text-sm text-sage-dark">
                   {stats.companionPlanting.goodPairs.map((pair, idx) => (
                     <li key={idx}>
                       <span className="font-medium">{pair.plant1}</span> +{" "}
                       <span className="font-medium">{pair.plant2}</span>
-                      <span className="text-emerald-500 text-xs ml-1">- {pair.reason}</span>
+                      <span className="text-sage-dark text-xs ml-1">- {pair.reason}</span>
                     </li>
                   ))}
                 </ul>
@@ -369,7 +369,7 @@ export default function StatsPage() {
       {/* Empty state */}
       {stats.summary.totalPlacements === 0 && (
         <div className={`${ui.card} ${ui.cardPad} text-center`}>
-          <p className="text-slate-600 mb-3">
+          <p className="text-earth-warm mb-3">
             No plants placed yet. Add some plants to your beds to see statistics!
           </p>
           <Link className={`${ui.btn} ${ui.btnPrimary}`} href="/beds">
