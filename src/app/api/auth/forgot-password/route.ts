@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { checkRateLimit, getClientIdentifier, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
+import { sendPasswordResetEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
@@ -56,16 +57,26 @@ export async function POST(req: Request) {
         },
       });
 
-      // In production, you would send this link via email
-      // For now, return it in the response for display in UI
-      const resetLink = `/reset-password?token=${plainToken}`;
+      const resetPath = `/reset-password?token=${plainToken}`;
+      const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+      const fullResetLink = `${baseUrl}${resetPath}`;
 
-      return NextResponse.json({
-        success: true,
-        message: "Password reset link generated",
-        resetLink, // Only for development - remove in production
-        expires: expires.toISOString(),
-      });
+      // In development, return the link directly for testing
+      if (process.env.NODE_ENV === "development") {
+        return NextResponse.json({
+          success: true,
+          message: "Password reset link generated",
+          resetLink: resetPath,
+          expires: expires.toISOString(),
+        });
+      }
+
+      // In production, send the reset link via email
+      const emailResult = await sendPasswordResetEmail(user.email, fullResetLink);
+      if (!emailResult.success) {
+        console.error("Failed to send password reset email:", emailResult.error);
+        // Don't expose email errors to user - just log them
+      }
     }
 
     // Return success even if user doesn't exist (security best practice)
