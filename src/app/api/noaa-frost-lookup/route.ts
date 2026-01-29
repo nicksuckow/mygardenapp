@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkRateLimit, getClientIdentifier, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -160,6 +161,13 @@ function findFrostDates(records: NOAADataRecord[], year: number): {
 }
 
 export async function GET(req: Request) {
+  // Rate limit check for external API
+  const clientId = getClientIdentifier(req);
+  const rateLimit = checkRateLimit(clientId, "noaa-frost-lookup", RATE_LIMITS.externalApi);
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit.resetIn);
+  }
+
   try {
     const token = process.env.NOAA_CDO_TOKEN;
     if (!token) {

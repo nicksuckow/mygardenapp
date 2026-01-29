@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { lookupHardinessZone } from "@/lib/verdantly";
+import { checkRateLimit, getClientIdentifier, rateLimitResponse, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -81,6 +82,13 @@ const FROST_DATE_ESTIMATES: Record<string, { lastSpring: string; firstFall: stri
 };
 
 export async function GET(req: Request) {
+  // Rate limit check for external API
+  const clientId = getClientIdentifier(req);
+  const rateLimit = checkRateLimit(clientId, "lookup-zone", RATE_LIMITS.externalApi);
+  if (!rateLimit.success) {
+    return rateLimitResponse(rateLimit.resetIn);
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const zipCode = searchParams.get("zip");
