@@ -16,6 +16,17 @@ function parseDateOrThrow(value: unknown, fieldName: string) {
   return d;
 }
 
+function parseOptionalDate(value: unknown): Date | null {
+  if (typeof value !== "string" || !value) {
+    return null;
+  }
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) {
+    return null;
+  }
+  return d;
+}
+
 export async function GET() {
   try {
     const userId = await getCurrentUserId();
@@ -42,11 +53,14 @@ export async function POST(req: Request) {
     const lastSpringFrost = parseDateOrThrow(body.lastSpringFrost, "lastSpringFrost");
     const firstFallFrost = parseDateOrThrow(body.firstFallFrost, "firstFallFrost");
     const zone = body.zone ? String(body.zone) : null;
+    const zip = body.zip ? String(body.zip) : null;
+    const actualLastSpringFrost = parseOptionalDate(body.actualLastSpringFrost);
+    const actualFirstFallFrost = parseOptionalDate(body.actualFirstFallFrost);
 
     const saved = await prisma.userSettings.upsert({
       where: { userId },
-      create: { userId, lastSpringFrost, firstFallFrost, zone },
-      update: { lastSpringFrost, firstFallFrost, zone },
+      create: { userId, lastSpringFrost, firstFallFrost, zone, zip, actualLastSpringFrost, actualFirstFallFrost },
+      update: { lastSpringFrost, firstFallFrost, zone, zip, actualLastSpringFrost, actualFirstFallFrost },
     });
 
     return NextResponse.json(saved);

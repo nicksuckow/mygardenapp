@@ -19,13 +19,14 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  settings      UserSettings?
-  gardens       Garden[]
-  beds          Bed[]
-  plants        Plant[]
-  seedInventory SeedInventory[]
-  journalEntries GardenJournal[]
-  gardenYears   GardenYear[]
+  settings         UserSettings?
+  gardens          Garden[]
+  beds             Bed[]
+  plants           Plant[]
+  seedInventory    SeedInventory[]
+  journalEntries   GardenJournal[]
+  gardenYears      GardenYear[]
+  frostDateHistory FrostDateHistory[]
 
   // NextAuth.js session support
   accounts           Account[]
@@ -98,11 +99,35 @@ model UserSettings {
   lastSpringFrost DateTime
   firstFallFrost  DateTime
   zone            String?
+  zip             String?  // User's ZIP code for frost lookups
   units           String   @default("imperial") // "imperial" or "metric"
+
+  // Actual frost dates for tracking real conditions (user-recorded)
+  actualLastSpringFrost DateTime? // When frost actually last occurred in spring
+  actualFirstFallFrost  DateTime? // When frost actually first occurred in fall
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// Historical frost date records - stores actual frost dates by year
+model FrostDateHistory {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  year                  Int       // The year this record is for (e.g., 2025, 2026)
+  actualLastSpringFrost DateTime? // When frost actually last occurred in spring
+  actualFirstFallFrost  DateTime? // When frost actually first occurred in fall
+  notes                 String?   // Optional notes about the frost conditions
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year])
+  @@index([userId])
+  @@index([userId, year])
 }
 
 // Plant model - now per-user

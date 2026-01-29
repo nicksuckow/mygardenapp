@@ -698,6 +698,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
   const [plantSearch, setPlantSearch] = useState("");
   const [isPlantDropdownOpen, setIsPlantDropdownOpen] = useState(false);
   const [selectedPlantForDrag, setSelectedPlantForDrag] = useState<Plant | null>(null);
+  const [isHoveringBed, setIsHoveringBed] = useState(false);
+  const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number } | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   // Companion planting alert state
@@ -1272,6 +1274,16 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
     [bed, isPositionValid]
   );
 
+  // Calculate valid zones when a plant is selected and hovering over bed
+  useEffect(() => {
+    if (selectedPlantForDrag && isHoveringBed && !draggedPlant) {
+      calculateValidZones(selectedPlantForDrag);
+    } else if (!selectedPlantForDrag && !draggedPlant) {
+      setValidDropZones([]);
+      setHoverPosition(null);
+    }
+  }, [selectedPlantForDrag, isHoveringBed, draggedPlant, calculateValidZones]);
+
   // Handle drag start from palette (new plant)
   const handleDragStart = useCallback(
     (plant: Plant) => {
@@ -1784,13 +1796,52 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
           y: e.clientY - panStart.y,
         });
       }
+      // Track hover position when a plant is selected (for click-to-place)
+      if (selectedPlantForDrag && !draggedPlant && !isPanning) {
+        const pos = getCanvasPosition(e.clientX, e.clientY);
+        if (pos) {
+          const nearest = findNearestValidZone(pos);
+          setHoverPosition(nearest);
+          setDropPosition(nearest);
+        }
+      }
     },
-    [isPanning, panStart]
+    [isPanning, panStart, selectedPlantForDrag, draggedPlant, getCanvasPosition, findNearestValidZone]
   );
 
   const handleCanvasMouseUp = useCallback(() => {
     setIsPanning(false);
   }, []);
+
+  // Handle mouse enter/leave for showing valid zones when plant selected
+  const handleCanvasMouseEnter = useCallback(() => {
+    if (selectedPlantForDrag) {
+      setIsHoveringBed(true);
+    }
+  }, [selectedPlantForDrag]);
+
+  const handleCanvasMouseLeave = useCallback(() => {
+    setIsHoveringBed(false);
+    if (!draggedPlant) {
+      setHoverPosition(null);
+      setDropPosition(null);
+    }
+  }, [draggedPlant]);
+
+  // Handle click to place when a plant is selected
+  const handleCanvasClick = useCallback(
+    async (e: React.MouseEvent<HTMLDivElement>) => {
+      // Don't place if we were panning, dragging, or clicking on a placement
+      if (isPanning || draggedPlant) return;
+
+      // Only place if we have a selected plant and a valid hover position
+      if (selectedPlantForDrag && hoverPosition) {
+        e.stopPropagation();
+        await placeAt(hoverPosition.x, hoverPosition.y, selectedPlantForDrag.id);
+      }
+    },
+    [isPanning, draggedPlant, selectedPlantForDrag, hoverPosition, placeAt]
+  );
 
   // Mini-map navigation
   const handleMiniMapNavigate = useCallback((x: number, y: number) => {
@@ -2216,10 +2267,10 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                 </div>
               )}
 
-              {/* Selected plant to drag */}
+              {/* Selected plant to place */}
               {selectedPlantForDrag && (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-500">Drag to place:</p>
+                  <p className="text-sm text-gray-500">Click in bed or drag to place:</p>
                   <div className="relative">
                     <PlantCard
                       plant={selectedPlantForDrag}
@@ -2241,7 +2292,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
 
               {!selectedPlantForDrag && !isPlantDropdownOpen && (
                 <p className="text-sm text-gray-500">
-                  Search and select a plant to drag onto the bed
+                  Search and select a plant to place in the bed
                 </p>
               )}
             </div>
@@ -2251,7 +2302,8 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             <p className="text-xs text-blue-900 font-medium">How to use:</p>
             <ul className="text-xs text-blue-800 mt-1 space-y-0.5 list-disc pl-4">
               <li>Search and select a plant above</li>
-              <li>Drag the selected plant to bed</li>
+              <li>Click in bed to place (green zones show valid spots)</li>
+              <li>Or drag the selected plant to bed</li>
               <li>Drag placed plants to reposition</li>
               <li>Hover plant and click X to delete</li>
               <li>Long-press on mobile to drag</li>
@@ -2554,7 +2606,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
             >
             <div
               ref={canvasRef}
-              className={`relative ${isPanning ? "cursor-grabbing" : "cursor-default"}`}
+              className={`relative ${isPanning ? "cursor-grabbing" : selectedPlantForDrag && hoverPosition ? "cursor-pointer" : "cursor-default"}`}
               style={{
                 width: canvasWidth * zoom,
                 height: canvasHeight * zoom,
@@ -2573,7 +2625,9 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
               onMouseDown={handleCanvasMouseDown}
               onMouseMove={handleCanvasMouseMove}
               onMouseUp={handleCanvasMouseUp}
-              onMouseLeave={() => setIsPanning(false)}
+              onMouseEnter={handleCanvasMouseEnter}
+              onMouseLeave={handleCanvasMouseLeave}
+              onClick={handleCanvasClick}
               onWheel={handleWheel}
             >
               {/* Grid dots overlay */}
@@ -2605,9 +2659,11 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   );
                 })}
 
-              {/* Valid drop zones */}
-              {draggedPlant &&
+              {/* Valid drop zones - show when dragging or when plant selected and hovering */}
+              {(draggedPlant || (selectedPlantForDrag && isHoveringBed)) &&
                 validDropZones.map((zone, idx) => {
+                  const activePlant = draggedPlant || selectedPlantForDrag;
+                  if (!activePlant) return null;
                   const displayPos = toDisplayCoords(zone.x, zone.y);
                   return (
                     <div
@@ -2616,17 +2672,21 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       style={{
                         left: displayPos.x * PIXELS_PER_INCH,
                         top: displayPos.y * PIXELS_PER_INCH,
-                        width: draggedPlant.spacingInches * PIXELS_PER_INCH,
-                        height: draggedPlant.spacingInches * PIXELS_PER_INCH,
+                        width: activePlant.spacingInches * PIXELS_PER_INCH,
+                        height: activePlant.spacingInches * PIXELS_PER_INCH,
                       }}
                     />
                   );
                 })}
 
-              {/* Drop preview (snapped position) */}
-              {draggedPlant && dropPosition && (() => {
-                const displayPos = toDisplayCoords(dropPosition.x, dropPosition.y);
-                const previewSize = draggedPlant.spacingInches * PIXELS_PER_INCH;
+              {/* Drop/hover preview (snapped position) - shows when dragging OR when plant selected and hovering */}
+              {((draggedPlant && dropPosition) || (selectedPlantForDrag && isHoveringBed && hoverPosition)) && (() => {
+                const activePlant = draggedPlant || selectedPlantForDrag;
+                const activePosition = dropPosition || hoverPosition;
+                if (!activePlant || !activePosition) return null;
+
+                const displayPos = toDisplayCoords(activePosition.x, activePosition.y);
+                const previewSize = activePlant.spacingInches * PIXELS_PER_INCH;
 
                 // Get companion status for the preview (virtual ID -1 for new placement, or actual ID for move)
                 const previewId = draggedPlacement?.id ?? -1;
@@ -2647,9 +2707,16 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                   }
                 }
 
+                // Use slightly different styling for click-to-place preview vs drag preview
+                const isClickMode = !draggedPlant && selectedPlantForDrag;
+
                 return (
                   <div
-                    className={`absolute rounded-full bg-emerald-400/70 border-3 border-emerald-300 pointer-events-none flex items-center justify-center transition-all duration-150 ${previewCompanionClass}`}
+                    className={`absolute rounded-full pointer-events-none flex items-center justify-center transition-all duration-150 ${previewCompanionClass} ${
+                      isClickMode
+                        ? "bg-emerald-400/50 border-2 border-emerald-400 cursor-pointer"
+                        : "bg-emerald-400/70 border-3 border-emerald-300"
+                    }`}
                     style={{
                       left: displayPos.x * PIXELS_PER_INCH,
                       top: displayPos.y * PIXELS_PER_INCH,
@@ -2659,7 +2726,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                     }}
                   >
                     {showPlantIcons ? (() => {
-                      const { icon, shortName, customType } = getPlantIconAndName(draggedPlant.name);
+                      const { icon, shortName, customType } = getPlantIconAndName(activePlant.name);
                       return (
                         <div className="flex flex-col items-center justify-center">
                           {customType ? (
@@ -2686,7 +2753,7 @@ export default function BedLayoutClient({ bedId }: { bedId: number }) {
                       );
                     })() : (
                       <span className="text-xs font-medium text-white text-center leading-tight drop-shadow">
-                        {draggedPlant.name}
+                        {activePlant.name}
                       </span>
                     )}
                   </div>
