@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ui } from "@/lib/uiStyles";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -71,13 +70,13 @@ function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-6 rounded-lg border border-cream-200 bg-white p-8 shadow-sm">
+      <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50">
+        <div className="w-full max-w-md space-y-6 rounded-2xl border border-cream-200 bg-white p-8 shadow-xl">
           <div className="text-center">
             <div className="mb-4 flex justify-center">
-              <div className="rounded-full bg-sage/10 p-3">
+              <div className="rounded-full bg-sage/10 p-4">
                 <svg
-                  className="h-8 w-8 text-sage-dark"
+                  className="h-10 w-10 text-sage-dark"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -91,7 +90,7 @@ function ResetPasswordForm() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-display font-semibold text-earth-deep">
+            <h1 className="text-2xl font-display font-bold text-earth-deep">
               Password Reset Successful
             </h1>
             <p className="mt-2 text-sm text-earth-warm">
@@ -104,10 +103,22 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6 rounded-lg border border-cream-200 bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50">
+      <div className="w-full max-w-md space-y-6 rounded-2xl border border-cream-200 bg-white p-8 shadow-xl">
         <div className="text-center">
-          <h1 className="text-2xl font-display font-semibold text-earth-deep">
+          <div className="mb-4 flex justify-center">
+            <div className="w-16 h-16">
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-md">
+                <ellipse cx="60" cy="95" rx="45" ry="12" fill="#6B5B4F"/>
+                <ellipse cx="60" cy="88" rx="12" ry="8" fill="#A85A3A"/>
+                <path d="M60 85 Q60 65 60 50" stroke="#5C7A56" strokeWidth="6" strokeLinecap="round"/>
+                <path d="M60 55 Q45 45 38 30 Q50 35 60 50" fill="#7D9A78"/>
+                <path d="M60 50 Q75 40 82 25 Q70 32 60 45" fill="#A8C4A2"/>
+                <path d="M60 50 Q55 42 52 35 Q58 38 60 48" fill="#7D9A78"/>
+              </svg>
+            </div>
+          </div>
+          <h1 className="text-2xl font-display font-bold text-earth-deep">
             Reset Password
           </h1>
           <p className="mt-2 text-sm text-earth-warm">
@@ -116,28 +127,31 @@ function ResetPasswordForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="token"
-              className="block text-sm font-medium text-earth-deep mb-1"
-            >
-              Reset Token
-            </label>
-            <input
-              id="token"
-              type="text"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="w-full rounded border border-cream-200 px-3 py-2 text-sm font-mono focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
-              required
-              placeholder="Enter your reset token"
-            />
-          </div>
+          {/* Only show token field if not provided via URL */}
+          {!tokenFromUrl && (
+            <div>
+              <label
+                htmlFor="token"
+                className="block text-sm font-medium text-earth-deep mb-1.5"
+              >
+                Reset Token
+              </label>
+              <input
+                id="token"
+                type="text"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="w-full rounded-lg border-2 border-cream-200 px-4 py-2.5 text-sm font-mono focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all"
+                required
+                placeholder="Enter your reset token"
+              />
+            </div>
+          )}
 
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-earth-deep mb-1"
+              className="block text-sm font-medium text-earth-deep mb-1.5"
             >
               New Password
             </label>
@@ -146,17 +160,18 @@ function ResetPasswordForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
+              className="w-full rounded-lg border-2 border-cream-200 px-4 py-2.5 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all"
               required
               autoComplete="new-password"
               minLength={8}
+              autoFocus={!!tokenFromUrl}
             />
           </div>
 
           <div>
             <label
               htmlFor="confirm-password"
-              className="block text-sm font-medium text-earth-deep mb-1"
+              className="block text-sm font-medium text-earth-deep mb-1.5"
             >
               Confirm New Password
             </label>
@@ -165,7 +180,7 @@ function ResetPasswordForm() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full rounded border border-cream-200 px-3 py-2 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20"
+              className="w-full rounded-lg border-2 border-cream-200 px-4 py-2.5 text-sm focus:border-sage focus:outline-none focus:ring-2 focus:ring-sage/20 transition-all"
               required
               autoComplete="new-password"
               minLength={8}
@@ -173,7 +188,7 @@ function ResetPasswordForm() {
           </div>
 
           {error && (
-            <div className="rounded bg-terracotta/10 border border-terracotta/30 px-3 py-2 text-sm text-terracotta-dark">
+            <div className="rounded-lg bg-terracotta/10 border border-terracotta/30 px-4 py-3 text-sm text-terracotta-dark">
               {error}
             </div>
           )}
@@ -181,7 +196,7 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full ${ui.btn} ${ui.btnPrimary}`}
+            className="w-full rounded-lg bg-gradient-to-r from-sage to-sage-dark px-4 py-3 text-sm font-semibold text-white hover:from-sage-dark hover:to-sage disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all"
           >
             {loading ? "Resetting password..." : "Reset Password"}
           </button>
@@ -190,7 +205,7 @@ function ResetPasswordForm() {
         <div className="text-center space-y-2">
           <Link
             href="/login"
-            className="block text-sm text-earth-warm hover:text-earth-deep hover:underline"
+            className="block text-sm text-sage-dark hover:text-sage hover:underline font-medium"
           >
             Back to login
           </Link>
@@ -198,7 +213,7 @@ function ResetPasswordForm() {
             href="/forgot-password"
             className="block text-sm text-earth-warm hover:text-earth-deep hover:underline"
           >
-            Request a new token
+            Request a new reset link
           </Link>
         </div>
       </div>

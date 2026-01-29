@@ -56,12 +56,14 @@ export async function POST(req: Request) {
         },
       });
 
-      // In production, you would send this via email
+      // In production, you would send this link via email
       // For now, return it in the response for display in UI
+      const resetLink = `/reset-password?token=${plainToken}`;
+
       return NextResponse.json({
         success: true,
-        message: "Password reset token generated",
-        token: plainToken, // Only for development - remove in production
+        message: "Password reset link generated",
+        resetLink, // Only for development - remove in production
         expires: expires.toISOString(),
       });
     }

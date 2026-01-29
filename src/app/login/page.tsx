@@ -49,14 +49,22 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md space-y-6 rounded-2xl border-2 border-cream-200 bg-white/95 backdrop-blur-sm p-8 shadow-xl relative z-10">
         <div className="text-center space-y-2">
-          {/* Plant icon */}
+          {/* Brand logo */}
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-br from-sage to-sage-dark text-white p-4 rounded-2xl shadow-lg">
-              <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 22V11"/>
-                <path d="M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11" strokeLinecap="round"/>
-                <path d="M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" strokeLinecap="round"/>
-                <circle cx="12" cy="22" r="1" fill="currentColor"/>
+            <div className="w-20 h-20">
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-lg">
+                {/* Soil/ground curve */}
+                <ellipse cx="60" cy="95" rx="45" ry="12" fill="#6B5B4F"/>
+                {/* Seed in soil */}
+                <ellipse cx="60" cy="88" rx="12" ry="8" fill="#A85A3A"/>
+                {/* Main stem */}
+                <path d="M60 85 Q60 65 60 50" stroke="#5C7A56" strokeWidth="6" strokeLinecap="round"/>
+                {/* Left leaf */}
+                <path d="M60 55 Q45 45 38 30 Q50 35 60 50" fill="#7D9A78"/>
+                {/* Right leaf */}
+                <path d="M60 50 Q75 40 82 25 Q70 32 60 45" fill="#A8C4A2"/>
+                {/* Small emerging leaf at top */}
+                <path d="M60 50 Q55 42 52 35 Q58 38 60 48" fill="#7D9A78"/>
               </svg>
             </div>
           </div>
