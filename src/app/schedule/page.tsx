@@ -684,25 +684,25 @@ export default function SchedulePage() {
     <div className="space-y-6">
       {/* Main content - hidden when printing day modal */}
       <div className={printingDayModal ? "print-hide-for-modal" : ""}>
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-mustard-50 via-mustard-100 to-mustard-200 border border-mustard/30 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6">
         {/* Decorative calendar icon */}
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-mustard-dark" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
           </svg>
         </div>
 
         <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-mustard to-mustard-dark text-white p-2.5 rounded-xl shadow-md">
+          <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-mustard-dark to-earth-warm bg-clip-text text-transparent">
+            <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
               Planting Schedule
             </h1>
-            <p className="text-earth-deep text-sm mt-1">
+            <p className="text-earth-warm text-sm mt-1">
               Planned activities for your garden based on frost dates and plant timing
             </p>
           </div>

@@ -71,24 +71,24 @@ export default function SeedInventoryPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-mustard-50 via-mustard-100 to-mustard-200 border border-mustard/30 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6">
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-mustard-dark" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
           </svg>
         </div>
 
         <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-mustard to-mustard-dark text-white p-2.5 rounded-xl shadow-md">
+          <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-mustard-dark to-earth-warm bg-clip-text text-transparent">
+            <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
               Seed Inventory
             </h1>
-            <p className="text-earth-deep text-sm mt-1">
+            <p className="text-earth-warm text-sm mt-1">
               Track which plants you have seeds for and what you still need to buy
             </p>
           </div>

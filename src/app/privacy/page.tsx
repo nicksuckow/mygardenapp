@@ -7,12 +7,31 @@ export const metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="max-w-3xl mx-auto">
-      <div className={`${ui.card} ${ui.cardPad} space-y-6`}>
-        <div>
-          <h1 className="text-2xl font-bold text-earth-deep">Privacy Policy</h1>
-          <p className="text-sm text-earth-warm mt-1">Last updated: January 2026</p>
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6">
+        {/* Decorative shield icon */}
+        <div className="absolute top-0 right-0 opacity-10">
+          <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+          </svg>
         </div>
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+              Privacy Policy
+            </h1>
+            <p className="text-earth-warm text-sm mt-1">Last updated: January 2026</p>
+          </div>
+        </div>
+      </div>
+
+      <div className={`${ui.card} ${ui.cardPad} space-y-6`}>
 
         <div className="prose prose-earth prose-sm max-w-none">
           <h2 className="text-lg font-semibold text-earth-deep mt-6">1. Introduction</h2>

@@ -298,19 +298,35 @@ export default function PlantNowPage() {
   return (
     <div className={ui.page}>
       <div className="max-w-6xl mx-auto p-4">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-earth-deep flex items-center gap-2">
-              <span>🌿</span> What Can I Plant Now?
-            </h1>
-            <p className="text-sm text-earth-warm mt-1">
-              Based on your frost dates: Last frost {formatDate(new Date(settings.lastSpringFrost))}, First frost{" "}
-              {formatDate(new Date(settings.firstFallFrost))}
-            </p>
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6 mb-6">
+          {/* Decorative seedling icon */}
+          <div className="absolute top-0 right-0 opacity-10">
+            <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M5.5 17a4.5 4.5 0 01-1.44-8.765 4.5 4.5 0 018.302-3.046 3.5 3.5 0 014.504 4.272A4 4 0 0115 17H5.5zm3.75-2.75a.75.75 0 001.5 0V9.66l1.95 2.1a.75.75 0 101.1-1.02l-3.25-3.5a.75.75 0 00-1.1 0l-3.25 3.5a.75.75 0 101.1 1.02l1.95-2.1v4.59z" clipRule="evenodd" />
+            </svg>
           </div>
-          <Link href="/garden" className="text-sm underline text-earth-warm hover:text-earth-deep">
-            Back to garden
-          </Link>
+
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+                  What Can I Plant Now?
+                </h1>
+                <p className="text-earth-warm text-sm mt-1">
+                  Based on your frost dates: Last frost {formatDate(new Date(settings.lastSpringFrost))}, First frost{" "}
+                  {formatDate(new Date(settings.firstFallFrost))}
+                </p>
+              </div>
+            </div>
+            <Link href="/garden" className="text-sm text-sage-dark hover:underline">
+              Back to garden
+            </Link>
+          </div>
         </div>
 
         {/* Successions Due Section */}

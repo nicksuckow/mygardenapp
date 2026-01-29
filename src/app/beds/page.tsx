@@ -125,25 +125,25 @@ export default function BedsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-terracotta-50 via-terracotta-100 to-terracotta-200 border border-terracotta/30 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6">
         {/* Decorative grid pattern */}
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-terracotta-dark" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 24 24">
             <path d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
           </svg>
         </div>
 
         <div className="relative flex items-center gap-3">
-          <div className="flex-shrink-0 bg-gradient-to-br from-terracotta to-terracotta-dark text-white p-2.5 rounded-xl shadow-md">
+          <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-terracotta-dark to-earth-warm bg-clip-text text-transparent">
+            <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
               Garden Beds
             </h1>
-            <p className="text-earth-deep text-sm mt-1">
+            <p className="text-earth-warm text-sm mt-1">
               Create a bed, then open it to lay out plants on a grid.
             </p>
           </div>

@@ -197,27 +197,43 @@ export default function JournalPage() {
     <div className={ui.page}>
       <div className="max-w-4xl mx-auto p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-earth-deep flex items-center gap-2">
-              <span>📔</span> Garden Journal
-            </h1>
-            <p className="text-sm text-earth-warm mt-1">
-              Track your garden progress, observations, and milestones
-            </p>
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6 mb-6">
+          {/* Decorative book icon */}
+          <div className="absolute top-0 right-0 opacity-10">
+            <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+            </svg>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/garden" className="text-sm underline text-earth-warm hover:text-earth-deep">
-              Back to garden
-            </Link>
-            {!isAddingEntry && (
-              <button
-                onClick={() => setIsAddingEntry(true)}
-                className={`${ui.btn} ${ui.btnPrimary}`}
-              >
-                + New Entry
-              </button>
-            )}
+
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+                  Garden Journal
+                </h1>
+                <p className="text-earth-warm text-sm mt-1">
+                  Track your garden progress, observations, and milestones
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/garden" className="text-sm text-sage-dark hover:underline">
+                Back to garden
+              </Link>
+              {!isAddingEntry && (
+                <button
+                  onClick={() => setIsAddingEntry(true)}
+                  className={`${ui.btn} ${ui.btnPrimary}`}
+                >
+                  + New Entry
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

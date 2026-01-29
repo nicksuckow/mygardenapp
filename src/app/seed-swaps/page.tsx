@@ -109,19 +109,35 @@ export default function SeedSwapsPage() {
     <div className={ui.page}>
       <div className="max-w-4xl mx-auto p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-earth-deep flex items-center gap-2">
-              <span>🌱</span> Find Seed Swaps
-            </h1>
-            <p className="text-sm text-earth-warm mt-1">
-              Discover local seed libraries, swaps, and gardening communities
-              {settings?.zone && ` • Zone ${settings.zone}`}
-            </p>
+        <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6 mb-6">
+          {/* Decorative swap icon */}
+          <div className="absolute top-0 right-0 opacity-10">
+            <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201 2.466l-.312-.311h2.433a.75.75 0 000-1.5H3.989a.75.75 0 00-.75.75v4.242a.75.75 0 001.5 0v-2.43l.31.31a7 7 0 0011.712-3.138.75.75 0 00-1.449-.39zm1.23-3.723a.75.75 0 00.219-.53V2.929a.75.75 0 00-1.5 0V5.36l-.31-.31A7 7 0 003.239 8.188a.75.75 0 101.448.389A5.5 5.5 0 0113.89 6.11l.311.31h-2.432a.75.75 0 000 1.5h4.243a.75.75 0 00.53-.219z" clipRule="evenodd" />
+            </svg>
           </div>
-          <Link href="/garden" className="text-sm underline text-earth-warm hover:text-earth-deep">
-            Back to garden
-          </Link>
+
+          <div className="relative flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+                  Find Seed Swaps
+                </h1>
+                <p className="text-earth-warm text-sm mt-1">
+                  Discover local seed libraries, swaps, and gardening communities
+                  {settings?.zone && ` • Zone ${settings.zone}`}
+                </p>
+              </div>
+            </div>
+            <Link href="/garden" className="text-sm text-sage-dark hover:underline">
+              Back to garden
+            </Link>
+          </div>
         </div>
 
         {/* Search Section */}

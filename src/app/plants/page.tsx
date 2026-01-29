@@ -518,26 +518,26 @@ export default function PlantsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-sage/10 via-sage/10 to-teal-50 border border-sage/20 p-6">
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6">
         {/* Decorative plant in corner */}
         <div className="absolute top-0 right-0 opacity-10">
-          <svg className="w-32 h-32 text-sage-dark" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
           </svg>
         </div>
 
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage text-white p-2.5 rounded-xl shadow-md">
+            <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 22V11M12 11C12 8.79086 10.2091 7 8 7C5.79086 7 4 8.79086 4 11M12 11C12 8.79086 13.7909 7 16 7C18.2091 7 20 8.79086 20 11" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-sage-dark to-sage-dark bg-clip-text text-transparent">
-                🌿 Plants
+              <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+                Plants
               </h1>
-              <p className="text-sage-dark text-sm mt-1">
+              <p className="text-earth-warm text-sm mt-1">
                 Add plants with timing rules (weeks relative to last frost).
               </p>
             </div>

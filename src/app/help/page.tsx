@@ -165,11 +165,29 @@ function FAQAccordion({ item }: { item: FAQItem }) {
 export default function HelpPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className={`${ui.card} ${ui.cardPad}`}>
-        <h1 className="text-2xl font-display font-bold text-earth-deep">Help & FAQ</h1>
-        <p className="text-earth-warm mt-2">
-          Find answers to common questions about using Sow Plan.
-        </p>
+      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-cream-100 via-sage-light/20 to-cream-50 border border-cream-200 p-6">
+        {/* Decorative help icon */}
+        <div className="absolute top-0 right-0 opacity-10">
+          <svg className="w-32 h-32 text-sage" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+          </svg>
+        </div>
+
+        <div className="relative flex items-center gap-3">
+          <div className="flex-shrink-0 bg-gradient-to-br from-sage to-sage-dark text-white p-2.5 rounded-xl shadow-md">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-display font-bold bg-gradient-to-r from-sage-dark to-sage bg-clip-text text-transparent">
+              Help & FAQ
+            </h1>
+            <p className="text-earth-warm text-sm mt-1">
+              Find answers to common questions about using Sow Plan
+            </p>
+          </div>
+        </div>
       </div>
 
       {faqSections.map((section) => (
