@@ -54,6 +54,9 @@ export async function GET() {
     today.setHours(0, 0, 0, 0);
 
     for (const plant of successionPlants) {
+      // Skip plants with no placements at all (removed from beds)
+      if (plant.placements.length === 0) continue;
+
       // Count existing successions for this plant
       const placementsWithDates = plant.placements.filter(
         (p) => p.directSowedDate || p.transplantedDate || p.seedsStartedDate
@@ -64,6 +67,9 @@ export async function GET() {
 
       // Skip if already at max successions
       if (currentCount >= maxCount) continue;
+
+      // Skip if no placements have dates yet (nothing planted to base succession on)
+      if (currentCount === 0) continue;
 
       // Find the latest planted date
       let latestDate: Date | null = null;
