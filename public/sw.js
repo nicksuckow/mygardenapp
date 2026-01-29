@@ -1,13 +1,14 @@
 // Garden Planner Service Worker
 // Provides offline support and caching for better performance
 
-const CACHE_NAME = "garden-planner-v1";
+const CACHE_NAME = "garden-planner-v2";
 const OFFLINE_URL = "/offline";
 
 // Assets to cache immediately on install
 const PRECACHE_ASSETS = [
   "/",
   "/offline",
+  "/favicon.ico",
   "/favicon.svg",
 ];
 
